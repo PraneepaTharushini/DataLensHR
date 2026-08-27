@@ -778,6 +778,50 @@ app.post('/api/incidents/:id/mitigate', async (req, res) => {
   }
 });
 
+// GET Department Privacy Analytics & Reporting
+app.get('/api/analytics/departments', async (req, res) => {
+  if (!req.user || (req.user.role !== 'System Administrator' && req.user.role !== 'HR Manager')) {
+    return res.status(403).json({ message: 'Access denied: Privileged access required.' });
+  }
+  try {
+    const query = `
+      WITH dept_employees AS (
+          SELECT department, COUNT(id) as employee_count
+          FROM employees
+          GROUP BY department
+      ),
+      dept_incidents AS (
+          SELECT e.department, COUNT(si.id) as incident_count, COALESCE(AVG(si.risk_score), 0) as avg_risk_score, COALESCE(MAX(si.risk_score), 0) as max_risk_score
+          FROM security_incidents si
+          JOIN employees e ON si.user_id = e.user_id
+          GROUP BY e.department
+      ),
+      dept_audits AS (
+          SELECT e.department, COUNT(al.id) as total_actions, COALESCE(SUM(al.records_accessed), 0) as total_records_accessed
+          FROM audit_logs al
+          JOIN employees e ON al.user_id = e.user_id
+          GROUP BY e.department
+      )
+      SELECT 
+          de.department,
+          de.employee_count,
+          COALESCE(di.incident_count, 0) as incident_count,
+          COALESCE(di.avg_risk_score, 0) as avg_risk_score,
+          COALESCE(di.max_risk_score, 0) as max_risk_score,
+          COALESCE(da.total_actions, 0) as total_actions,
+          COALESCE(da.total_records_accessed, 0) as total_records_accessed
+      FROM dept_employees de
+      LEFT JOIN dept_incidents di ON de.department = di.department
+      LEFT JOIN dept_audits da ON de.department = da.department
+      ORDER BY avg_risk_score DESC;
+    `;
+    const [analytics] = await pool.query(query);
+    res.json(analytics);
+  } catch (err) {
+    res.status(500).json({ message: err.message });
+  }
+});
+
 // POST Threat Simulator API
 app.post('/api/simulate/threat', async (req, res) => {
   if (!req.user) return res.status(401).json({ message: 'Unauthorized' });

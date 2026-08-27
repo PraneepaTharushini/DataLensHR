@@ -22,11 +22,15 @@ function App() {
   
   // Rule Management States
   const [rules, setRules] = useState([]);
-  const [secOpsTab, setSecOpsTab] = useState('alerts'); // alerts, rules
+  const [secOpsTab, setSecOpsTab] = useState('alerts'); // alerts, rules, analytics
   const [editingRule, setEditingRule] = useState(null);
   const [editWeight, setEditWeight] = useState(0);
   const [editIsEnabled, setEditIsEnabled] = useState(true);
   const [editParams, setEditParams] = useState({});
+  
+  // Department Analytics States
+  const [deptAnalytics, setDeptAnalytics] = useState([]);
+  const [isLoadingAnalytics, setIsLoadingAnalytics] = useState(false);
   
   // Custom Simulator / Context Headers
   const [simLocation, setSimLocation] = useState('Colombo, Sri Lanka');
@@ -84,6 +88,7 @@ function App() {
       fetchLeaves();
       fetchIncidents();
       fetchRules();
+      fetchDeptAnalytics();
     }
   }, [token]);
 
@@ -157,6 +162,24 @@ function App() {
       }
     } catch (err) {
       console.error(err);
+    }
+  };
+
+  // API Call: Fetch Department Privacy Analytics
+  const fetchDeptAnalytics = async () => {
+    setIsLoadingAnalytics(true);
+    try {
+      const response = await fetch(`${API_BASE}/analytics/departments`, {
+        headers: getHeaders()
+      });
+      if (response.ok) {
+        const data = await response.json();
+        setDeptAnalytics(data);
+      }
+    } catch (err) {
+      console.error(err);
+    } finally {
+      setIsLoadingAnalytics(false);
     }
   };
 
@@ -264,6 +287,20 @@ function App() {
     return Object.values(accounts)
       .sort((a, b) => b.peakScore - a.peakScore)
       .slice(0, 3);
+  };
+
+  // Helper: Get highest average risk department
+  const getTopRiskDept = () => {
+    if (deptAnalytics.length === 0) return 'None';
+    const sorted = [...deptAnalytics].sort((a, b) => b.avg_risk_score - a.avg_risk_score);
+    return sorted[0].avg_risk_score > 0 ? `${sorted[0].department} (${Math.round(sorted[0].avg_risk_score)} Avg Risk)` : 'None';
+  };
+
+  // Helper: Get highest records accessed department
+  const getTopHarvesterDept = () => {
+    if (deptAnalytics.length === 0) return 'None';
+    const sorted = [...deptAnalytics].sort((a, b) => b.total_records_accessed - a.total_records_accessed);
+    return sorted[0].total_records_accessed > 0 ? `${sorted[0].department} (${sorted[0].total_records_accessed} reads)` : 'None';
   };
 
   // API Call: Resolve / Mitigate Incident
@@ -464,6 +501,7 @@ function App() {
     setShowSecOps(false);
     setSalaryMap({});
     setRules([]);
+    setDeptAnalytics([]);
   };
 
   const handleSessionExpiration = (message) => {
@@ -859,6 +897,14 @@ function App() {
                     ⚙️ Privacy Detection Rules
                   </button>
                 )}
+                {(user && (user.role === 'System Administrator' || user.role === 'HR Manager')) && (
+                  <button 
+                    onClick={() => { setSecOpsTab('analytics'); fetchDeptAnalytics(); }} 
+                    className={`sub-nav-btn ${secOpsTab === 'analytics' ? 'active' : ''}`}
+                  >
+                    📊 Department Analytics
+                  </button>
+                )}
               </div>
 
               {secOpsTab === 'alerts' ? (
@@ -1082,7 +1128,7 @@ function App() {
                     </div>
                   </div>
                 </>
-              ) : (
+              ) : secOpsTab === 'rules' ? (
                 /* ================= RULES CONFIGURATION VIEW ================= */
                 <div className="rules-config-panel animate-fade-in">
                   <div className="rules-config-header">
@@ -1244,6 +1290,166 @@ function App() {
                         </div>
                       );
                     })}
+                  </div>
+                </div>
+              ) : (
+                /* ================= DEPARTMENT ANALYTICS VIEW ================= */
+                <div className="dept-analytics-panel animate-fade-in">
+                  <div className="rules-config-header">
+                    <h3 style={{ color: 'var(--text-primary)' }}>Department Privacy Analytics</h3>
+                    <p>Aggregated telemetry audit of data accesses, record leaks, and incident risk summaries grouped by department.</p>
+                  </div>
+
+                  {/* Summary ribbon */}
+                  <div className="analytics-ribbon" style={{ display: 'flex', gap: '16px', marginBottom: '24px', flexWrap: 'wrap' }}>
+                    <div className="ribbon-card" style={{ flex: 1, minWidth: '220px', background: 'var(--bg-card)', border: '1px solid var(--border-glow)', padding: '16px', borderRadius: '12px' }}>
+                      <span style={{ fontSize: '11px', color: 'var(--text-secondary)', textTransform: 'uppercase', letterSpacing: '0.05em' }}>Monitored Depts</span>
+                      <h3 style={{ fontSize: '24px', fontWeight: '800', marginTop: '8px', color: 'var(--text-primary)' }}>{deptAnalytics.length}</h3>
+                    </div>
+                    <div className="ribbon-card" style={{ flex: 1, minWidth: '220px', background: 'var(--bg-card)', border: '1px solid var(--border-glow)', padding: '16px', borderRadius: '12px' }}>
+                      <span style={{ fontSize: '11px', color: 'var(--text-secondary)', textTransform: 'uppercase', letterSpacing: '0.05em' }}>Top Vulnerability Dept</span>
+                      <h3 style={{ fontSize: '15px', fontWeight: '700', marginTop: '12px', color: 'var(--danger)' }}>{getTopRiskDept()}</h3>
+                    </div>
+                    <div className="ribbon-card" style={{ flex: 1, minWidth: '220px', background: 'var(--bg-card)', border: '1px solid var(--border-glow)', padding: '16px', borderRadius: '12px' }}>
+                      <span style={{ fontSize: '11px', color: 'var(--text-secondary)', textTransform: 'uppercase', letterSpacing: '0.05em' }}>Highest Data Harvest</span>
+                      <h3 style={{ fontSize: '15px', fontWeight: '700', marginTop: '12px', color: 'var(--warning)' }}>{getTopHarvesterDept()}</h3>
+                    </div>
+                  </div>
+
+                  {/* Grid of Department Cards */}
+                  <div className="rules-grid" style={{ marginBottom: '24px' }}>
+                    {deptAnalytics.map((dept) => {
+                      const avgRisk = parseFloat(dept.avg_risk_score || 0);
+                      const maxRisk = parseInt(dept.max_risk_score || 0);
+                      const isHighRisk = avgRisk >= 60 || maxRisk >= 75;
+                      const isMedRisk = (avgRisk >= 30 && avgRisk < 60) || (maxRisk >= 40 && maxRisk < 75);
+                      
+                      return (
+                        <div 
+                          key={dept.department} 
+                          className="rule-config-card" 
+                          style={{
+                            borderColor: isHighRisk 
+                              ? 'rgba(239, 68, 68, 0.4)' 
+                              : isMedRisk 
+                                ? 'rgba(245, 158, 11, 0.4)' 
+                                : 'var(--border-glow)'
+                          }}
+                        >
+                          <div className="rule-card-header" style={{ marginBottom: '8px' }}>
+                            <div>
+                              <span className="rule-card-id" style={{ background: 'var(--primary-glow)', color: 'var(--text-primary)' }}>
+                                {dept.employee_count} Employees
+                              </span>
+                              <h4 style={{ color: 'var(--text-primary)', marginTop: '8px', fontSize: '16px' }}>{dept.department || 'General'}</h4>
+                            </div>
+                            <span className="status-badge-indicator" style={{
+                              backgroundColor: isHighRisk 
+                                ? 'rgba(239, 68, 68, 0.15)' 
+                                : isMedRisk 
+                                  ? 'rgba(245, 158, 11, 0.15)' 
+                                  : 'rgba(16, 185, 129, 0.15)',
+                              color: isHighRisk ? 'var(--danger)' : isMedRisk ? 'var(--warning)' : 'var(--success)'
+                            }}>
+                              {isHighRisk ? 'Critical Risk' : isMedRisk ? 'Elevated' : 'Secured'}
+                            </span>
+                          </div>
+
+                          <div className="rule-card-metrics" style={{ marginTop: '12px' }}>
+                            {/* Horizontal Risk Bar */}
+                            <div style={{ marginBottom: '14px' }}>
+                              <div style={{ display: 'flex', justifyContent: 'space-between', fontSize: '11px', marginBottom: '4px' }}>
+                                <span style={{ color: 'var(--text-secondary)' }}>Avg Risk Score:</span>
+                                <span style={{ fontWeight: 'bold', color: 'var(--text-primary)' }}>{Math.round(avgRisk)}/100</span>
+                              </div>
+                              <div style={{ height: '6px', background: 'rgba(255,255,255,0.05)', borderRadius: '3px', overflow: 'hidden' }}>
+                                <div style={{
+                                  height: '100%',
+                                  width: `${Math.max(avgRisk, 3)}%`,
+                                  backgroundColor: isHighRisk ? 'var(--danger)' : isMedRisk ? 'var(--warning)' : 'var(--success)'
+                                }} />
+                              </div>
+                            </div>
+
+                            <div className="metric-row" style={{ display: 'flex', justifyContent: 'space-between', padding: '6px 0', borderBottom: '1px solid rgba(255,255,255,0.05)', fontSize: '12px' }}>
+                              <span style={{ color: 'var(--text-secondary)' }}>Triggered Incidents:</span>
+                              <span style={{ 
+                                color: dept.incident_count > 0 ? 'var(--danger)' : 'var(--text-primary)', 
+                                fontWeight: dept.incident_count > 0 ? 'bold' : 'normal' 
+                              }}>
+                                {dept.incident_count}
+                              </span>
+                            </div>
+
+                            <div className="metric-row" style={{ display: 'flex', justifyContent: 'space-between', padding: '6px 0', borderBottom: '1px solid rgba(255,255,255,0.05)', fontSize: '12px' }}>
+                              <span style={{ color: 'var(--text-secondary)' }}>Max Incident Risk:</span>
+                              <span style={{ color: 'var(--text-primary)' }}>{maxRisk}</span>
+                            </div>
+
+                            <div className="metric-row" style={{ display: 'flex', justifyContent: 'space-between', padding: '6px 0', borderBottom: '1px solid rgba(255,255,255,0.05)', fontSize: '12px' }}>
+                              <span style={{ color: 'var(--text-secondary)' }}>Sensitive Records Read:</span>
+                              <span style={{ color: 'var(--text-primary)', fontWeight: 'bold' }}>{dept.total_records_accessed}</span>
+                            </div>
+
+                            <div className="metric-row" style={{ display: 'flex', justifyContent: 'space-between', padding: '6px 0', fontSize: '12px' }}>
+                              <span style={{ color: 'var(--text-secondary)' }}>Total Audit Activities:</span>
+                              <span style={{ color: 'var(--text-primary)' }}>{dept.total_actions}</span>
+                            </div>
+                          </div>
+                        </div>
+                      );
+                    })}
+                  </div>
+
+                  {/* Analytics Detail Data Table */}
+                  <div className="incidents-card-log">
+                    <div className="incidents-log-header">
+                      <div>
+                        <h3 style={{ color: 'var(--text-primary)' }}>Department Audit Log Matrix</h3>
+                        <p>Detailed breakdown of access rates, data leak risks, and compliance levels by department.</p>
+                      </div>
+                      <button onClick={fetchDeptAnalytics} className="btn-actions-refresh">
+                        Refresh Reporting
+                      </button>
+                    </div>
+
+                    <div className="table-wrapper">
+                      <table>
+                        <thead>
+                          <tr>
+                            <th>Department</th>
+                            <th>Active Members</th>
+                            <th>Incident Violations</th>
+                            <th>Average Risk Score</th>
+                            <th>Peak Risk Score</th>
+                            <th>Sensitive Records Read</th>
+                            <th>Audit Transactions</th>
+                          </tr>
+                        </thead>
+                        <tbody>
+                          {deptAnalytics.map((dept, i) => (
+                            <tr key={i}>
+                              <td style={{ fontWeight: '700', color: 'var(--text-primary)' }}>{dept.department || 'General'}</td>
+                              <td style={{ color: 'var(--text-primary)' }}>{dept.employee_count}</td>
+                              <td style={{ color: dept.incident_count > 0 ? 'var(--danger)' : 'var(--text-primary)', fontWeight: dept.incident_count > 0 ? 'bold' : 'normal' }}>
+                                {dept.incident_count}
+                              </td>
+                              <td style={{ color: 'var(--text-primary)' }}>
+                                <span className={`risk-score-pill`} style={{
+                                  backgroundColor: parseFloat(dept.avg_risk_score) >= 60 ? 'rgba(239, 68, 68, 0.15)' : parseFloat(dept.avg_risk_score) >= 30 ? 'rgba(245, 158, 11, 0.15)' : 'rgba(16, 185, 129, 0.15)',
+                                  color: parseFloat(dept.avg_risk_score) >= 60 ? '#fca5a5' : parseFloat(dept.avg_risk_score) >= 30 ? '#fcd34d' : '#a7f3d0'
+                                }}>
+                                  {Math.round(dept.avg_risk_score)}
+                                </span>
+                              </td>
+                              <td style={{ color: 'var(--text-primary)' }}>{dept.max_risk_score}</td>
+                              <td style={{ color: 'var(--text-primary)', fontWeight: 'bold' }}>{dept.total_records_accessed}</td>
+                              <td style={{ color: 'var(--text-primary)' }}>{dept.total_actions}</td>
+                            </tr>
+                          ))}
+                        </tbody>
+                      </table>
+                    </div>
                   </div>
                 </div>
               )}
