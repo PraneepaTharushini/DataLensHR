@@ -333,10 +333,11 @@ async function insertAuditLog(req, user, actionType, recordsAccessed = 0) {
 async function seedMockData() {
   try {
     const [rows] = await pool.query('SELECT COUNT(*) as count FROM users');
+    const adminId = '11111111-1111-1111-1111-111111111111';
+    
     if (rows[0].count === 0) {
       console.log('[SEED] Seeding database with mock employees & users...');
       
-      const adminId = '11111111-1111-1111-1111-111111111111';
       const managerId = '22222222-2222-2222-2222-222222222222';
       const staffId = '33333333-3333-3333-3333-333333333333';
       const employeeUserId = '44444444-4444-4444-4444-444444444444';
@@ -356,7 +357,8 @@ async function seedMockData() {
          ('e1', '${managerId}', 'Emma', 'Watson', 'HR Department', 'HR Director', 185000.00, 'manager@datalenshr.com', '+94 77 123 4567', '2020-01-15', FALSE),
          ('e2', '${staffId}', 'Sarah', 'Connor', 'HR Department', 'HR Assistant', 85000.00, 'staff@datalenshr.com', '+94 77 987 6543', '2023-06-10', FALSE),
          ('e3', '${employeeUserId}', 'David', 'Beckham', 'Sales', 'Account Executive', 65000.00, 'employee@datalenshr.com', '+94 71 555 4321', '2021-08-20', FALSE),
-         ('e4', NULL, 'Jane', 'Doe', 'Executive', 'Senior Executive VP (Honeypot)', 350000.00, 'jane.doe@datalenshr.com', '+94 77 111 2222', '2019-11-01', TRUE)` // Canary profile
+         ('e4', NULL, 'Jane', 'Doe', 'Executive', 'Senior Executive VP (Honeypot)', 350000.00, 'jane.doe@datalenshr.com', '+94 77 111 2222', '2019-11-01', TRUE),
+         ('e5', '${adminId}', 'System', 'Administrator', 'Executive', 'System Administrator', 150000.00, 'admin@datalenshr.com', '+94 77 000 0000', '2018-05-20', FALSE)`
       );
 
       // Seed Leaves
@@ -367,6 +369,17 @@ async function seedMockData() {
       );
 
       console.log('[SEED] Seeding completed.');
+    } else {
+      // Ensure admin employee record is seeded if tables existed but lacked this profile
+      const [adminEmpCheck] = await pool.query('SELECT * FROM employees WHERE user_id = ?', [adminId]);
+      if (adminEmpCheck.length === 0) {
+        await pool.query(
+          `INSERT INTO employees (id, user_id, first_name, last_name, department, position, salary, email, phone, hire_date, is_canary)
+           VALUES ('e5', ?, 'System', 'Administrator', 'Executive', 'System Administrator', 150000.00, 'admin@datalenshr.com', '+94 77 000 0000', '2018-05-20', FALSE)`,
+          [adminId]
+        );
+        console.log('[SEED] Admin employee profile e5 seeded successfully.');
+      }
     }
   } catch (err) {
     console.error('[SEED ERR] Seeding failed:', err.message);
