@@ -1249,7 +1249,6 @@ function App() {
               )}
             </div>
           </div>
-        </div>
         ) : (
           /* ================= HR DEMO APPLICATION WORKSPACE ================= */
           <div className="workspace-container animate-fade-in">
