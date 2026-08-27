@@ -1874,3 +1874,166 @@ html, body {
   appearance: textfield;
 }
 
+/* SecOps Sub-Navigation Tabs */
+.secops-sub-nav {
+  display: flex;
+  gap: 16px;
+  margin-bottom: 24px;
+  border-bottom: 1px solid var(--border-glow);
+  padding-bottom: 12px;
+}
+
+.sub-nav-btn {
+  background: none;
+  border: none;
+  color: var(--text-secondary);
+  font-family: var(--font-sans);
+  font-size: 14px;
+  font-weight: 600;
+  padding: 8px 16px;
+  cursor: pointer;
+  border-radius: 6px;
+  transition: all 0.2s ease;
+}
+
+.sub-nav-btn:hover {
+  background: rgba(255, 255, 255, 0.05);
+  color: var(--text-primary);
+}
+
+.sub-nav-btn.active {
+  background: var(--primary-glow);
+  color: var(--text-primary);
+  border: 1px solid var(--border-glow);
+}
+
+/* Rules Configuration Grid */
+.rules-config-panel {
+  display: flex;
+  flex-direction: column;
+  gap: 20px;
+}
+
+.rules-config-header h3 {
+  font-size: 18px;
+  font-weight: 700;
+}
+
+.rules-config-header p {
+  color: var(--text-secondary);
+  font-size: 12px;
+  margin-top: 4px;
+}
+
+.rules-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(320px, 1fr));
+  gap: 20px;
+}
+
+.rule-config-card {
+  background: var(--bg-card);
+  border: 1px solid var(--border-glow);
+  border-radius: 12px;
+  padding: 20px;
+  display: flex;
+  flex-direction: column;
+  justify-content: space-between;
+  transition: transform 0.2s ease, border-color 0.2s ease;
+}
+
+.rule-config-card:hover {
+  transform: translateY(-2px);
+  border-color: var(--primary);
+}
+
+.rule-config-card.disabled {
+  opacity: 0.7;
+}
+
+.rule-card-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: flex-start;
+  margin-bottom: 12px;
+}
+
+.rule-card-id {
+  font-family: var(--font-mono);
+  font-size: 11px;
+  font-weight: bold;
+  background: rgba(255, 255, 255, 0.08);
+  color: var(--text-primary);
+  padding: 2px 6px;
+  border-radius: 4px;
+  border: 1px solid var(--border-glow);
+}
+
+.status-badge-indicator {
+  font-size: 11px;
+  font-weight: 700;
+  padding: 2px 8px;
+  border-radius: 20px;
+}
+
+.status-badge-indicator.active {
+  background: rgba(16, 185, 129, 0.15);
+  color: var(--success);
+}
+
+.status-badge-indicator.inactive {
+  background: rgba(239, 68, 68, 0.15);
+  color: var(--danger);
+}
+
+.rule-card-desc {
+  font-size: 12px;
+  line-height: 1.6;
+  margin-bottom: 16px;
+  min-height: 38px;
+}
+
+.rule-edit-form {
+  border-top: 1px solid rgba(255, 255, 255, 0.05);
+  padding-top: 16px;
+  margin-top: 8px;
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+}
+
+.edit-form-field label {
+  font-size: 11px;
+  color: var(--text-secondary);
+}
+
+.btn-save-rule {
+  background: var(--primary);
+  color: white;
+  border: none;
+  padding: 8px 16px;
+  border-radius: 6px;
+  font-size: 12px;
+  font-weight: bold;
+  cursor: pointer;
+}
+
+.btn-save-rule:hover {
+  background: var(--primary-hover);
+}
+
+.btn-cancel-rule {
+  background: none;
+  border: 1px solid var(--border-glow);
+  color: var(--text-primary);
+  padding: 8px 16px;
+  border-radius: 6px;
+  font-size: 12px;
+  cursor: pointer;
+}
+
+.btn-cancel-rule:hover {
+  background: rgba(255, 255, 255, 0.05);
+}
+
+

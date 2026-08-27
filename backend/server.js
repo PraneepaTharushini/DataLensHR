@@ -63,6 +63,30 @@ app.use(express.json());
 const userRequestCounts = {}; // format: { userId: [timestamps] }
 const ipFailedLogins = {};    // format: { ipAddress: [timestamps] }
 
+// Configurable Privacy Rules in-memory cache
+let activeRulesCache = {};
+
+async function refreshRulesCache() {
+  try {
+    const [rows] = await pool.query('SELECT * FROM privacy_rules');
+    const newCache = {};
+    rows.forEach(rule => {
+      newCache[rule.id] = {
+        name: rule.name,
+        description: rule.description,
+        weight: rule.weight,
+        is_enabled: rule.is_enabled,
+        parameters: typeof rule.parameters === 'object' ? rule.parameters : JSON.parse(rule.parameters || '{}')
+      };
+    });
+    activeRulesCache = newCache;
+    console.log('[DB CACHE] Privacy detection rules cache loaded/refreshed.', Object.keys(activeRulesCache).length, 'rules active.');
+  } catch (err) {
+    console.error('[DB CACHE ERR] Failed to refresh rules cache:', err.message);
+  }
+}
+
+
 // Helper for Parsing Geolocation & Browser Fingerprints
 function parseClientMetadata(req) {
   const userAgent = req.headers['user-agent'] || 'Unknown Browser';
@@ -115,6 +139,10 @@ app.use(authenticateToken);
 
 // Real-Time Threat Analysis & Dynamic Risk Scoring Engine
 async function analyzePrivacyThreats(req, user, actionType, recordsAccessed = 0) {
+  if (Object.keys(activeRulesCache).length === 0) {
+    await refreshRulesCache();
+  }
+
   const metadata = parseClientMetadata(req);
   const now = new Date();
   const currentHour = now.getHours();
@@ -127,64 +155,74 @@ async function analyzePrivacyThreats(req, user, actionType, recordsAccessed = 0)
     time: now.toISOString()
   };
 
-  // 1. Rule R-02: Unusual Working Hours (Access between 11 PM and 5 AM)
-  if (currentHour >= 23 || currentHour < 5) {
-    triggeredRules.push({
-      id: 'R-02',
-      name: 'UNUSUAL_HOURS',
-      description: `Access requested at ${now.toLocaleTimeString()} outside standard hours (07:00 - 19:00)`,
-      weight: 15
-    });
+  // 1. Rule R-02: Unusual Working Hours
+  const r02 = activeRulesCache['R-02'];
+  if (r02 && r02.is_enabled) {
+    const startHour = r02.parameters.start_hour ?? 23;
+    const endHour = r02.parameters.end_hour ?? 5;
+    if (currentHour >= startHour || currentHour < endHour) {
+      triggeredRules.push({
+        id: 'R-02',
+        name: r02.name,
+        description: `Access requested at ${now.toLocaleTimeString()} outside standard hours (${startHour}:00 - ${endHour}:00)`,
+        weight: r02.weight
+      });
+    }
   }
 
-  // 2. Rule R-04: Salary Probing (Attempt to access unauthorized sensitive fields)
-  if (actionType === 'UNAUTHORIZED_SALARY_READ') {
+  // 2. Rule R-04: Salary Probing
+  const r04 = activeRulesCache['R-04'];
+  if (r04 && r04.is_enabled && actionType === 'UNAUTHORIZED_SALARY_READ') {
     triggeredRules.push({
       id: 'R-04',
-      name: 'SPI_SALARY_PROBE',
+      name: r04.name,
       description: `Access restriction violation: Unauthorized read attempt on salary endpoint.`,
-      weight: 40
+      weight: r04.weight
     });
   }
 
-  // 3. Rule R-05: Volumetric Scraping (e.g., > 10 profile reads within 10 seconds)
-  if (user && actionType === 'PROFILE_READ') {
+  // 3. Rule R-05: Volumetric Scraping
+  const r05 = activeRulesCache['R-05'];
+  if (r05 && r05.is_enabled && user && actionType === 'PROFILE_READ') {
     const userId = user.id;
-    const windowMs = 10000; // 10 seconds sliding window
+    const limit = r05.parameters.limit ?? 10;
+    const windowMs = r05.parameters.window_ms ?? 10000;
     if (!userRequestCounts[userId]) userRequestCounts[userId] = [];
     
     // Clear expired timestamps
     userRequestCounts[userId] = userRequestCounts[userId].filter(t => now - t < windowMs);
     userRequestCounts[userId].push(now);
     
-    if (userRequestCounts[userId].length > 10) {
+    if (userRequestCounts[userId].length > limit) {
       triggeredRules.push({
         id: 'R-05',
-        name: 'VOLUMETRIC_SCRAPE',
-        description: `High access rate: accessed ${userRequestCounts[userId].length} records in 10s.`,
-        weight: 45
+        name: r05.name,
+        description: `High access rate: accessed ${userRequestCounts[userId].length} records in ${windowMs / 1000}s.`,
+        weight: r05.weight
       });
-      rawEvidence.volumeDetails = `${userRequestCounts[userId].length} hits/10s`;
+      rawEvidence.volumeDetails = `${userRequestCounts[userId].length} hits/${windowMs / 1000}s`;
     }
   }
 
   // 4. Rule R-06: Canary honeypot access (Fetching decoy record)
-  if (actionType === 'CANARY_ACCESS') {
+  const r06 = activeRulesCache['R-06'];
+  if (r06 && r06.is_enabled && actionType === 'CANARY_ACCESS') {
     triggeredRules.push({
       id: 'R-06',
-      name: 'CANARY_ACCESS',
+      name: r06.name,
       description: `Decoy Canary profile accessed (John Doe - Senior Executive VP).`,
-      weight: 80
+      weight: r06.weight
     });
   }
 
   // 5. Rule R-03: Impossible Travel / Geolocational anomaly
-  if (req.headers['x-simulate-impossible-travel'] === 'true') {
+  const r03 = activeRulesCache['R-03'];
+  if (r03 && r03.is_enabled && req.headers['x-simulate-impossible-travel'] === 'true') {
     triggeredRules.push({
       id: 'R-03',
-      name: 'IMPOSSIBLE_TRAVEL',
+      name: r03.name,
       description: `Impossible geolocational speed: Login location switched from Colombo to Tokyo in 5 mins.`,
-      weight: 50
+      weight: r03.weight
     });
   }
 
@@ -756,11 +794,47 @@ app.post('/api/simulate/threat', async (req, res) => {
   }
 });
 
+// 6. Configurable Privacy Rules Endpoints
+app.get('/api/rules', async (req, res) => {
+  if (!req.user || (req.user.role !== 'System Administrator' && req.user.role !== 'HR Manager')) {
+    return res.status(403).json({ message: 'Access denied: Privileged access required.' });
+  }
+  try {
+    const [rules] = await pool.query('SELECT * FROM privacy_rules ORDER BY id ASC');
+    res.json(rules);
+  } catch (err) {
+    res.status(500).json({ message: err.message });
+  }
+});
+
+app.put('/api/rules/:id', async (req, res) => {
+  if (!req.user || req.user.role !== 'System Administrator') {
+    return res.status(403).json({ message: 'Access denied: Admin control only.' });
+  }
+  const ruleId = req.params.id;
+  const { weight, is_enabled, parameters } = req.body;
+  try {
+    await pool.query(
+      `UPDATE privacy_rules 
+       SET weight = ?, is_enabled = ?, parameters = ?, updated_at = CURRENT_TIMESTAMP
+       WHERE id = ?`,
+      [weight, is_enabled, JSON.stringify(parameters), ruleId]
+    );
+    await refreshRulesCache();
+    await insertAuditLog(req, req.user, `RULE_UPDATE_${ruleId}`, 1);
+    res.json({ message: `Rule ${ruleId} updated successfully.` });
+  } catch (err) {
+    res.status(500).json({ message: err.message });
+  }
+});
+
+
 // Server Initialization
 server.listen(PORT, async () => {
   console.log(`[SERVER] DataLens HR Backend running on port ${PORT}`);
   try {
     await seedMockData();
+    await refreshRulesCache();
     console.log('[SERVER] Database health verified, seeds evaluated.');
   } catch (e) {
     console.error('[SERVER] Database is not fully initialized. Run node setup_db.js first.', e.message);

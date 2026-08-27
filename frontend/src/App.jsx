@@ -20,6 +20,14 @@ function App() {
   const [incidents, setIncidents] = useState([]);
   const [errorMessage, setErrorMessage] = useState('');
   
+  // Rule Management States
+  const [rules, setRules] = useState([]);
+  const [secOpsTab, setSecOpsTab] = useState('alerts'); // alerts, rules
+  const [editingRule, setEditingRule] = useState(null);
+  const [editWeight, setEditWeight] = useState(0);
+  const [editIsEnabled, setEditIsEnabled] = useState(true);
+  const [editParams, setEditParams] = useState({});
+  
   // Custom Simulator / Context Headers
   const [simLocation, setSimLocation] = useState('Colombo, Sri Lanka');
   const [isScraping, setIsScraping] = useState(false);
@@ -75,6 +83,7 @@ function App() {
       fetchEmployees();
       fetchLeaves();
       fetchIncidents();
+      fetchRules();
     }
   }, [token]);
 
@@ -133,6 +142,49 @@ function App() {
       }
     } catch (err) {
       console.error(err);
+    }
+  };
+
+  // API Call: Fetch Privacy Detection Rules
+  const fetchRules = async () => {
+    try {
+      const response = await fetch(`${API_BASE}/rules`, {
+        headers: getHeaders()
+      });
+      if (response.ok) {
+        const data = await response.json();
+        setRules(data);
+      }
+    } catch (err) {
+      console.error(err);
+    }
+  };
+
+  // API Call: Save Privacy Rule modifications
+  const handleSaveRule = async (e, ruleId) => {
+    e.preventDefault();
+    try {
+      const response = await fetch(`${API_BASE}/rules/${ruleId}`, {
+        method: 'PUT',
+        headers: getHeaders(),
+        body: JSON.stringify({
+          weight: editWeight,
+          is_enabled: editIsEnabled,
+          parameters: editParams
+        })
+      });
+      if (response.ok) {
+        alert('Rule configuration updated successfully!');
+        setEditingRule(null);
+        fetchRules();
+        fetchIncidents();
+      } else {
+        const err = await response.json();
+        alert(err.message || 'Failed to update rule.');
+      }
+    } catch (err) {
+      console.error(err);
+      alert('Error saving rule configuration.');
     }
   };
 
@@ -411,6 +463,7 @@ function App() {
     setUser(null);
     setShowSecOps(false);
     setSalaryMap({});
+    setRules([]);
   };
 
   const handleSessionExpiration = (message) => {
@@ -762,248 +815,438 @@ function App() {
               <div className="policies-panel">
                 <h3>Threat Detection Policies</h3>
                 <div className="policy-grid-rows">
-                  <div className="policy-grid-row">
-                    <span className="policy-label-code">R-02: Hour Anomaly</span>
-                    <span className="policy-label-desc" style={{ color: 'var(--text-primary)' }}>11 PM - 5 AM</span>
-                  </div>
-                  <div className="policy-grid-row">
-                    <span className="policy-label-code">R-03: Travel Velocity</span>
-                    <span className="policy-label-desc" style={{ color: 'var(--text-primary)' }}>Impossible Dist</span>
-                  </div>
-                  <div className="policy-grid-row">
-                    <span className="policy-label-code">R-04: Salary Probe</span>
-                    <span className="policy-label-desc" style={{ color: 'var(--text-primary)' }}>Role Overreach</span>
-                  </div>
-                  <div className="policy-grid-row">
-                    <span className="policy-label-code">R-05: Vol Scraping</span>
-                    <span className="policy-label-desc" style={{ color: 'var(--text-primary)' }}>&gt;10 hits / 10s</span>
-                  </div>
-                  <div className="policy-grid-row">
-                    <span className="policy-label-code">R-06: Decoy Honeypot</span>
-                    <span className="policy-label-desc" style={{ color: '#f87171' }}>Canary Trigger</span>
-                  </div>
+                  {rules.map((r) => {
+                    const params = typeof r.parameters === 'object' ? r.parameters : JSON.parse(r.parameters || '{}');
+                    let displayDesc = 'Enabled';
+                    if (!r.is_enabled) {
+                      displayDesc = 'Disabled';
+                    } else if (r.id === 'R-02') {
+                      displayDesc = `${params.start_hour ?? 23}:00 - ${params.end_hour ?? 5}:00`;
+                    } else if (r.id === 'R-03') {
+                      displayDesc = 'Geo Anomaly';
+                    } else if (r.id === 'R-04') {
+                      displayDesc = 'Salary Read';
+                    } else if (r.id === 'R-05') {
+                      displayDesc = `>${params.limit ?? 10} reads/${(params.window_ms ?? 10000)/1000}s`;
+                    } else if (r.id === 'R-06') {
+                      displayDesc = 'Canary Trigger';
+                    }
+                    return (
+                      <div key={r.id} className="policy-grid-row" style={!r.is_enabled ? { opacity: 0.5 } : {}}>
+                        <span className="policy-label-code">{r.id}: {r.name.replace(/_/g, ' ')}</span>
+                        <span className="policy-label-desc" style={{ color: !r.is_enabled ? 'var(--text-muted)' : 'var(--text-primary)' }}>{displayDesc}</span>
+                      </div>
+                    );
+                  })}
                 </div>
               </div>
             </div>
 
             <div className="secops-main-content">
-              {/* Top Analytics Panel (Top Risk & Rule Frequency) */}
-              <div className="secops-analytics-grid">
-                
-                {/* Top Risk Accounts */}
-                <div className="analytics-card">
-                  <h3>🚨 Top Risk Accounts</h3>
-                  <div className="analytics-card-content">
-                    {getTopRiskAccounts().length === 0 ? (
-                      <div style={{ color: 'var(--text-secondary)', fontSize: '12px' }}>No active accounts flagged.</div>
-                    ) : (
-                      <div className="risk-accounts-list">
-                        {getTopRiskAccounts().map((acc, idx) => (
-                          <div key={idx} className="risk-account-row">
-                            <div className="risk-account-details">
-                              <span className="risk-account-email" style={{ color: 'var(--text-primary)' }}>{acc.email}</span>
-                              <span className="risk-account-role">{acc.role}</span>
-                            </div>
-                            <div className="risk-account-badge">
-                              <span className="risk-score-pill" style={{
-                                backgroundColor: acc.peakScore >= 70 ? 'rgba(239, 68, 68, 0.15)' : 'rgba(245, 158, 11, 0.15)',
-                                color: acc.peakScore >= 70 ? '#fca5a5' : '#fcd34d'
-                              }}>
-                                Peak Risk: {acc.peakScore}
-                              </span>
-                              <span className="risk-incident-count">({acc.incidentCount} alerts)</span>
-                            </div>
-                          </div>
-                        ))}
-                      </div>
-                    )}
-                  </div>
-                </div>
+              {/* SecOps Sub-Navigation Tabs */}
+              <div className="secops-sub-nav">
+                <button 
+                  onClick={() => setSecOpsTab('alerts')} 
+                  className={`sub-nav-btn ${secOpsTab === 'alerts' ? 'active' : ''}`}
+                >
+                  ⚠️ Telemetry & Incident Alerts
+                </button>
+                {user && user.role === 'System Administrator' && (
+                  <button 
+                    onClick={() => setSecOpsTab('rules')} 
+                    className={`sub-nav-btn ${secOpsTab === 'rules' ? 'active' : ''}`}
+                  >
+                    ⚙️ Privacy Detection Rules
+                  </button>
+                )}
+              </div>
 
-                {/* Rule Trigger Frequency */}
-                <div className="analytics-card">
-                  <h3>📊 Rule Trigger Frequency</h3>
-                  <div className="analytics-card-content">
-                    {Object.entries(getRuleFrequencies()).map(([rule, count], idx) => {
-                      const frequencies = getRuleFrequencies();
-                      const maxCount = Math.max(...Object.values(frequencies), 1);
-                      const percentage = (count / maxCount) * 100;
-                      return (
-                        <div key={idx} className="rule-frequency-row">
-                          <div className="rule-frequency-labels">
-                            <span className="rule-name-lbl" style={{ color: 'var(--text-primary)' }}>{rule.replace(/_/g, ' ')}</span>
-                            <span className="rule-count-lbl">{count} times</span>
+              {secOpsTab === 'alerts' ? (
+                <>
+                  {/* Top Analytics Panel (Top Risk & Rule Frequency) */}
+                  <div className="secops-analytics-grid">
+                    
+                    {/* Top Risk Accounts */}
+                    <div className="analytics-card">
+                      <h3>🚨 Top Risk Accounts</h3>
+                      <div className="analytics-card-content">
+                        {getTopRiskAccounts().length === 0 ? (
+                          <div style={{ color: 'var(--text-secondary)', fontSize: '12px' }}>No active accounts flagged.</div>
+                        ) : (
+                          <div className="risk-accounts-list">
+                            {getTopRiskAccounts().map((acc, idx) => (
+                              <div key={idx} className="risk-account-row">
+                                <div className="risk-account-details">
+                                  <span className="risk-account-email" style={{ color: 'var(--text-primary)' }}>{acc.email}</span>
+                                  <span className="risk-account-role">{acc.role}</span>
+                                </div>
+                                <div className="risk-account-badge">
+                                  <span className="risk-score-pill" style={{
+                                    backgroundColor: acc.peakScore >= 70 ? 'rgba(239, 68, 68, 0.15)' : 'rgba(245, 158, 11, 0.15)',
+                                    color: acc.peakScore >= 70 ? '#fca5a5' : '#fcd34d'
+                                  }}>
+                                    Peak Risk: {acc.peakScore}
+                                  </span>
+                                  <span className="risk-incident-count">({acc.incidentCount} alerts)</span>
+                                </div>
+                              </div>
+                            ))}
                           </div>
-                          <div className="rule-frequency-bar-bg">
+                        )}
+                      </div>
+                    </div>
+
+                    {/* Rule Trigger Frequency */}
+                    <div className="analytics-card">
+                      <h3>📊 Rule Trigger Frequency</h3>
+                      <div className="analytics-card-content">
+                        {Object.entries(getRuleFrequencies()).map(([rule, count], idx) => {
+                          const frequencies = getRuleFrequencies();
+                          const maxCount = Math.max(...Object.values(frequencies), 1);
+                          const percentage = (count / maxCount) * 100;
+                          return (
+                            <div key={idx} className="rule-frequency-row">
+                              <div className="rule-frequency-labels">
+                                <span className="rule-name-lbl" style={{ color: 'var(--text-primary)' }}>{rule.replace(/_/g, ' ')}</span>
+                                <span className="rule-count-lbl">{count} times</span>
+                              </div>
+                              <div className="rule-frequency-bar-bg">
+                                <div 
+                                  className="rule-frequency-bar-fill" 
+                                  style={{ 
+                                    width: `${percentage}%`,
+                                    backgroundColor: rule === 'CANARY_ACCESS' || rule === 'IMPOSSIBLE_TRAVEL' ? 'var(--danger)' : 'var(--warning)'
+                                  }}
+                                />
+                              </div>
+                            </div>
+                          );
+                        })}
+                      </div>
+                    </div>
+
+                  </div>
+
+                  {/* Main alerts listing log */}
+                  <div className="incidents-card-log">
+                    <div className="incidents-log-header">
+                      <div>
+                        <h3 style={{ color: 'var(--text-primary)' }}>Suspicious Activity Auditing Feed</h3>
+                        <p>Real-time telemetry reports containing detailed user access records, IP geolocations, and dynamic mitigation advice.</p>
+                      </div>
+                      <button onClick={fetchIncidents} className="btn-actions-refresh">
+                        Refresh Alerts Feed
+                      </button>
+                    </div>
+
+                    <div className="incident-scroller-view">
+                      {incidents.length === 0 ? (
+                        <div className="no-incidents-placeholder">
+                          <div className="no-incidents-placeholder-icon">🛡️</div>
+                          <p style={{ fontWeight: 'bold', fontSize: '15px', color: 'var(--text-primary)' }}>System Shield Active</p>
+                          <p style={{ fontSize: '12px', color: 'var(--text-secondary)', marginTop: '4px' }}>
+                            No malicious activities flagged yet. Switch to "HR Workspace" and trigger simulator buttons to test rule calculations.
+                          </p>
+                        </div>
+                      ) : (
+                        incidents.map((inc) => {
+                          const triggeredRules = Array.isArray(inc.triggered_rules) ? inc.triggered_rules : JSON.parse(inc.triggered_rules || '[]');
+                          const evidence = typeof inc.raw_evidence === 'object' ? inc.raw_evidence : JSON.parse(inc.raw_evidence || '{}');
+                          const actions = Array.isArray(inc.recommended_actions) ? inc.recommended_actions : JSON.parse(inc.recommended_actions || '[]');
+                          
+                          return (
                             <div 
-                              className="rule-frequency-bar-fill" 
-                              style={{ 
-                                width: `${percentage}%`,
-                                backgroundColor: rule === 'CANARY_ACCESS' || rule === 'IMPOSSIBLE_TRAVEL' ? 'var(--danger)' : 'var(--warning)'
-                              }}
-                            />
+                              key={inc.id}
+                              className={`incident-ticket ${
+                                inc.status === 'Open' 
+                                  ? inc.risk_level === 'High' 
+                                    ? 'risk-high' 
+                                    : inc.risk_level === 'Medium' 
+                                      ? 'risk-medium' 
+                                      : 'risk-low'
+                                  : 'resolved'
+                              }`}
+                            >
+                              <div className="ticket-header">
+                                <div>
+                                  <div style={{ display: 'flex', gap: '8px', alignItems: 'center' }}>
+                                    <span className={`risk-level-badge ${inc.risk_level.toLowerCase()}`}>
+                                      {inc.risk_level} Risk Level
+                                    </span>
+                                    <span style={{ fontSize: '11px', color: 'var(--text-secondary)', fontFamily: 'monospace' }}>ID: {inc.id.substring(0, 8)}</span>
+                                  </div>
+                                  <h4 className="ticket-title" style={{ color: 'var(--text-primary)' }}>
+                                    Triggered: <span className="rule-code-ref">{triggeredRules.join(', ')}</span>
+                                  </h4>
+                                </div>
+
+                                <div className="ticket-score-box">
+                                  <span className="ticket-score-number" style={{ color: 'var(--text-primary)' }}>{inc.risk_score}</span>
+                                  <span className="ticket-score-lbl block">Calculated Risk</span>
+                                </div>
+                              </div>
+
+                              {/* Evidence Table */}
+                              <div className="evidence-grid">
+                                <div className="evidence-cell">
+                                  <label>Audit Target Account:</label>
+                                  <span style={{ color: 'var(--text-primary)' }}>{inc.user_email || 'Anonymous'}</span>
+                                </div>
+                                <div className="evidence-cell">
+                                  <label>Role Assignment:</label>
+                                  <span style={{ color: '#818cf8' }}>{inc.user_role || 'Guest'}</span>
+                                </div>
+                                <div className="evidence-cell">
+                                  <label>Browser/Device Agent:</label>
+                                  <span style={{ color: 'var(--text-primary)' }}>{evidence.metadata ? evidence.metadata.device : 'Unknown Browser'}</span>
+                                </div>
+                                <div className="evidence-cell">
+                                  <label>Geo Location Network:</label>
+                                  <span style={{ color: 'var(--text-primary)' }}>
+                                    📍 {evidence.metadata ? `${evidence.metadata.city}, ${evidence.metadata.country}` : 'Unknown'} ({evidence.metadata ? evidence.metadata.ip : '127.0.0.1'})
+                                  </span>
+                                </div>
+                              </div>
+
+                              {/* Mitigation protocols */}
+                              <div className="incident-protocol-section">
+                                <span className="incident-protocol-title">Mitigation Advice Response Plan:</span>
+                                <ul className="incident-protocol-list" style={{ color: 'var(--text-secondary)' }}>
+                                  {actions.map((act, i) => (
+                                    <li key={i}>{act}</li>
+                                  ))}
+                                </ul>
+                              </div>
+
+                              {inc.status === 'Open' && (
+                                <div className="ticket-actions-bar">
+                                  <button
+                                    onClick={() => executeMitigation(inc.id, 'DISMISS', null)}
+                                    className="btn-mitigation-dismiss"
+                                    style={{ color: 'var(--text-primary)', border: '1px solid var(--border-glow)' }}
+                                  >
+                                    Dismiss False Positive
+                                  </button>
+                                  {inc.risk_level === 'High' && (
+                                    <button
+                                      onClick={() => executeMitigation(inc.id, 'LOCK_USER', inc.user_id)}
+                                      className="btn-mitigation-lock"
+                                    >
+                                      Trigger Lock User Account
+                                    </button>
+                                  )}
+                                </div>
+                              )}
+                              {inc.status === 'Resolved' && (
+                                <div className="ticket-actions-bar" style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', width: '100%' }}>
+                                  <span className="ticket-resolved-badge">
+                                    ✓ Mitigated & Resolved
+                                  </span>
+                                  <div style={{ display: 'flex', gap: '8px' }}>
+                                    {inc.risk_level === 'High' && (
+                                      <button
+                                        onClick={() => executeMitigation(inc.id, 'UNLOCK_USER', inc.user_id)}
+                                        className="btn-mitigation-unlock"
+                                      >
+                                        Unlock Account
+                                      </button>
+                                    )}
+                                    <button
+                                      onClick={() => executeMitigation(inc.id, 'REOPEN', null)}
+                                      className="btn-mitigation-dismiss"
+                                      style={{ color: 'var(--text-primary)', border: '1px solid var(--border-glow)', padding: '8px 16px' }}
+                                    >
+                                      Reopen Incident
+                                    </button>
+                                  </div>
+                                </div>
+                              )}
+                              {inc.status === 'False Positive' && (
+                                <div className="ticket-actions-bar" style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', width: '100%' }}>
+                                  <span className="ticket-resolved-badge" style={{ color: 'var(--text-muted)' }}>
+                                    ✓ Dismissed (False Positive)
+                                  </span>
+                                  <button
+                                    onClick={() => executeMitigation(inc.id, 'REOPEN', null)}
+                                    className="btn-mitigation-unlock"
+                                    style={{ background: 'var(--primary)', padding: '8px 16px' }}
+                                  >
+                                    Reopen Incident
+                                  </button>
+                                </div>
+                              )}
+                            </div>
+                          );
+                        })
+                      )}
+                    </div>
+                  </div>
+                </>
+              ) : (
+                /* ================= RULES CONFIGURATION VIEW ================= */
+                <div className="rules-config-panel animate-fade-in">
+                  <div className="rules-config-header">
+                    <h3 style={{ color: 'var(--text-primary)' }}>Privacy Policy Detection Rules</h3>
+                    <p>Dynamically modify threat limits, active sliding windows, risk weights, and toggle rules on/off to adjust security sensitivity levels.</p>
+                  </div>
+
+                  <div className="rules-grid">
+                    {rules.map((rule) => {
+                      const params = typeof rule.parameters === 'object' ? rule.parameters : JSON.parse(rule.parameters || '{}');
+                      const isEditing = editingRule && editingRule.id === rule.id;
+
+                      return (
+                        <div key={rule.id} className={`rule-config-card ${rule.is_enabled ? 'enabled' : 'disabled'}`}>
+                          <div className="rule-card-header">
+                            <div>
+                              <span className="rule-card-id">{rule.id}</span>
+                              <h4 style={{ color: 'var(--text-primary)', marginTop: '4px' }}>{rule.name.replace(/_/g, ' ')}</h4>
+                            </div>
+                            <span className={`status-badge-indicator ${rule.is_enabled ? 'active' : 'inactive'}`}>
+                              {rule.is_enabled ? 'Active Policy' : 'Disabled'}
+                            </span>
                           </div>
+                          
+                          <p className="rule-card-desc" style={{ color: 'var(--text-secondary)' }}>{rule.description}</p>
+
+                          {isEditing ? (
+                            <form onSubmit={(e) => handleSaveRule(e, rule.id)} className="rule-edit-form">
+                              <div className="edit-form-field">
+                                <label style={{ display: 'block', color: 'var(--text-primary)', marginBottom: '6px', fontSize: '12px' }}>Risk Score Weight (1 - 100):</label>
+                                <div style={{ display: 'flex', alignItems: 'center', gap: '12px' }}>
+                                  <input 
+                                    type="range" 
+                                    min="1" 
+                                    max="100" 
+                                    value={editWeight} 
+                                    onChange={(e) => setEditWeight(parseInt(e.target.value))}
+                                    style={{ flex: 1 }}
+                                  />
+                                  <span style={{ fontWeight: 'bold', width: '30px', textAlign: 'right', color: 'var(--text-primary)' }}>{editWeight}</span>
+                                </div>
+                              </div>
+
+                              <div className="edit-form-field checkbox-field" style={{ display: 'flex', alignItems: 'center', gap: '8px', margin: '14px 0' }}>
+                                <input 
+                                  type="checkbox" 
+                                  id={`enabled-chk-${rule.id}`}
+                                  checked={editIsEnabled} 
+                                  onChange={(e) => setEditIsEnabled(e.target.checked)}
+                                  style={{ cursor: 'pointer', width: '16px', height: '16px' }}
+                                />
+                                <label htmlFor={`enabled-chk-${rule.id}`} style={{ cursor: 'pointer', fontSize: '13px', color: 'var(--text-primary)' }}>
+                                  Enable threat detection check
+                                </label>
+                              </div>
+
+                              {/* Custom Parameter Fields */}
+                              {rule.id === 'R-02' && (
+                                <div className="edit-form-field inline-fields" style={{ display: 'flex', gap: '12px', margin: '14px 0' }}>
+                                  <div style={{ flex: 1 }}>
+                                    <label style={{ display: 'block', color: 'var(--text-secondary)', marginBottom: '4px', fontSize: '11px' }}>Start Hour (11 PM = 23):</label>
+                                    <input 
+                                      type="number" 
+                                      min="0" 
+                                      max="23" 
+                                      value={editParams.start_hour ?? 23} 
+                                      onChange={(e) => setEditParams(prev => ({ ...prev, start_hour: parseInt(e.target.value) }))}
+                                      className="text-input-field"
+                                      style={{ width: '100%', padding: '6px' }}
+                                    />
+                                  </div>
+                                  <div style={{ flex: 1 }}>
+                                    <label style={{ display: 'block', color: 'var(--text-secondary)', marginBottom: '4px', fontSize: '11px' }}>End Hour (5 AM = 5):</label>
+                                    <input 
+                                      type="number" 
+                                      min="0" 
+                                      max="23" 
+                                      value={editParams.end_hour ?? 5} 
+                                      onChange={(e) => setEditParams(prev => ({ ...prev, end_hour: parseInt(e.target.value) }))}
+                                      className="text-input-field"
+                                      style={{ width: '100%', padding: '6px' }}
+                                    />
+                                  </div>
+                                </div>
+                              )}
+
+                              {rule.id === 'R-05' && (
+                                <div className="edit-form-field inline-fields" style={{ display: 'flex', gap: '12px', margin: '14px 0' }}>
+                                  <div style={{ flex: 1 }}>
+                                    <label style={{ display: 'block', color: 'var(--text-secondary)', marginBottom: '4px', fontSize: '11px' }}>Profile Reads Threshold:</label>
+                                    <input 
+                                      type="number" 
+                                      min="1" 
+                                      value={editParams.limit ?? 10} 
+                                      onChange={(e) => setEditParams(prev => ({ ...prev, limit: parseInt(e.target.value) }))}
+                                      className="text-input-field"
+                                      style={{ width: '100%', padding: '6px' }}
+                                    />
+                                  </div>
+                                  <div style={{ flex: 1 }}>
+                                    <label style={{ display: 'block', color: 'var(--text-secondary)', marginBottom: '4px', fontSize: '11px' }}>Sliding Window (ms):</label>
+                                    <input 
+                                      type="number" 
+                                      min="1000" 
+                                      step="1000"
+                                      value={editParams.window_ms ?? 10000} 
+                                      onChange={(e) => setEditParams(prev => ({ ...prev, window_ms: parseInt(e.target.value) }))}
+                                      className="text-input-field"
+                                      style={{ width: '100%', padding: '6px' }}
+                                    />
+                                  </div>
+                                </div>
+                              )}
+
+                              <div className="edit-form-actions" style={{ display: 'flex', gap: '8px', marginTop: '16px' }}>
+                                <button type="submit" className="btn-primary-action" style={{ padding: '6px 12px', fontSize: '12px' }}>Save Changes</button>
+                                <button type="button" onClick={() => setEditingRule(null)} className="btn-mitigation-dismiss" style={{ padding: '6px 12px', fontSize: '12px', border: '1px solid var(--border-glow)' }}>Cancel</button>
+                              </div>
+                            </form>
+                          ) : (
+                            <div className="rule-card-metrics" style={{ marginTop: '14px' }}>
+                              <div className="metric-row" style={{ display: 'flex', justifyContent: 'space-between', padding: '6px 0', borderBottom: '1px solid rgba(255,255,255,0.05)' }}>
+                                <span style={{ color: 'var(--text-secondary)', fontSize: '12px' }}>Risk Weight:</span>
+                                <span style={{ color: 'var(--text-primary)', fontWeight: 'bold', fontSize: '12px' }}>{rule.weight}</span>
+                              </div>
+                              
+                              {rule.id === 'R-02' && (
+                                <div className="metric-row" style={{ display: 'flex', justifyContent: 'space-between', padding: '6px 0', borderBottom: '1px solid rgba(255,255,255,0.05)' }}>
+                                  <span style={{ color: 'var(--text-secondary)', fontSize: '12px' }}>Restricted Timeframe:</span>
+                                  <span style={{ color: 'var(--text-primary)', fontSize: '12px', fontWeight: '500' }}>
+                                    {params.start_hour ?? 23}:00 to {params.end_hour ?? 5}:00
+                                  </span>
+                                </div>
+                              )}
+
+                              {rule.id === 'R-05' && (
+                                <div className="metric-row" style={{ display: 'flex', justifyContent: 'space-between', padding: '6px 0', borderBottom: '1px solid rgba(255,255,255,0.05)' }}>
+                                  <span style={{ color: 'var(--text-secondary)', fontSize: '12px' }}>Alert Limit Threshold:</span>
+                                  <span style={{ color: 'var(--text-primary)', fontSize: '12px', fontWeight: '500' }}>
+                                    &gt; {params.limit ?? 10} reads / {(params.window_ms ?? 10000) / 1000}s
+                                  </span>
+                                </div>
+                              )}
+
+                              <button 
+                                onClick={() => {
+                                  setEditingRule(rule);
+                                  setEditWeight(rule.weight);
+                                  setEditIsEnabled(rule.is_enabled);
+                                  setEditParams(params);
+                                }} 
+                                className="btn-actions-refresh"
+                                style={{ width: '100%', marginTop: '14px', padding: '8px', fontSize: '12px', border: '1px solid var(--border-glow)', textAlign: 'center' }}
+                              >
+                                Edit Policy Configurations
+                              </button>
+                            </div>
+                          )}
                         </div>
                       );
                     })}
                   </div>
                 </div>
-
-              </div>
-
-              {/* Main alerts listing log */}
-              <div className="incidents-card-log">
-              <div className="incidents-log-header">
-                <div>
-                  <h3 style={{ color: 'var(--text-primary)' }}>Suspicious Activity Auditing Feed</h3>
-                  <p>Real-time telemetry reports containing detailed user access records, IP geolocations, and dynamic mitigation advice.</p>
-                </div>
-                <button onClick={fetchIncidents} className="btn-actions-refresh">
-                  Refresh Alerts Feed
-                </button>
-              </div>
-
-              <div className="incident-scroller-view">
-                {incidents.length === 0 ? (
-                  <div className="no-incidents-placeholder">
-                    <div className="no-incidents-placeholder-icon">🛡️</div>
-                    <p style={{ fontWeight: 'bold', fontSize: '15px', color: 'var(--text-primary)' }}>System Shield Active</p>
-                    <p style={{ fontSize: '12px', color: 'var(--text-secondary)', marginTop: '4px' }}>
-                      No malicious activities flagged yet. Switch to "HR Workspace" and trigger simulator buttons to test rule calculations.
-                    </p>
-                  </div>
-                ) : (
-                  incidents.map((inc) => {
-                    const triggeredRules = Array.isArray(inc.triggered_rules) ? inc.triggered_rules : JSON.parse(inc.triggered_rules || '[]');
-                    const evidence = typeof inc.raw_evidence === 'object' ? inc.raw_evidence : JSON.parse(inc.raw_evidence || '{}');
-                    const actions = Array.isArray(inc.recommended_actions) ? inc.recommended_actions : JSON.parse(inc.recommended_actions || '[]');
-                    
-                    return (
-                      <div 
-                        key={inc.id}
-                        className={`incident-ticket ${
-                          inc.status === 'Open' 
-                            ? inc.risk_level === 'High' 
-                              ? 'risk-high' 
-                              : inc.risk_level === 'Medium' 
-                                ? 'risk-medium' 
-                                : 'risk-low'
-                            : 'resolved'
-                        }`}
-                      >
-                        <div className="ticket-header">
-                          <div>
-                            <div style={{ display: 'flex', gap: '8px', alignItems: 'center' }}>
-                              <span className={`risk-level-badge ${inc.risk_level.toLowerCase()}`}>
-                                {inc.risk_level} Risk Level
-                              </span>
-                              <span style={{ fontSize: '11px', color: 'var(--text-secondary)', fontFamily: 'monospace' }}>ID: {inc.id.substring(0, 8)}</span>
-                            </div>
-                            <h4 className="ticket-title" style={{ color: 'var(--text-primary)' }}>
-                              Triggered: <span className="rule-code-ref">{triggeredRules.join(', ')}</span>
-                            </h4>
-                          </div>
-
-                          <div className="ticket-score-box">
-                            <span className="ticket-score-number" style={{ color: 'var(--text-primary)' }}>{inc.risk_score}</span>
-                            <span className="ticket-score-lbl block">Calculated Risk</span>
-                          </div>
-                        </div>
-
-                        {/* Evidence Table */}
-                        <div className="evidence-grid">
-                          <div className="evidence-cell">
-                            <label>Audit Target Account:</label>
-                            <span style={{ color: 'var(--text-primary)' }}>{inc.user_email || 'Anonymous'}</span>
-                          </div>
-                          <div className="evidence-cell">
-                            <label>Role Assignment:</label>
-                            <span style={{ color: '#818cf8' }}>{inc.user_role || 'Guest'}</span>
-                          </div>
-                          <div className="evidence-cell">
-                            <label>Browser/Device Agent:</label>
-                            <span style={{ color: 'var(--text-primary)' }}>{evidence.metadata ? evidence.metadata.device : 'Unknown Browser'}</span>
-                          </div>
-                          <div className="evidence-cell">
-                            <label>Geo Location Network:</label>
-                            <span style={{ color: 'var(--text-primary)' }}>
-                              📍 {evidence.metadata ? `${evidence.metadata.city}, ${evidence.metadata.country}` : 'Unknown'} ({evidence.metadata ? evidence.metadata.ip : '127.0.0.1'})
-                            </span>
-                          </div>
-                        </div>
-
-                        {/* Mitigation protocols */}
-                        <div className="incident-protocol-section">
-                          <span className="incident-protocol-title">Mitigation Advice Response Plan:</span>
-                          <ul className="incident-protocol-list" style={{ color: 'var(--text-secondary)' }}>
-                            {actions.map((act, i) => (
-                              <li key={i}>{act}</li>
-                            ))}
-                          </ul>
-                        </div>
-
-                        {inc.status === 'Open' && (
-                          <div className="ticket-actions-bar">
-                            <button
-                              onClick={() => executeMitigation(inc.id, 'DISMISS', null)}
-                              className="btn-mitigation-dismiss"
-                              style={{ color: 'var(--text-primary)', border: '1px solid var(--border-glow)' }}
-                            >
-                              Dismiss False Positive
-                            </button>
-                            {inc.risk_level === 'High' && (
-                              <button
-                                onClick={() => executeMitigation(inc.id, 'LOCK_USER', inc.user_id)}
-                                className="btn-mitigation-lock"
-                              >
-                                Trigger Lock User Account
-                              </button>
-                            )}
-                          </div>
-                        )}
-                        {inc.status === 'Resolved' && (
-                          <div className="ticket-actions-bar" style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', width: '100%' }}>
-                            <span className="ticket-resolved-badge">
-                              ✓ Mitigated & Resolved
-                            </span>
-                            <div style={{ display: 'flex', gap: '8px' }}>
-                              {inc.risk_level === 'High' && (
-                                <button
-                                  onClick={() => executeMitigation(inc.id, 'UNLOCK_USER', inc.user_id)}
-                                  className="btn-mitigation-unlock"
-                                >
-                                  Unlock Account
-                                </button>
-                              )}
-                              <button
-                                onClick={() => executeMitigation(inc.id, 'REOPEN', null)}
-                                className="btn-mitigation-dismiss"
-                                style={{ color: 'var(--text-primary)', border: '1px solid var(--border-glow)', padding: '8px 16px' }}
-                              >
-                                Reopen Incident
-                              </button>
-                            </div>
-                          </div>
-                        )}
-                        {inc.status === 'False Positive' && (
-                          <div className="ticket-actions-bar" style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', width: '100%' }}>
-                            <span className="ticket-resolved-badge" style={{ color: 'var(--text-muted)' }}>
-                              ✓ Dismissed (False Positive)
-                            </span>
-                            <button
-                              onClick={() => executeMitigation(inc.id, 'REOPEN', null)}
-                              className="btn-mitigation-unlock"
-                              style={{ background: 'var(--primary)', padding: '8px 16px' }}
-                            >
-                              Reopen Incident
-                            </button>
-                          </div>
-                        )}
-                      </div>
-                    );
-                  })
-                )}
-              </div>
+              )}
             </div>
           </div>
         </div>

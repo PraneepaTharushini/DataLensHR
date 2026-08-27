@@ -165,3 +165,25 @@ ON CONFLICT (id) DO NOTHING;
 
 -- Synchronize the roles serial sequence
 SELECT setval(pg_get_serial_sequence('roles', 'id'), COALESCE(max(id), 1)) FROM roles;
+
+-- 8. Privacy Threat Detection Rules Table
+CREATE TABLE IF NOT EXISTS privacy_rules (
+    id VARCHAR(10) PRIMARY KEY,
+    name VARCHAR(100) UNIQUE NOT NULL,
+    description TEXT,
+    weight INT NOT NULL,
+    is_enabled BOOLEAN DEFAULT TRUE,
+    parameters JSONB DEFAULT '{}',
+    created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+    updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+);
+
+-- Initial Privacy Rules Seeding
+INSERT INTO privacy_rules (id, name, description, weight, is_enabled, parameters) VALUES
+('R-02', 'UNUSUAL_HOURS', 'Detects requests made during unusual working hours', 15, TRUE, '{"start_hour": 23, "end_hour": 5}'),
+('R-03', 'IMPOSSIBLE_TRAVEL', 'Flag geolocational changes suggesting travel speeds exceeding normal limits', 50, TRUE, '{}'),
+('R-04', 'SPI_SALARY_PROBE', 'Flag unauthorized attempts to read employee salary columns', 40, TRUE, '{}'),
+('R-05', 'VOLUMETRIC_SCRAPE', 'Flag rapid profile access limits exceeding a specified time frame', 45, TRUE, '{"limit": 10, "window_ms": 10000}'),
+('R-06', 'CANARY_ACCESS', 'Flag access to decoy employee profiles designed to trigger traps', 80, TRUE, '{}')
+ON CONFLICT (id) DO NOTHING;
+
