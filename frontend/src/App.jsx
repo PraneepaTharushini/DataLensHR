@@ -566,7 +566,9 @@ function App() {
       {/* Navbar header */}
       <header className="navbar">
         <div className="nav-brand">
-          <div className="nav-logo">🛡️</div>
+          <div className="nav-logo">
+            <img src="/logo.png" alt="DataLens Logo" className="nav-logo-img" />
+          </div>
           <div className="nav-title">
             <h1 style={{ color: 'var(--text-primary)' }}>DataLens HR</h1>
             <p>Privacy Analytics Suite</p>

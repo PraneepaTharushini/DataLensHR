@@ -180,15 +180,18 @@ html, body {
 .nav-logo {
   height: 38px;
   width: 38px;
-  background: linear-gradient(135deg, var(--primary), #a855f7);
   border-radius: 10px;
   display: flex;
   align-items: center;
   justify-content: center;
-  font-weight: 800;
-  font-size: 18px;
-  color: white;
-  box-shadow: 0 0 15px rgba(99, 102, 241, 0.4);
+  box-shadow: 0 0 15px rgba(99, 102, 241, 0.2);
+  overflow: hidden;
+}
+
+.nav-logo-img {
+  height: 100%;
+  width: 100%;
+  object-fit: cover;
 }
 
 .nav-title h1 {
