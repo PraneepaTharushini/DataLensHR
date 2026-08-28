@@ -134,3 +134,25 @@ You can log in to the dashboard using these seeded mock user accounts:
 *   **Frontend**: React.js, TailwindCSS (for responsive UI elements), Socket.io Client
 *   **Backend**: Node.js, Express, Socket.io (for real-time dashboard threat alerts)
 *   **Database**: PostgreSQL (pooling handled with the `pg` client driver)
+
+---
+
+## 📅 12-Week Project Plan Progress
+
+The following table tracks our implementation progress against the 12-week schedule:
+
+| Phase | Task Description | Status |
+| :--- | :--- | :--- |
+| **Week 1** | Project planning, literature review, requirement gathering | **Completed** |
+| **Week 2** | System analysis, database design, UI/architecture design | **Completed** |
+| **Week 3** | Develop authentication and Role-Based Access Control | **Completed** |
+| **Week 4** | Develop employee management and leave management | **Completed** |
+| **Week 5** | Implement audit log collection and activity tracking | **Completed** |
+| **Week 6** | Develop configurable privacy rule management module | **Completed** |
+| **Week 7** | Implement behavior-based risk detection and risk scoring | **Completed** |
+| **Week 8** | Develop alert generation and security review predictions | **Completed** |
+| **Week 9** | Implement department privacy analytics and reporting | **Completed** |
+| **Week 10** | Develop analytics dashboard and recommendation engine | **Completed** |
+| **Week 11** | System integration, testing, bug fixing, and evaluation | **In Progress** |
+| **Week 12** | Documentation, final improvements, and presentation | **Pending** |
+
