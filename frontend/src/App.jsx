@@ -32,6 +32,9 @@ function App() {
   const [deptAnalytics, setDeptAnalytics] = useState([]);
   const [isLoadingAnalytics, setIsLoadingAnalytics] = useState(false);
   
+  // Proactive Recommendations States
+  const [recommendations, setRecommendations] = useState([]);
+  
   // Custom Simulator / Context Headers
   const [simLocation, setSimLocation] = useState('Colombo, Sri Lanka');
   const [isScraping, setIsScraping] = useState(false);
@@ -89,6 +92,7 @@ function App() {
       fetchIncidents();
       fetchRules();
       fetchDeptAnalytics();
+      fetchRecommendations();
     }
   }, [token]);
 
@@ -180,6 +184,53 @@ function App() {
       console.error(err);
     } finally {
       setIsLoadingAnalytics(false);
+    }
+  };
+
+  // API Call: Fetch Proactive Policy Recommendations
+  const fetchRecommendations = async () => {
+    try {
+      const response = await fetch(`${API_BASE}/analytics/recommendations`, {
+        headers: getHeaders()
+      });
+      if (response.ok) {
+        const data = await response.json();
+        setRecommendations(data);
+      }
+    } catch (err) {
+      console.error(err);
+    }
+  };
+
+  // API Call: Enforce Dynamic Recommendation Action
+  const handleApplyRecommendation = async (rec) => {
+    try {
+      const response = await fetch(`${API_BASE}/recommendations/apply`, {
+        method: 'POST',
+        headers: getHeaders(),
+        body: JSON.stringify({
+          type: rec.type,
+          target_user_id: rec.target_user_id,
+          target_email: rec.target_email,
+          target_rule_id: rec.target_rule_id,
+          target_limit: rec.target_limit,
+          incident_id: rec.incident_id
+        })
+      });
+      if (response.ok) {
+        const resData = await response.json();
+        alert(resData.message || 'Recommendation policy applied successfully!');
+        fetchRecommendations();
+        fetchIncidents();
+        fetchRules();
+        fetchDeptAnalytics();
+      } else {
+        const errData = await response.json();
+        alert(errData.message || 'Failed to apply recommendation policy.');
+      }
+    } catch (err) {
+      console.error(err);
+      alert('Error applying policy recommendation.');
     }
   };
 
@@ -907,6 +958,14 @@ function App() {
                     📊 Department Analytics
                   </button>
                 )}
+                {(user && (user.role === 'System Administrator' || user.role === 'HR Manager')) && (
+                  <button 
+                    onClick={() => { setSecOpsTab('recommendations'); fetchRecommendations(); }} 
+                    className={`sub-nav-btn ${secOpsTab === 'recommendations' ? 'active' : ''}`}
+                  >
+                    💡 Policy Recommendations
+                  </button>
+                )}
               </div>
 
               {secOpsTab === 'alerts' ? (
@@ -1294,7 +1353,7 @@ function App() {
                     })}
                   </div>
                 </div>
-              ) : (
+              ) : secOpsTab === 'analytics' ? (
                 /* ================= DEPARTMENT ANALYTICS VIEW ================= */
                 <div className="dept-analytics-panel animate-fade-in">
                   <div className="rules-config-header">
@@ -1452,6 +1511,89 @@ function App() {
                         </tbody>
                       </table>
                     </div>
+                  </div>
+                </div>
+              ) : (
+                /* ================= POLICY RECOMMENDATIONS VIEW ================= */
+                <div className="dept-analytics-panel animate-fade-in">
+                  <div className="rules-config-header">
+                    <h3 style={{ color: 'var(--text-primary)' }}>💡 Proactive Policy Recommendations</h3>
+                    <p>AI-driven security enforcement policies automatically generated based on telemetry patterns, anomalous logins, and system configuration rules.</p>
+                  </div>
+
+                  <div className="rules-grid">
+                    {recommendations.length === 0 ? (
+                      <div className="no-incidents-placeholder" style={{ gridColumn: '1 / -1', padding: '40px 20px' }}>
+                        <div className="no-incidents-placeholder-icon">💡</div>
+                        <p style={{ fontWeight: 'bold', fontSize: '15px', color: 'var(--text-primary)' }}>System Fully Optimized</p>
+                        <p style={{ fontSize: '12px', color: 'var(--text-secondary)', marginTop: '4px' }}>
+                          No active policy vulnerability recommendations generated. All configurations are aligned with current telemetry.
+                        </p>
+                      </div>
+                    ) : (
+                      recommendations.map((rec) => {
+                        const isHigh = rec.severity === 'High' || rec.severity === 'Critical';
+                        return (
+                          <div 
+                            key={rec.id} 
+                            className="rule-config-card"
+                            style={{
+                              borderColor: isHigh ? 'rgba(239, 68, 68, 0.4)' : 'var(--border-glow)',
+                              display: 'flex',
+                              flexDirection: 'column',
+                              justifyContent: 'space-between'
+                            }}
+                          >
+                            <div>
+                              <div className="rule-card-header" style={{ marginBottom: '12px' }}>
+                                <div>
+                                  <span className="rule-card-id" style={{ background: 'var(--primary-glow)', color: 'var(--text-primary)' }}>{rec.id}</span>
+                                  <h4 style={{ color: 'var(--text-primary)', marginTop: '8px', fontSize: '15px' }}>{rec.title}</h4>
+                                </div>
+                                <span className="status-badge-indicator" style={{
+                                  backgroundColor: rec.severity === 'Critical' 
+                                    ? 'rgba(239, 68, 68, 0.2)' 
+                                    : rec.severity === 'High' 
+                                      ? 'rgba(239, 68, 68, 0.15)' 
+                                      : 'rgba(245, 158, 11, 0.15)',
+                                  color: isHigh ? 'var(--danger)' : 'var(--warning)'
+                                }}>
+                                  {rec.severity} Priority
+                                </span>
+                              </div>
+
+                              <p className="rule-card-desc" style={{ color: 'var(--text-secondary)', fontSize: '12px', marginBottom: '16px' }}>
+                                {rec.description}
+                              </p>
+                            </div>
+
+                            <div style={{ marginTop: 'auto' }}>
+                              {user.role === 'System Administrator' ? (
+                                <button
+                                  onClick={() => handleApplyRecommendation(rec)}
+                                  className="btn-primary-action"
+                                  style={{ width: '100%', padding: '10px', fontSize: '12px', borderRadius: '8px' }}
+                                >
+                                  ⚡ Apply Policy Recommendation
+                                </button>
+                              ) : (
+                                <div style={{ 
+                                  textAlign: 'center', 
+                                  fontSize: '11px', 
+                                  color: 'var(--text-muted)', 
+                                  padding: '8px', 
+                                  background: 'rgba(255,255,255,0.02)',
+                                  borderRadius: '6px',
+                                  border: '1px dashed var(--border-glow)' 
+                                }}>
+                                  Requires Admin permissions to apply
+                                </div>
+                              )}
+                            </div>
+                          </div>
+                        );
+                      })
+                    )}
                   </div>
                 </div>
               )}

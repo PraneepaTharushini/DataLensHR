@@ -886,6 +886,191 @@ app.put('/api/rules/:id', async (req, res) => {
 });
 
 
+// GET Proactive Recommendations Engine
+app.get('/api/analytics/recommendations', authenticateToken, async (req, res) => {
+  if (!req.user || (req.user.role !== 'System Administrator' && req.user.role !== 'HR Manager')) {
+    return res.status(403).json({ message: 'Access denied: Privileged access required.' });
+  }
+
+  try {
+    const recommendations = [];
+
+    // Query active incidents and logs
+    const [incidents] = await pool.query(
+      `SELECT si.*, u.email as user_email 
+       FROM security_incidents si
+       LEFT JOIN users u ON si.user_id = u.id
+       WHERE si.status = 'Open'`
+    );
+
+    // Track which recommendations have been generated to prevent duplicates
+    const generated = new Set();
+
+    for (const inc of incidents) {
+      const triggeredRules = Array.isArray(inc.triggered_rules) ? inc.triggered_rules : JSON.parse(inc.triggered_rules || '[]');
+      const userEmail = inc.user_email || 'Anonymous';
+      const userId = inc.user_id;
+
+      // 1. Impossible Travel -> Enforce MFA
+      if (triggeredRules.includes('IMPOSSIBLE_TRAVEL') && userId) {
+        const key = `MFA_${userId}`;
+        if (!generated.has(key)) {
+          // Check if MFA is already enabled for the user
+          const [uRows] = await pool.query('SELECT mfa_enabled FROM users WHERE id = ?', [userId]);
+          if (uRows.length > 0 && !uRows[0].mfa_enabled) {
+            recommendations.push({
+              id: `REC-MFA-${userId.substring(0, 8)}`,
+              type: 'ENFORCE_MFA',
+              title: `Enforce MFA Policy`,
+              description: `Multiple geolocational speed anomalies detected for account ${userEmail}. Enforcing Multi-Factor Authentication will block unauthorized sessions.`,
+              severity: 'High',
+              target_user_id: userId,
+              target_email: userEmail,
+              incident_id: inc.id
+            });
+            generated.add(key);
+          }
+        }
+      }
+
+      // 2. Canary Honeypot Access -> Administrative Quarantine
+      if (triggeredRules.includes('CANARY_ACCESS') && userId) {
+        const key = `QUARANTINE_${userId}`;
+        if (!generated.has(key)) {
+          const [uRows] = await pool.query('SELECT is_active FROM users WHERE id = ?', [userId]);
+          if (uRows.length > 0 && uRows[0].is_active) {
+            recommendations.push({
+              id: `REC-QUAR-${userId.substring(0, 8)}`,
+              type: 'QUARANTINE_USER',
+              title: `Administrative Quarantine`,
+              description: `Honeypot canary profile ('Jane Doe') accessed by ${userEmail}. Quarantine the user session immediately to prevent data leakage.`,
+              severity: 'Critical',
+              target_user_id: userId,
+              target_email: userEmail,
+              incident_id: inc.id
+            });
+            generated.add(key);
+          }
+        }
+      }
+
+      // 3. Unauthorized Salary Probing -> Mandatory Security Training
+      if (triggeredRules.includes('UNAUTHORIZED_SALARY_READ') && userId) {
+        const key = `TRAINING_${userId}`;
+        if (!generated.has(key)) {
+          recommendations.push({
+            id: `REC-TRAIN-${userId.substring(0, 8)}`,
+            type: 'SCHEDULE_TRAINING',
+            title: `Mandatory Security Review`,
+            description: `Unauthorized attempts to query restricted annual salary data detected for ${userEmail}. Schedule mandatory privacy training and log warning.`,
+            severity: 'Medium',
+            target_user_id: userId,
+            target_email: userEmail,
+            incident_id: inc.id
+          });
+          generated.add(key);
+        }
+      }
+    }
+
+    // 4. Volumetric Scraping -> Lower thresholds or enable lockout
+    const [volIncidents] = await pool.query(
+      `SELECT COUNT(*) as count FROM security_incidents 
+       WHERE triggered_rules LIKE '%VOLUMETRIC_SCRAPE%' AND status = 'Open'`
+    );
+    if (volIncidents[0].count > 0) {
+      // Find R-05 rule to see if it's already tight
+      const [r05] = await pool.query("SELECT parameters FROM privacy_rules WHERE id = 'R-05'");
+      const params = typeof r05[0].parameters === 'string' ? JSON.parse(r05[0].parameters) : r05[0].parameters;
+      const currentLimit = params.limit ?? 10;
+      if (currentLimit > 5) {
+        recommendations.push({
+          id: `REC-THRESH-R05`,
+          type: 'TIGHTEN_SCRAPE_LIMIT',
+          title: `Tighten Volumetric Limits`,
+          description: `Active volumetric scrape events detected in telemetry logs. Tighten profile read limit from ${currentLimit} down to 5 to protect directory details.`,
+          severity: 'High',
+          target_rule_id: 'R-05',
+          target_limit: 5,
+          current_limit: currentLimit
+        });
+      }
+    }
+
+    res.json(recommendations);
+  } catch (err) {
+    res.status(500).json({ message: err.message });
+  }
+});
+
+// Apply Recommendation action dynamically
+app.post('/api/recommendations/apply', authenticateToken, async (req, res) => {
+  if (!req.user || req.user.role !== 'System Administrator') {
+    return res.status(403).json({ message: 'Access denied: Admin control only.' });
+  }
+
+  const { type, target_user_id, target_email, target_rule_id, target_limit, incident_id } = req.body;
+
+  try {
+    if (type === 'ENFORCE_MFA' && target_user_id) {
+      // Update user to enable MFA
+      await pool.query('UPDATE users SET mfa_enabled = TRUE WHERE id = ?', [target_user_id]);
+      if (incident_id) {
+        await pool.query("UPDATE security_incidents SET status = 'Resolved', mitigation_executed = TRUE, notes = 'Mitigated: MFA Enforced' WHERE id = ?", [incident_id]);
+      }
+      await insertAuditLog(req, req.user, `MFA_ENFORCED_USER_${target_user_id}`, 1);
+      io.emit('INCIDENT_RESOLVED', { id: incident_id, note: `MFA Enforced for ${target_email}` });
+      return res.json({ message: `MFA has been successfully enforced for ${target_email}.` });
+    }
+
+    if (type === 'QUARANTINE_USER' && target_user_id) {
+      // Lock user account
+      const lockDurationMinutes = 60;
+      const lockedUntil = new Date(Date.now() + lockDurationMinutes * 60000);
+      await pool.query('UPDATE users SET is_active = FALSE, locked_until = ? WHERE id = ?', [lockedUntil, target_user_id]);
+      if (incident_id) {
+        await pool.query("UPDATE security_incidents SET status = 'Resolved', mitigation_executed = TRUE, notes = 'Quarantined user account for 60m' WHERE id = ?", [incident_id]);
+      }
+      await insertAuditLog(req, req.user, `QUARANTINE_USER_${target_user_id}`, 1);
+      io.emit('INCIDENT_RESOLVED', { id: incident_id, note: `User ${target_email} quarantined` });
+      return res.json({ message: `User ${target_email} has been quarantined for 60 minutes.` });
+    }
+
+    if (type === 'SCHEDULE_TRAINING' && target_user_id) {
+      // Resolve/Mitigate incident by scheduling security training
+      if (incident_id) {
+        await pool.query("UPDATE security_incidents SET status = 'Resolved', mitigation_executed = TRUE, notes = 'Scheduled Privacy Review Session' WHERE id = ?", [incident_id]);
+      }
+      await insertAuditLog(req, req.user, `SCHEDULED_TRAINING_USER_${target_user_id}`, 1);
+      io.emit('INCIDENT_RESOLVED', { id: incident_id, note: `Scheduled security training for ${target_email}` });
+      return res.json({ message: `Scheduled mandatory security training for ${target_email}. Log entry updated.` });
+    }
+
+    if (type === 'TIGHTEN_SCRAPE_LIMIT' && target_rule_id) {
+      // Update rule configuration parameters
+      const [rRows] = await pool.query('SELECT parameters FROM privacy_rules WHERE id = ?', [target_rule_id]);
+      if (rRows.length > 0) {
+        const params = typeof rRows[0].parameters === 'string' ? JSON.parse(rRows[0].parameters) : rRows[0].parameters;
+        params.limit = target_limit;
+        await pool.query('UPDATE privacy_rules SET parameters = ? WHERE id = ?', [JSON.stringify(params), target_rule_id]);
+        await refreshRulesCache();
+        await insertAuditLog(req, req.user, `RULE_UPDATE_${target_rule_id}_LIMIT_${target_limit}`, 1);
+        
+        // Resolve all open volumetric scrape incidents
+        await pool.query("UPDATE security_incidents SET status = 'Resolved', mitigation_executed = TRUE, notes = 'Limit tightened to 5' WHERE triggered_rules LIKE '%VOLUMETRIC_SCRAPE%' AND status = 'Open'");
+        io.emit('INCIDENT_RESOLVED', { note: `Scraping limit tightened to ${target_limit}` });
+        
+        return res.json({ message: `Scraping limit for rule ${target_rule_id} has been tightened to ${target_limit}.` });
+      }
+    }
+
+    res.status(400).json({ message: 'Invalid recommendation action type.' });
+  } catch (err) {
+    res.status(500).json({ message: err.message });
+  }
+});
+
+
 // Server Initialization
 server.listen(PORT, async () => {
   console.log(`[SERVER] DataLens HR Backend running on port ${PORT}`);
