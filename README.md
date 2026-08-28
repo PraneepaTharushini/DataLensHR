@@ -30,541 +30,129 @@ The main focus of the project is **privacy monitoring, suspicious behaviour dete
 The project includes a limited HRIS module that acts as the environment for demonstrating privacy monitoring.
 
 ### 1. User Login
-
-* User authentication
-* Secure password storage
-* Login/logout
-* Failed login tracking
-* Session management
-* JWT-based authentication
+* User authentication & secure password storage
+* Failed login tracking and lockout thresholds
+* Session management with JWT-based authentication
 
 ### 2. Employee Management
-
-* Add employees
-* View employee profiles
-* Update employee information
-* Delete/deactivate employee records
-* Search and filter employees
-* Control access to sensitive employee information
+* Add, view, update, and remove employee records
+* Search and filter directories
+* Control access and data masking for sensitive fields (e.g., salary)
 
 ### 3. Leave Management
-
-* Submit leave requests
-* View leave requests
-* Approve/reject leave requests
+* Submit, view, and approve/reject leave requests
 * Track leave history
-* Monitor user activity related to leave management
 
-### 4. User Roles
-
-Role-Based Access Control (RBAC) is used to control access to system functionality.
-
-Example roles:
-
+### 4. User Roles (RBAC)
 * **System Administrator**
 * **HR Manager**
+* **HR Staff**
 * **Employee**
 
-Different roles have different permissions for accessing employee information and HR functions.
-
 ---
 
-# 🔐 Privacy Monitoring System
+## 🔐 Privacy Monitoring System
 
-The core component of DataLens HR is the **Privacy Monitoring and Incident Response Module**.
-
-The system monitors user activities and identifies behaviour that may indicate unauthorized access, compromised accounts, insider threats, or potential data exposure.
-
----
-
-## 🚨 Suspicious Behaviour Detection
-
-The system can detect activities such as:
-
-### Unfamiliar Device
-
-A user logs in using a device that has not previously been associated with their account.
-
-### Unusual Location
-
-A login occurs from a location that is significantly different from the user's normal login locations.
-
-### Multiple Failed Login Attempts
-
-Repeated failed login attempts may indicate a brute-force attack or compromised credentials.
-
-### Unusual Working Hours
-
-A user accesses the system outside their normal working hours.
-
-### Excessive Employee Record Access
-
-A user views an unusually large number of employee records within a short period.
-
-### Unauthorized Salary Access
-
-A user attempts to access salary or other sensitive employee information without the required permission.
-
-### Large Data Export
-
-A user exports an unusually large amount of employee information.
-
-### Other Suspicious Behaviour
-
-The system can be extended with additional behavioural rules as required.
-
----
-
-# 📊 Risk Scoring
-
-Each suspicious activity is assigned a risk score.
-
-Example:
-
-| Activity                           | Example Score |
-| ---------------------------------- | ------------: |
-| Unfamiliar device                  |            20 |
-| Login outside working hours        |            15 |
-| Unusual location                   |            40 |
-| Multiple failed logins             |            35 |
-| Unauthorized sensitive-data access |            50 |
-| Large data export                  |            50 |
-| Excessive employee record access   |            40 |
-
-The system combines relevant risk factors to determine the overall risk level.
-
-### Risk Levels
-
+DataLens HR continuously tracks events and uses a composite risk scoring system to detect suspicious behavior, assigning one of three risk levels:
 ```text
 0 – 29     → LOW
 30 – 59    → MEDIUM
 60+        → HIGH
 ```
 
-The scoring thresholds can be adjusted during implementation and testing.
+### Suspicious Behaviour Detection Rules:
+*   **Unfamiliar Device**: Logs in using a device hash not previously seen.
+*   **Unusual Location**: Geolocation switches dynamically to simulate impossible travel.
+*   **Failed Logins**: Repeated authentication failures lock the user temporarily.
+*   **Unusual Working Hours**: Accesses sensitive metrics between 11 PM and 5 AM.
+*   **Volumetric Scraping**: Accesses excessive employee directories within short windows.
+*   **Canary Trap / Honeypot Profile**: Accesses fake employee profile (`Jane Doe - Senior Executive VP`) designed to trigger immediate alerts.
+*   **Unauthorized Salary Probing**: Attempts to query restricted data without privileges.
 
 ---
 
-# ⚠️ Incident Management
+## 🛠️ Getting Started & Installation
 
-When suspicious behaviour is detected, DataLens HR creates a security/privacy incident.
+### Prerequisites
 
-Each incident stores information such as:
+*   **Node.js** (v18 or higher)
+*   **PostgreSQL** (v14 or higher)
 
-* Incident ID
-* Date and time
-* User account
-* User role
-* IP address
-* Device information
-* Location
-* Activity performed
-* Incident type
-* Risk score
-* Risk level
-* Incident status
-* Recommended action
-* Resolution information
+### Step 1: Database Setup
 
-Example:
+1.  Make sure your local PostgreSQL server is running.
+2.  Navigate to the `backend/` folder and create a `.env` file based on `.env.example`:
+    ```ini
+    PORT=5000
+    DB_USER=postgres
+    DB_HOST=localhost
+    DB_NAME=datalens_hr
+    DB_PASSWORD=your_postgres_password
+    DB_PORT=5432
+    JWT_SECRET=supersecretjwtkey123!@#
+    JWT_EXPIRES_IN=24h
+    ```
+3.  Install dependencies and run the database setup script to initialize PostgreSQL and seed initial mock tables:
+    ```bash
+    cd backend
+    npm install
+    node setup_db.js
+    ```
 
-```text
-Incident ID: INC00125
-User: EMP204
-Activity: Large employee-data export
-Risk Score: 85
-Risk Level: HIGH
-IP Address: 192.168.10.15
-Device: Windows 11 / Chrome
-Status: Open
-Recommended Action: Terminate active session and review audit logs
+### Step 2: Running the Application Locally
+
+#### Start the Backend Server:
+```bash
+cd backend
+npm run dev
 ```
+The API server will run at [http://localhost:5000](http://localhost:5000).
 
----
-
-# 🔔 Notifications
-
-When a suspicious activity reaches a defined risk level, the system notifies authorized administrators.
-
-Example:
-
-```text
-⚠ HIGH RISK INCIDENT
-
-User: EMP204
-
-Activity:
-Large employee data export
-
-Risk Score:
-85
-
-Time:
-10:45 AM
-
-Recommended Action:
-Terminate active session and investigate audit logs.
+#### Start the Frontend Client:
+```bash
+cd ../frontend
+npm install
+npm run dev
 ```
-
-Notifications can be displayed through the system dashboard and can later be extended to email or other notification channels.
-
----
-
-# 🛡️ Recommended Security Actions
-
-Depending on the detected behaviour and risk level, the system can recommend actions such as:
-
-* Temporarily lock the user account
-* Force a password reset
-* Enable Multi-Factor Authentication (MFA)
-* Terminate active sessions
-* Review audit logs
-* Investigate the incident
-* Restrict access to sensitive information
-* Notify affected employees if personal information may have been exposed
-
-The system can provide recommendations to administrators rather than automatically executing every action.
+The client dashboard will run at [http://localhost:5173](http://localhost:5173).
 
 ---
 
-# 📈 Privacy Analytics Dashboard
+## 👥 Seed Credentials (Local Development)
 
-The dashboard provides an overview of privacy and security activities.
+You can log in to the dashboard using these seeded mock user accounts:
 
-Possible analytics include:
-
-* Total login attempts
-* Successful vs failed logins
-* Suspicious activities
-* High-risk incidents
-* Medium-risk incidents
-* Low-risk incidents
-* Most common incident types
-* Users with unusual behaviour
-* Sensitive-data access attempts
-* Data export activities
-* Incident trends over time
-* Department/user-level risk trends
+*   **System Administrator**: `admin@datalenshr.com` / password: `admin123`
+*   **HR Manager**: `manager@datalenshr.com` / password: `admin123`
+*   **HR Staff**: `staff@datalenshr.com` / password: `admin123`
+*   **Employee**: `employee@datalenshr.com` / password: `admin123`
 
 ---
 
-# 📝 Audit Logging
+## 🧰 Technology Stack
 
-Important user activities are recorded in an audit log.
-
-Example activities:
-
-```text
-LOGIN
-LOGOUT
-FAILED_LOGIN
-VIEW_EMPLOYEE
-UPDATE_EMPLOYEE
-VIEW_SALARY
-SUBMIT_LEAVE
-APPROVE_LEAVE
-EXPORT_DATA
-UNAUTHORIZED_ACCESS
-```
-
-Audit logs support:
-
-* Security monitoring
-* Incident investigation
-* User activity tracking
-* Privacy analysis
-* Incident response
+*   **Frontend**: React.js, TailwindCSS (for responsive UI elements), Socket.io Client
+*   **Backend**: Node.js, Express, Socket.io (for real-time dashboard threat alerts)
+*   **Database**: PostgreSQL (pooling handled with the `pg` client driver)
 
 ---
 
-# 🏗️ System Architecture
+## 📅 12-Week Project Plan Progress
+
+The following table tracks our implementation progress against the 12-week schedule:
+
+| Phase | Task Description | Status |
+| :--- | :--- | :--- |
+| **Week 1** | Project planning, literature review, requirement gathering | **Completed** |
+| **Week 2** | System analysis, database design, UI/architecture design | **Completed** |
+| **Week 3** | Develop authentication and Role-Based Access Control | **Completed** |
+| **Week 4** | Develop employee management and leave management | **Completed** |
+| **Week 5** | Implement audit log collection and activity tracking | **Completed** |
+| **Week 6** | Develop configurable privacy rule management module | **Completed** |
+| **Week 7** | Implement behavior-based risk detection and risk scoring | **Completed** |
+| **Week 8** | Develop alert generation and security review predictions | **Completed** |
+| **Week 9** | Implement department privacy analytics and reporting | **Completed** |
+| **Week 10** | Develop analytics dashboard and recommendation engine | **Completed** |
+| **Week 11** | System integration, testing, bug fixing, and evaluation | **Completed** |
+| **Week 12** | Documentation, final improvements, and presentation | **In Progress** |
 
-The proposed architecture follows a layered web application structure.
-
-```text
-                    ┌──────────────────────┐
-                    │      React.js        │
-                    │     Frontend UI      │
-                    └──────────┬───────────┘
-                               │
-                               ▼
-                    ┌──────────────────────┐
-                    │    REST API Layer    │
-                    │   Node.js + Express  │
-                    └──────────┬───────────┘
-                               │
-                ┌──────────────┼──────────────┐
-                ▼              ▼              ▼
-        ┌────────────┐ ┌──────────────┐ ┌─────────────┐
-        │    HRIS    │ │   Privacy    │ │    Auth &   │
-        │   Module   │ │  Monitoring  │ │    RBAC     │
-        └────────────┘ └──────┬───────┘ └─────────────┘
-                              │
-                              ▼
-                     ┌─────────────────┐
-                     │ Risk Scoring    │
-                     │ & Detection     │
-                     └────────┬────────┘
-                              │
-                              ▼
-                     ┌─────────────────┐
-                     │    Incident     │
-                     │    Management   │
-                     └────────┬────────┘
-                              │
-                              ▼
-                     ┌─────────────────┐
-                     │   PostgreSQL    │
-                     │    Database     │
-                     └─────────────────┘
-```
-
----
-
-# 🗄️ Main Database Components
-
-The database can contain tables such as:
-
-```text
-users
-employees
-roles
-permissions
-leave_requests
-audit_logs
-login_attempts
-user_devices
-user_locations
-security_incidents
-risk_events
-notifications
-sessions
-```
-
-The exact database structure can be adjusted during system design and implementation.
-
----
-
-# 🧰 Technology Stack
-
-### Frontend
-
-* React.js
-* HTML5
-* CSS3
-* JavaScript
-* Chart/analytics library
-
-### Backend
-
-* Node.js
-* Express.js
-* REST APIs
-* JWT Authentication
-
-### Database
-
-* PostgreSQL
-
-### Security
-
-* JWT
-* Password hashing
-* Role-Based Access Control
-* Audit logging
-* Session management
-
-### Analytics
-
-* Rule-based behavioural detection
-* Risk scoring
-* Privacy analytics
-* Optional lightweight machine-learning enhancement
-
----
-
-# 🤖 Intelligent Component
-
-The first implementation can use a **rule-based detection engine** because it is practical and explainable for a final-year project.
-
-For example:
-
-```text
-IF failed_login_attempts > 5
-THEN create HIGH risk incident
-
-IF employee_records_viewed > 200
-WITHIN 5 minutes
-THEN create HIGH risk incident
-
-IF login_location IS unusual
-THEN create MEDIUM/HIGH risk incident
-
-IF user_role does not have salary permission
-AND salary_data is accessed
-THEN create HIGH risk incident
-```
-
-A lightweight machine-learning component can optionally be introduced later to identify behavioural patterns that are difficult to detect using predefined rules.
-
----
-
-# 🔄 Example System Flow
-
-```text
-User Login
-     ↓
-Authentication
-     ↓
-User Performs HR Activity
-     ↓
-Activity Recorded in Audit Log
-     ↓
-Privacy Monitoring Engine
-     ↓
-Analyse Behaviour
-     ↓
-Suspicious?
-   /     \
- No       Yes
- |         |
-Continue   Risk Calculation
-             ↓
-       Risk Classification
-             ↓
-      Create Incident
-             ↓
-       Notify Admin
-             ↓
-      Recommend Action
-             ↓
-       Investigation
-```
-
----
-
-# 👥 Target Users
-
-### System Administrator
-
-* Manage users and roles
-* Monitor system security
-* Review incidents
-* Investigate suspicious activities
-* Take recommended security actions
-
-### HR Manager
-
-* Manage employees
-* Manage leave requests
-* View privacy analytics
-* Review security incidents
-* Investigate employee-data access
-
-### Employee
-
-* View own profile
-* Submit leave requests
-* View leave status
-* Perform permitted HR activities
-
----
-
-# 🎯 Project Scope
-
-## Included
-
-* User authentication
-* Employee management
-* Leave management
-* Role-based access control
-* Audit logging
-* Privacy monitoring
-* Suspicious behaviour detection
-* Risk scoring
-* Incident management
-* Notifications
-* Privacy analytics dashboard
-* Recommended security actions
-
-## Not Included
-
-To keep the project achievable within the project timeline, the system does not aim to implement a complete enterprise HRIS.
-
-The following are outside the core scope:
-
-* Payroll processing
-* Recruitment management
-* Performance management
-* Full attendance management
-* Benefits management
-* Complete employee self-service suite
-
----
-
-# 🌟 Key Value of DataLens HR
-
-Unlike a traditional HRIS that mainly records user activities, **DataLens HR actively analyzes those activities**.
-
-```text
-Traditional HRIS
-
-User → Activity → Database
-
-
-DataLens HR
-
-User
-  ↓
-Activity
-  ↓
-Audit Log
-  ↓
-Behaviour Analysis
-  ↓
-Risk Detection
-  ↓
-Risk Score
-  ↓
-Incident
-  ↓
-Notification
-  ↓
-Recommended Response
-```
-
-This allows the system to identify potentially dangerous behaviour and support administrators in responding to privacy and security incidents.
-
----
-
-# 🚀 Future Enhancements
-
-Potential future improvements include:
-
-* Machine-learning-based anomaly detection
-* Adaptive user behaviour profiles
-* Multi-Factor Authentication
-* Email/SMS security alerts
-* Advanced geographical anomaly detection
-* Automated session termination
-* Automated account locking
-* Privacy policy simulation
-* Advanced threat intelligence integration
-* Real-time security monitoring
-* Predictive privacy risk analytics
-
----
-
-# 📌 Project Summary
-
-**DataLens HR** combines a lightweight HRIS with an intelligent privacy monitoring layer.
-
-The basic HRIS provides:
-
-> **Login + Employee Management + Leave Management + User Roles**
-
-The main innovation is:
-
-> **Behaviour Monitoring + Suspicious Activity Detection + Risk Scoring + Incident Management + Privacy Analytics**
-
-The goal is to help organizations identify unusual access behaviour, detect potential privacy incidents, notify responsible personnel, and support appropriate security responses.
