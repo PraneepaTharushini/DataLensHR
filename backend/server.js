@@ -350,22 +350,15 @@ async function seedMockData() {
       await pool.query('INSERT INTO users (id, email, password_hash, role_id) VALUES (?, ?, ?, 3)', [staffId, 'staff@datalenshr.com', hashedPw]);
       await pool.query('INSERT INTO users (id, email, password_hash, role_id) VALUES (?, ?, ?, 4)', [employeeUserId, 'employee@datalenshr.com', hashedPw]);
 
-      // Seed Employees
+      // Seed Employees (Generic, realistic profiles)
       await pool.query(
         `INSERT INTO employees (id, user_id, first_name, last_name, department, position, salary, email, phone, hire_date, is_canary)
          VALUES 
-         ('e1', '${managerId}', 'Emma', 'Watson', 'HR Department', 'HR Director', 185000.00, 'manager@datalenshr.com', '+94 77 123 4567', '2020-01-15', FALSE),
-         ('e2', '${staffId}', 'Sarah', 'Connor', 'HR Department', 'HR Assistant', 85000.00, 'staff@datalenshr.com', '+94 77 987 6543', '2023-06-10', FALSE),
-         ('e3', '${employeeUserId}', 'David', 'Beckham', 'Sales', 'Account Executive', 65000.00, 'employee@datalenshr.com', '+94 71 555 4321', '2021-08-20', FALSE),
-         ('e4', NULL, 'Jane', 'Doe', 'Executive', 'Senior Executive VP (Honeypot)', 350000.00, 'jane.doe@datalenshr.com', '+94 77 111 2222', '2019-11-01', TRUE),
+         ('e1', '${managerId}', 'Emma', 'Davis', 'HR Department', 'HR Director', 185000.00, 'manager@datalenshr.com', '+94 77 123 4567', '2020-01-15', FALSE),
+         ('e2', '${staffId}', 'Sarah', 'Miller', 'HR Department', 'HR Assistant', 85000.00, 'staff@datalenshr.com', '+94 77 987 6543', '2023-06-10', FALSE),
+         ('e3', '${employeeUserId}', 'David', 'Clark', 'Sales', 'Account Executive', 65000.00, 'employee@datalenshr.com', '+94 71 555 4321', '2021-08-20', FALSE),
+         ('e4', NULL, 'Jane', 'Honeypot', 'Executive', 'Senior Executive VP (Honeypot)', 350000.00, 'jane.doe@datalenshr.com', '+94 77 111 2222', '2019-11-01', TRUE),
          ('e5', '${adminId}', 'System', 'Administrator', 'Executive', 'System Administrator', 150000.00, 'admin@datalenshr.com', '+94 77 000 0000', '2018-05-20', FALSE)`
-      );
-
-      // Seed Leaves
-      await pool.query(
-        `INSERT INTO leave_requests (id, employee_id, leave_type, start_date, end_date, status, reason)
-         VALUES 
-         ('l1', 'e3', 'Annual Leave', '2026-08-10', '2026-08-15', 'Pending', 'Family vacation abroad')`
       );
 
       console.log('[SEED] Seeding completed.');
