@@ -973,10 +973,9 @@ app.get('/api/analytics/recommendations', authenticateToken, async (req, res) =>
       }
     }
 
-    // 4. Volumetric Scraping -> Lower thresholds or enable lockout
     const [volIncidents] = await pool.query(
       `SELECT COUNT(*) as count FROM security_incidents 
-       WHERE triggered_rules LIKE '%VOLUMETRIC_SCRAPE%' AND status = 'Open'`
+       WHERE triggered_rules @> '["VOLUMETRIC_SCRAPE"]' AND status = 'Open'`
     );
     if (volIncidents[0].count > 0) {
       // Find R-05 rule to see if it's already tight
@@ -999,6 +998,7 @@ app.get('/api/analytics/recommendations', authenticateToken, async (req, res) =>
 
     res.json(recommendations);
   } catch (err) {
+    console.error('[REC GET ERR]', err.message);
     res.status(500).json({ message: err.message });
   }
 });
@@ -1057,7 +1057,7 @@ app.post('/api/recommendations/apply', authenticateToken, async (req, res) => {
         await insertAuditLog(req, req.user, `RULE_UPDATE_${target_rule_id}_LIMIT_${target_limit}`, 1);
         
         // Resolve all open volumetric scrape incidents
-        await pool.query("UPDATE security_incidents SET status = 'Resolved', mitigation_executed = TRUE, notes = 'Limit tightened to 5' WHERE triggered_rules LIKE '%VOLUMETRIC_SCRAPE%' AND status = 'Open'");
+        await pool.query("UPDATE security_incidents SET status = 'Resolved', mitigation_executed = TRUE, notes = 'Limit tightened to 5' WHERE triggered_rules @> '[\"VOLUMETRIC_SCRAPE\"]' AND status = 'Open'");
         io.emit('INCIDENT_RESOLVED', { note: `Scraping limit tightened to ${target_limit}` });
         
         return res.json({ message: `Scraping limit for rule ${target_rule_id} has been tightened to ${target_limit}.` });
@@ -1066,6 +1066,7 @@ app.post('/api/recommendations/apply', authenticateToken, async (req, res) => {
 
     res.status(400).json({ message: 'Invalid recommendation action type.' });
   } catch (err) {
+    console.error('[REC APPLY ERR]', err.message);
     res.status(500).json({ message: err.message });
   }
 });
