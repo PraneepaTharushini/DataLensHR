@@ -5,6 +5,9 @@ const http = require('http');
 const { Server } = require('socket.io');
 const cors = require('cors');
 const pg = require('pg');
+const fs = require('fs');
+const path = require('path');
+
 pg.types.setTypeParser(20, val => parseInt(val, 10)); // Parse bigint (int8) as number
 const jwt = require('jsonwebtoken');
 const bcrypt = require('bcryptjs');
@@ -91,7 +94,7 @@ async function refreshRulesCache() {
 function parseClientMetadata(req) {
   const userAgent = req.headers['user-agent'] || 'Unknown Browser';
   const ip = req.ip || req.connection.remoteAddress || '127.0.0.1';
-  
+
   // Basic mock browser parser
   let browser = 'Chrome';
   if (userAgent.includes('Firefox')) browser = 'Firefox';
@@ -101,11 +104,11 @@ function parseClientMetadata(req) {
   let os = 'Windows';
   if (userAgent.includes('Macintosh')) os = 'macOS';
   else if (userAgent.includes('Linux')) os = 'Linux';
-  
+
   // Dynamic mock locations to simulate different places
   let country = 'Sri Lanka';
   let city = 'Colombo';
-  
+
   if (req.headers['x-simulate-location']) {
     const loc = req.headers['x-simulate-location'].split(',');
     city = loc[0].trim();
@@ -119,12 +122,12 @@ function parseClientMetadata(req) {
 const authenticateToken = (req, res, next) => {
   const authHeader = req.headers['authorization'];
   const token = authHeader && authHeader.split(' ')[1];
-  
+
   if (!token) {
     req.user = null;
     return next();
   }
-  
+
   jwt.verify(token, JWT_SECRET, (err, decoded) => {
     if (err) {
       req.user = null;
@@ -146,7 +149,7 @@ async function analyzePrivacyThreats(req, user, actionType, recordsAccessed = 0)
   const metadata = parseClientMetadata(req);
   const now = new Date();
   const currentHour = now.getHours();
-  
+
   const triggeredRules = [];
   const rawEvidence = {
     action: actionType,
@@ -188,11 +191,11 @@ async function analyzePrivacyThreats(req, user, actionType, recordsAccessed = 0)
     const limit = r05.parameters.limit ?? 10;
     const windowMs = r05.parameters.window_ms ?? 10000;
     if (!userRequestCounts[userId]) userRequestCounts[userId] = [];
-    
+
     // Clear expired timestamps
     userRequestCounts[userId] = userRequestCounts[userId].filter(t => now - t < windowMs);
     userRequestCounts[userId].push(now);
-    
+
     if (userRequestCounts[userId].length > limit) {
       triggeredRules.push({
         id: 'R-05',
@@ -235,7 +238,7 @@ async function analyzePrivacyThreats(req, user, actionType, recordsAccessed = 0)
     if (user.role === 'System Administrator') roleMultiplier = 1.4;
     else if (user.role === 'HR Manager') roleMultiplier = 1.25;
   }
-  
+
   const sumWeights = triggeredRules.reduce((acc, rule) => acc + rule.weight, 0);
   const compositeScore = Math.min(100, Math.round(sumWeights * roleMultiplier));
 
@@ -258,7 +261,7 @@ async function analyzePrivacyThreats(req, user, actionType, recordsAccessed = 0)
     const rulesJson = JSON.stringify(triggeredRules.map(r => r.name));
     const evidenceJson = JSON.stringify(rawEvidence);
     const actionsJson = JSON.stringify(recommendedActions);
-    
+
     await pool.query(
       `INSERT INTO security_incidents 
        (id, user_id, triggered_rules, raw_evidence, risk_score, risk_level, recommended_actions, status)
@@ -290,7 +293,7 @@ async function analyzePrivacyThreats(req, user, actionType, recordsAccessed = 0)
       recommended_actions: recommendedActions,
       status: 'Open'
     };
-    
+
     io.emit('NEW_INCIDENT', websocketPayload);
     console.log(`[ALERT] High-risk security incident broadcasted: ${riskLevel} (${compositeScore})`);
 
@@ -329,28 +332,36 @@ async function insertAuditLog(req, user, actionType, recordsAccessed = 0) {
 
 // ---------------- API ENDPOINTS ----------------
 
-// 1. Setup Mock User Seeds (Invoked automatically if database is empty)
+// 1. Setup Mock User Seeds & Auto-Create Tables
 async function seedMockData() {
   try {
+    // Automatically read and execute schema.sql to create tables if they don't exist
+    const schemaPath = path.join(__dirname, 'schema.sql');
+    if (fs.existsSync(schemaPath)) {
+      const schemaSql = fs.readFileSync(schemaPath, 'utf8');
+      await pool.query(schemaSql);
+      console.log('[DB] Database schema tables initialized/verified.');
+    }
+
     const [rows] = await pool.query('SELECT COUNT(*) as count FROM users');
     const adminId = '11111111-1111-1111-1111-111111111111';
-    
+
     if (rows[0].count === 0) {
       console.log('[SEED] Seeding database with mock employees & users...');
-      
+
       const managerId = '22222222-2222-2222-2222-222222222222';
       const staffId = '33333333-3333-3333-3333-333333333333';
       const employeeUserId = '44444444-4444-4444-4444-444444444444';
 
       const hashedPw = await bcrypt.hash('admin123', 10);
 
-      // Seed Users (Roles map: 1=SysAdmin, 2=HRManager, 3=HRStaff, 4=Employee)
+      // Seed Users
       await pool.query('INSERT INTO users (id, email, password_hash, role_id) VALUES (?, ?, ?, 1)', [adminId, 'admin@datalenshr.com', hashedPw]);
       await pool.query('INSERT INTO users (id, email, password_hash, role_id) VALUES (?, ?, ?, 2)', [managerId, 'manager@datalenshr.com', hashedPw]);
       await pool.query('INSERT INTO users (id, email, password_hash, role_id) VALUES (?, ?, ?, 3)', [staffId, 'staff@datalenshr.com', hashedPw]);
       await pool.query('INSERT INTO users (id, email, password_hash, role_id) VALUES (?, ?, ?, 4)', [employeeUserId, 'employee@datalenshr.com', hashedPw]);
 
-      // Seed Employees (Generic, realistic profiles)
+      // Seed Employees
       await pool.query(
         `INSERT INTO employees (id, user_id, first_name, last_name, department, position, salary, email, phone, hire_date, is_canary)
          VALUES 
@@ -363,12 +374,11 @@ async function seedMockData() {
 
       console.log('[SEED] Seeding completed.');
     } else {
-      // Ensure admin employee record is seeded if tables existed but lacked this profile
       const [adminEmpCheck] = await pool.query('SELECT * FROM employees WHERE user_id = ?', [adminId]);
       if (adminEmpCheck.length === 0) {
         await pool.query(
           `INSERT INTO employees (id, user_id, first_name, last_name, department, position, salary, email, phone, hire_date, is_canary)
-           VALUES ('e5', ?, 'System', 'Administrator', 'Executive', 'System Administrator', 150000.00, 'admin@datalenshr.com', '+94 77 000 0000', '2018-05-20', FALSE)`,
+            VALUES ('e5', ?, 'System', 'Administrator', 'Executive', 'System Administrator', 150000.00, 'admin@datalenshr.com', '+94 77 000 0000', '2018-05-20', FALSE)`,
           [adminId]
         );
         console.log('[SEED] Admin employee profile e5 seeded successfully.');
@@ -398,7 +408,7 @@ app.get('/api/db-status', async (req, res) => {
 app.post('/api/auth/login', async (req, res) => {
   const { email, password } = req.body;
   const metadata = parseClientMetadata(req);
-  
+
   try {
     const [users] = await pool.query(
       `SELECT u.*, r.name as role 
@@ -419,7 +429,7 @@ app.post('/api/auth/login', async (req, res) => {
     if (user.locked_until) {
       if (new Date(user.locked_until) > new Date()) {
         await insertAuditLog(req, user, 'LOGIN_ATTEMPT_LOCKED_OUT', 0);
-        return res.status(403).json({ 
+        return res.status(403).json({
           message: `Account is temporarily locked due to security anomalies. Try again after ${new Date(user.locked_until).toLocaleTimeString()}.`
         });
       } else {
@@ -488,11 +498,11 @@ app.get('/api/employees', async (req, res) => {
 
     // Dynamic audit logs mapping
     await insertAuditLog(req, req.user, 'DIRECTORY_READ', 0);
-    
+
     // Check volumetric scraping
     const threat = await analyzePrivacyThreats(req, req.user, 'PROFILE_READ', 5);
     let forceMask = false;
-    
+
     if (threat && threat.riskLevel === 'High') {
       return res.status(403).json({ message: 'Session suspended. High security threat detected.' });
     } else if (threat && threat.riskLevel === 'Medium') {
@@ -500,14 +510,14 @@ app.get('/api/employees', async (req, res) => {
     }
 
     const [employees] = await pool.query('SELECT * FROM employees');
-    
+
     // Apply dynamic role-based data masking or dynamic risk masking
     const maskedEmployees = employees.map(emp => {
       const isOwner = emp.user_id === req.user.id;
       const isPrivileged = req.user.role === 'HR Manager' || req.user.role === 'System Administrator';
 
       const returnEmp = { ...emp };
-      
+
       if (!isOwner && !isPrivileged || forceMask) {
         // Mask Salary completely
         returnEmp.salary = '***.***';
@@ -634,7 +644,7 @@ app.get('/api/leaves', async (req, res) => {
   try {
     const isPrivileged = req.user.role === 'HR Manager' || req.user.role === 'System Administrator';
     await insertAuditLog(req, req.user, 'LEAVE_READ', 0);
-    
+
     if (isPrivileged) {
       const [leaves] = await pool.query(
         `SELECT lr.*, CONCAT(e.first_name, ' ', e.last_name) as employee_name 
@@ -753,15 +763,15 @@ app.post('/api/incidents/:id/mitigate', async (req, res) => {
       const lockedUntil = new Date(Date.now() + lockDurationMinutes * 60000);
       await pool.query('UPDATE users SET is_active = FALSE, locked_until = ? WHERE id = ?', [lockedUntil, userId]);
       await pool.query("UPDATE security_incidents SET status = 'Resolved', mitigation_executed = TRUE, notes = ? WHERE id = ?", [`Manual Mitigated: locked account until ${lockedUntil.toLocaleTimeString()}`, incidentId]);
-      
+
       io.emit('INCIDENT_RESOLVED', { id: incidentId, note: 'User Locked Successfully' });
       return res.json({ message: 'User account has been locked for 15 minutes.' });
     }
-    
+
     if (action === 'UNLOCK_USER' && userId) {
       await pool.query('UPDATE users SET is_active = TRUE, locked_until = NULL WHERE id = ?', [userId]);
       await pool.query("UPDATE security_incidents SET status = 'Resolved', mitigation_executed = TRUE, notes = 'Manual Mitigated: account unlocked' WHERE id = ?", [incidentId]);
-      
+
       io.emit('INCIDENT_RESOLVED', { id: incidentId, note: 'User Unlocked Successfully' });
       return res.json({ message: 'User account has been unlocked.' });
     }
@@ -1048,11 +1058,11 @@ app.post('/api/recommendations/apply', authenticateToken, async (req, res) => {
         await pool.query('UPDATE privacy_rules SET parameters = ? WHERE id = ?', [JSON.stringify(params), target_rule_id]);
         await refreshRulesCache();
         await insertAuditLog(req, req.user, `RULE_UPDATE_${target_rule_id}_LIMIT_${target_limit}`, 1);
-        
+
         // Resolve all open volumetric scrape incidents
         await pool.query("UPDATE security_incidents SET status = 'Resolved', mitigation_executed = TRUE, notes = 'Limit tightened to 5' WHERE triggered_rules @> '[\"VOLUMETRIC_SCRAPE\"]' AND status = 'Open'");
         io.emit('INCIDENT_RESOLVED', { note: `Scraping limit tightened to ${target_limit}` });
-        
+
         return res.json({ message: `Scraping limit for rule ${target_rule_id} has been tightened to ${target_limit}.` });
       }
     }
@@ -1076,5 +1086,3 @@ server.listen(PORT, async () => {
     console.error('[SERVER] Database is not fully initialized. Run node setup_db.js first.', e.message);
   }
 });
-// Nodemon trigger comment
-
