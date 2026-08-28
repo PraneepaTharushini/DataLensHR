@@ -2,7 +2,7 @@ import { useState, useEffect } from 'react';
 import { io } from 'socket.io-client';
 import './App.css';
 
-const API_BASE = 'http://localhost:5000/api';
+const API_BASE = import.meta.env.VITE_API_URL || 'http://localhost:5000/api';
 
 function App() {
   // Session States
@@ -64,7 +64,8 @@ function App() {
 
   // Establish WebSockets Connection for security updates
   useEffect(() => {
-    const socket = io('http://localhost:5000');
+    const backendUrl = import.meta.env.VITE_API_URL ? import.meta.env.VITE_API_URL.replace('/api', '') : 'http://localhost:5000';
+    const socket = io(backendUrl);
 
     socket.on('connect', () => {
       console.log('[WEBSOCKET] Connected to real-time incident stream.');
