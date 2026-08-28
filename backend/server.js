@@ -1076,3 +1076,5 @@ server.listen(PORT, async () => {
     console.error('[SERVER] Database is not fully initialized. Run node setup_db.js first.', e.message);
   }
 });
+// Nodemon trigger comment
+

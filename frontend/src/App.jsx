@@ -742,7 +742,7 @@ function App() {
                     <span>⚠️</span> 
                     <span style={{ textAlign: 'left' }}>{errorMessage}</span>
                   </div>
-                  {errorMessage.includes('locked') && (
+                  {(errorMessage.includes('locked') || errorMessage.includes('suspended')) && (
                     <button
                       type="button"
                       onClick={async () => {
