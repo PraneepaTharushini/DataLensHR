@@ -1341,67 +1341,115 @@ html, body {
   }
 }
 
+/* Hamburger button styling */
+.hamburger-menu-btn {
+  display: none;
+  background: none;
+  border: none;
+  cursor: pointer;
+  flex-direction: column;
+  justify-content: space-between;
+  width: 22px;
+  height: 16px;
+  padding: 0;
+  z-index: 1001;
+  outline: none;
+}
+
+.hamburger-menu-btn span {
+  display: block;
+  width: 22px;
+  height: 2px;
+  background-color: var(--text-primary);
+  border-radius: 2px;
+  transition: transform 0.3s cubic-bezier(0.16, 1, 0.3, 1), opacity 0.3s ease;
+}
+
+.hamburger-menu-btn.open span:nth-child(1) {
+  transform: translateY(7px) rotate(45deg);
+}
+
+.hamburger-menu-btn.open span:nth-child(2) {
+  opacity: 0;
+  transform: translateX(-10px);
+}
+
+.hamburger-menu-btn.open span:nth-child(3) {
+  transform: translateY(-7px) rotate(-45deg);
+}
+
 @media (max-width: 768px) {
   .navbar {
-    flex-direction: row;
-    flex-wrap: wrap;
-    gap: 12px;
-    padding: 12px 16px;
-    justify-content: space-between;
-    align-items: center;
+    padding: 16px 20px;
+    position: relative;
   }
-  
-  .nav-brand {
-    flex: 1;
-    min-width: 160px;
+
+  .hamburger-menu-btn {
     display: flex;
-    justify-content: flex-start;
   }
-  
+
+  /* Navigation controls slide out drawer */
   .nav-controls {
-    flex: 2;
-    min-width: 250px;
-    display: flex;
-    flex-wrap: wrap;
-    justify-content: flex-end;
-    align-items: center;
-    gap: 10px;
+    display: none;
+    flex-direction: column;
+    align-items: stretch;
+    gap: 20px;
+    position: absolute;
+    top: 100%;
+    left: 0;
+    right: 0;
+    background-color: var(--bg-darker);
+    border-bottom: 1px solid var(--border-glow);
+    padding: 24px 20px;
+    box-shadow: 0 20px 40px rgba(0, 0, 0, 0.5);
+    z-index: 99;
   }
-  
-  .switch-group {
-    order: 3;
-    flex: 1 0 100%;
+
+  .nav-controls.mobile-open {
     display: flex;
-    margin-top: 4px;
+    animation: fadeIn 0.25s cubic-bezier(0.16, 1, 0.3, 1) forwards;
+  }
+
+  .nav-controls .btn-signout {
+    width: 100%;
     justify-content: center;
+    margin-right: 0 !important;
+  }
+
+  .switch-group {
+    width: 100%;
+    flex-direction: row;
   }
 
   .switch-btn {
     flex: 1;
     justify-content: center;
   }
-  
+
   .user-badge {
-    order: 2;
     border-left: none;
     padding-left: 0;
-    display: flex;
+    flex-direction: column;
     align-items: center;
-    gap: 8px;
+    gap: 12px;
+    border-top: 1px solid var(--border-glow);
+    padding-top: 16px;
+    width: 100%;
+  }
+
+  .user-badge-info {
+    text-align: center;
   }
 
   .user-badge-email {
-    max-width: 120px;
-    overflow: hidden;
-    text-overflow: ellipsis;
-    white-space: nowrap;
+    max-width: 100%;
     display: block;
   }
-  
+
   .workspace-container {
     flex-direction: column;
   }
-  
+
   .nav-sidebar {
     width: 100%;
     border-right: none;
@@ -1409,47 +1457,58 @@ html, body {
     padding: 24px 20px;
     gap: 24px;
   }
-  
+
   .nav-menu {
     flex-direction: row;
     flex-wrap: wrap;
     justify-content: center;
     gap: 8px;
   }
-  
+
   .menu-item-btn {
     flex: 1;
     min-width: 130px;
     justify-content: center;
   }
-  
+
   .menu-item-btn.active {
     border-left: none;
     border-bottom: 3px solid var(--primary);
     border-radius: 10px;
     padding-left: 16px;
   }
-  
+
+  /* Collapsible simulator widget styles */
   .simulator-widget {
     width: 100%;
     border-top: 1px solid var(--border-glow);
     padding-top: 20px;
+    gap: 0;
   }
-  
+
+  .simulator-widget-header {
+    width: 100%;
+    user-select: none;
+  }
+
+  .simulator-widget-header:hover .menu-header {
+    color: var(--danger) !important;
+  }
+
   .view-frame {
     padding: 24px 16px;
   }
-  
+
   .incidents-card-log {
     padding: 24px 16px;
   }
-  
+
   .incidents-log-header {
     flex-direction: column;
     align-items: flex-start;
     gap: 16px;
   }
-  
+
   .btn-actions-refresh {
     width: 100%;
   }
@@ -1474,21 +1533,96 @@ html, body {
     text-align: center;
     font-size: 14px;
   }
+
+  /* Table Card Layout for Mobile */
+  .table-wrapper {
+    background: none;
+    border: none;
+    box-shadow: none;
+    overflow-x: visible;
+  }
+
+  .table-wrapper table,
+  .table-wrapper thead,
+  .table-wrapper tbody,
+  .table-wrapper th,
+  .table-wrapper td,
+  .table-wrapper tr {
+    display: block;
+    width: 100%;
+  }
+
+  .table-wrapper thead {
+    display: none; /* Hide header rows */
+  }
+
+  .table-wrapper tr {
+    border: 1px solid var(--border-glow);
+    background-color: var(--bg-card);
+    margin-bottom: 16px;
+    border-radius: 16px;
+    padding: 12px 6px;
+    box-shadow: 0 8px 20px rgba(0, 0, 0, 0.1);
+  }
+
+  .table-wrapper tr:last-child {
+    border-bottom: 1px solid var(--border-glow);
+  }
+
+  .table-wrapper td {
+    padding: 12px 16px;
+    border-bottom: 1px solid rgba(255, 255, 255, 0.03);
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    text-align: right;
+  }
+
+  .table-wrapper td:last-child {
+    border-bottom: none;
+    padding-top: 16px;
+    justify-content: flex-end;
+  }
+
+  .table-wrapper td::before {
+    content: attr(data-label);
+    font-weight: 700;
+    color: var(--text-secondary);
+    font-size: 11px;
+    text-transform: uppercase;
+    text-align: left;
+    letter-spacing: 0.5px;
+  }
+}
+
+/* Swipeable tabs & mobile touch optimizations */
+@media (max-width: 600px) {
+  .secops-sub-nav {
+    overflow-x: auto;
+    white-space: nowrap;
+    display: flex;
+    gap: 8px;
+    padding-bottom: 8px;
+    -webkit-overflow-scrolling: touch;
+    scrollbar-width: none;
+  }
+  .secops-sub-nav::-webkit-scrollbar {
+    display: none;
+  }
+  .sub-nav-btn {
+    padding: 8px 12px;
+    font-size: 12px;
+    flex-shrink: 0;
+  }
 }
 
 @media (max-width: 480px) {
   .navbar {
-    padding: 8px 12px;
-  }
-  
-  .nav-brand {
-    justify-content: center;
-    width: 100%;
+    padding: 12px 16px;
   }
 
-  .nav-controls {
-    justify-content: center;
-    width: 100%;
+  .nav-brand {
+    justify-content: flex-start;
   }
 
   .user-badge-email {
@@ -1704,6 +1838,9 @@ html, body {
   overflow: hidden;
   position: relative;
   z-index: 10000;
+  max-height: 90vh;
+  display: flex;
+  flex-direction: column;
 }
 
 .modal-card::after {
@@ -1722,6 +1859,7 @@ html, body {
   align-items: center;
   padding: 20px 28px;
   border-bottom: 1px solid var(--border-glow);
+  flex-shrink: 0;
 }
 
 .modal-header h3 {
@@ -1753,6 +1891,8 @@ html, body {
   display: grid;
   grid-template-columns: 1fr 1fr;
   gap: 20px;
+  overflow-y: auto;
+  max-height: calc(90vh - 80px);
 }
 
 @media (max-width: 600px) {
