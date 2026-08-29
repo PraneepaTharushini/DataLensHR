@@ -38,6 +38,8 @@ function App() {
   // Custom Simulator / Context Headers
   const [simLocation, setSimLocation] = useState('Colombo, Sri Lanka');
   const [isScraping, setIsScraping] = useState(false);
+  const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
+  const [isSimulatorCollapsed, setIsSimulatorCollapsed] = useState(window.innerWidth < 768);
 
   // Forms
   const [loginEmail, setLoginEmail] = useState('');
@@ -627,10 +629,26 @@ function App() {
           </div>
         </div>
 
-        <div className="nav-controls">
+        {/* Hamburger Menu Button */}
+        {token && (
+          <button 
+            className={`hamburger-menu-btn ${isMobileMenuOpen ? 'open' : ''}`}
+            onClick={() => setIsMobileMenuOpen(!isMobileMenuOpen)}
+            aria-label="Toggle menu"
+          >
+            <span></span>
+            <span></span>
+            <span></span>
+          </button>
+        )}
+
+        <div className={`nav-controls ${isMobileMenuOpen ? 'mobile-open' : ''}`}>
           {/* Universal Theme Toggle Button */}
           <button 
-            onClick={toggleTheme}
+            onClick={() => {
+              toggleTheme();
+              setIsMobileMenuOpen(false);
+            }}
             className="btn-signout"
             style={{ marginRight: '8px', display: 'flex', alignItems: 'center', gap: '6px' }}
           >
@@ -642,14 +660,20 @@ function App() {
               {/* Switching tabs */}
               <div className="switch-group">
                 <button 
-                  onClick={() => setShowSecOps(false)}
+                  onClick={() => {
+                    setShowSecOps(false);
+                    setIsMobileMenuOpen(false);
+                  }}
                   className={`switch-btn ${!showSecOps ? 'active' : ''}`}
                 >
                   HR Workspace
                 </button>
                 {(user.role === 'System Administrator' || user.role === 'HR Manager') && (
                   <button 
-                    onClick={() => setShowSecOps(true)}
+                    onClick={() => {
+                      setShowSecOps(true);
+                      setIsMobileMenuOpen(false);
+                    }}
                     className={`switch-btn ${showSecOps ? 'active' : ''}`}
                   >
                     SecOps Panel
@@ -663,7 +687,13 @@ function App() {
                   <p className="user-badge-email" style={{ color: 'var(--text-primary)' }}>{user.email}</p>
                   <p className="user-badge-role">{user.role}</p>
                 </div>
-                <button onClick={handleLogout} className="btn-signout">
+                <button 
+                  onClick={() => {
+                    handleLogout();
+                    setIsMobileMenuOpen(false);
+                  }} 
+                  className="btn-signout"
+                >
                   Sign Out
                 </button>
               </div>
@@ -1491,12 +1521,12 @@ function App() {
                         <tbody>
                           {deptAnalytics.map((dept, i) => (
                             <tr key={i}>
-                              <td style={{ fontWeight: '700', color: 'var(--text-primary)' }}>{dept.department || 'General'}</td>
-                              <td style={{ color: 'var(--text-primary)' }}>{dept.employee_count}</td>
-                              <td style={{ color: dept.incident_count > 0 ? 'var(--danger)' : 'var(--text-primary)', fontWeight: dept.incident_count > 0 ? 'bold' : 'normal' }}>
+                              <td data-label="Department" style={{ fontWeight: '700', color: 'var(--text-primary)' }}>{dept.department || 'General'}</td>
+                              <td data-label="Active Members" style={{ color: 'var(--text-primary)' }}>{dept.employee_count}</td>
+                              <td data-label="Incident Violations" style={{ color: dept.incident_count > 0 ? 'var(--danger)' : 'var(--text-primary)', fontWeight: dept.incident_count > 0 ? 'bold' : 'normal' }}>
                                 {dept.incident_count}
                               </td>
-                              <td style={{ color: 'var(--text-primary)' }}>
+                              <td data-label="Average Risk">
                                 <span className={`risk-score-pill`} style={{
                                   backgroundColor: parseFloat(dept.avg_risk_score) >= 60 ? 'rgba(239, 68, 68, 0.15)' : parseFloat(dept.avg_risk_score) >= 30 ? 'rgba(245, 158, 11, 0.15)' : 'rgba(16, 185, 129, 0.15)',
                                   color: parseFloat(dept.avg_risk_score) >= 60 ? '#fca5a5' : parseFloat(dept.avg_risk_score) >= 30 ? '#fcd34d' : '#a7f3d0'
@@ -1504,9 +1534,9 @@ function App() {
                                   {Math.round(dept.avg_risk_score)}
                                 </span>
                               </td>
-                              <td style={{ color: 'var(--text-primary)' }}>{dept.max_risk_score}</td>
-                              <td style={{ color: 'var(--text-primary)', fontWeight: 'bold' }}>{dept.total_records_accessed}</td>
-                              <td style={{ color: 'var(--text-primary)' }}>{dept.total_actions}</td>
+                              <td data-label="Peak Risk" style={{ color: 'var(--text-primary)' }}>{dept.max_risk_score}</td>
+                              <td data-label="Sensitive Records" style={{ color: 'var(--text-primary)', fontWeight: 'bold' }}>{dept.total_records_accessed}</td>
+                              <td data-label="Audit Transactions" style={{ color: 'var(--text-primary)' }}>{dept.total_actions}</td>
                             </tr>
                           ))}
                         </tbody>
@@ -1621,29 +1651,42 @@ function App() {
               </div>
 
               {/* Simulator trigger controls box */}
-              <div className="simulator-widget">
-                <span className="menu-header" style={{ color: '#f87171' }}>🚨 Threat Simulator Console</span>
-                
-                <button
-                  onClick={simulateScraping}
-                  disabled={isScraping}
-                  className="btn-simulate-threat"
+              <div className={`simulator-widget ${isSimulatorCollapsed ? 'collapsed' : ''}`}>
+                <div 
+                  className="simulator-widget-header" 
+                  onClick={() => setIsSimulatorCollapsed(!isSimulatorCollapsed)}
+                  style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', cursor: 'pointer' }}
                 >
-                  {isScraping ? 'Scraping...' : 'Simulate Volumetric Scrape'}
-                </button>
-                
-                <button
-                  onClick={simulateImpossibleTravel}
-                  className="btn-simulate-threat"
-                >
-                  Simulate Impossible Travel
-                </button>
-
-                <div className="client-status-card">
-                  <span>Simulated Context:</span>
-                  <div>📍 Location: <strong style={{ color: 'var(--text-primary)' }}>{simLocation}</strong></div>
-                  <div>📡 Proxy: <strong style={{ color: 'var(--text-primary)' }}>Inactive</strong></div>
+                  <span className="menu-header" style={{ color: '#f87171', margin: 0 }}>🚨 Threat Simulator Console</span>
+                  <span className="simulator-toggle-indicator" style={{ color: '#f87171', fontSize: '11px', fontWeight: 'bold' }}>
+                    {isSimulatorCollapsed ? '＋ Expand' : '－ Collapse'}
+                  </span>
                 </div>
+                
+                {!isSimulatorCollapsed && (
+                  <div className="simulator-widget-body animate-fade-in" style={{ display: 'flex', flexDirection: 'column', gap: '16px', marginTop: '16px' }}>
+                    <button
+                      onClick={simulateScraping}
+                      disabled={isScraping}
+                      className="btn-simulate-threat"
+                    >
+                      {isScraping ? 'Scraping...' : 'Simulate Volumetric Scrape'}
+                    </button>
+                    
+                    <button
+                      onClick={simulateImpossibleTravel}
+                      className="btn-simulate-threat"
+                    >
+                      Simulate Impossible Travel
+                    </button>
+
+                    <div className="client-status-card">
+                      <span>Simulated Context:</span>
+                      <div>📍 Location: <strong style={{ color: 'var(--text-primary)' }}>{simLocation}</strong></div>
+                      <div>📡 Proxy: <strong style={{ color: 'var(--text-primary)' }}>Inactive</strong></div>
+                    </div>
+                  </div>
+                )}
               </div>
             </aside>
 
@@ -1684,7 +1727,7 @@ function App() {
                       <tbody>
                         {employees.map((emp) => (
                           <tr key={emp.id} style={emp.is_canary ? { backgroundColor: 'rgba(239, 68, 68, 0.03)' } : {}}>
-                            <td style={{ fontWeight: '700', color: 'var(--text-primary)' }}>
+                            <td data-label="Name" style={{ fontWeight: '700', color: 'var(--text-primary)' }}>
                               {emp.first_name} {emp.last_name}
                               {emp.is_canary && (
                                 <span className="honeypot-badge">
@@ -1692,17 +1735,17 @@ function App() {
                                 </span>
                               )}
                             </td>
-                            <td style={{ color: 'var(--text-secondary)' }}>{emp.department}</td>
-                            <td style={{ color: 'var(--text-secondary)' }}>{emp.position}</td>
-                            <td style={{ color: 'var(--text-secondary)' }}>{new Date(emp.hire_date).toLocaleDateString()}</td>
-                            <td className="salary-val-sensitive">
+                            <td data-label="Department" style={{ color: 'var(--text-secondary)' }}>{emp.department}</td>
+                            <td data-label="Position" style={{ color: 'var(--text-secondary)' }}>{emp.position}</td>
+                            <td data-label="Hire Date" style={{ color: 'var(--text-secondary)' }}>{new Date(emp.hire_date).toLocaleDateString()}</td>
+                            <td data-label="Sensitive Salary" className="salary-val-sensitive">
                               {salaryMap[emp.id] ? (
                                 <span className="visible">${parseFloat(salaryMap[emp.id]).toLocaleString()}</span>
                               ) : (
                                 <span style={{ color: 'var(--text-secondary)' }}>{emp.salary}</span>
                               )}
                             </td>
-                            <td>
+                            <td data-label="Action">
                               <div style={{ display: 'flex', gap: '8px', alignItems: 'center' }}>
                                 <button 
                                   onClick={() => fetchSensitiveSalary(emp.id)}
@@ -1820,18 +1863,18 @@ function App() {
                       <tbody>
                         {leaves.map((l) => (
                           <tr key={l.id}>
-                            <td style={{ fontWeight: '700', color: 'var(--text-primary)' }}>{l.employee_name}</td>
-                            <td style={{ color: 'var(--text-secondary)' }}>{l.leave_type}</td>
-                            <td style={{ color: 'var(--text-secondary)' }}>{new Date(l.start_date).toLocaleDateString()}</td>
-                            <td style={{ color: 'var(--text-secondary)' }}>{new Date(l.end_date).toLocaleDateString()}</td>
-                            <td style={{ fontSize: '12px', color: 'var(--text-secondary)' }}>{l.reason}</td>
-                            <td>
+                            <td data-label="Employee" style={{ fontWeight: '700', color: 'var(--text-primary)' }}>{l.employee_name}</td>
+                            <td data-label="Leave Type" style={{ color: 'var(--text-secondary)' }}>{l.leave_type}</td>
+                            <td data-label="Start Date" style={{ color: 'var(--text-secondary)' }}>{new Date(l.start_date).toLocaleDateString()}</td>
+                            <td data-label="End Date" style={{ color: 'var(--text-secondary)' }}>{new Date(l.end_date).toLocaleDateString()}</td>
+                            <td data-label="Reason" style={{ fontSize: '12px', color: 'var(--text-secondary)' }}>{l.reason}</td>
+                            <td data-label="Status">
                               <span className={`status-indicator ${l.status.toLowerCase()}`}>
                                 {l.status}
                               </span>
                             </td>
                             {(user.role === 'HR Manager' || user.role === 'System Administrator') && (
-                              <td>
+                              <td data-label="Actions">
                                 {l.status === 'Pending' && (
                                   <div style={{ display: 'flex', gap: '8px' }}>
                                     <button 
