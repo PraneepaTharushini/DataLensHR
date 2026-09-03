@@ -577,15 +577,18 @@ app.delete('/api/employees/:id', async (req, res) => {
   const employeeId = req.params.id;
 
   try {
-    const [existing] = await pool.query('SELECT first_name, last_name FROM employees WHERE id = ?', [employeeId]);
+    const [existing] = await pool.query('SELECT first_name, last_name, user_id FROM employees WHERE id = ?', [employeeId]);
     if (existing.length === 0) {
       return res.status(404).json({ message: 'Employee not found.' });
     }
 
+    // Explicitly delete any dependent leave requests first to prevent foreign key errors
+    await pool.query('DELETE FROM leave_requests WHERE employee_id = ?', [employeeId]);
     await pool.query('DELETE FROM employees WHERE id = ?', [employeeId]);
     await insertAuditLog(req, req.user, 'DELETE_EMPLOYEE', 1);
     res.json({ message: `Employee ${existing[0].first_name} ${existing[0].last_name} removed successfully.` });
   } catch (err) {
+    console.error('[DELETE EMP ERR]', err.message);
     res.status(500).json({ message: err.message });
   }
 });
