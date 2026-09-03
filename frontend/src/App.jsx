@@ -34,7 +34,8 @@ import {
   Radio,
   Clock,
   RotateCcw,
-  Check
+  Check,
+  Info
 } from 'lucide-react';
 import './App.css';
 
@@ -74,18 +75,30 @@ function EmptyState({ icon, title = 'No data available yet', description = 'No e
   );
 }
 
-// Reusable Search / Filter Zero Results State Component
-function NoResultsState({ title = 'No results found', description = 'Try changing your search or filter criteria.', onClear }) {
+// Reusable Search / Filter Zero Results State Component with Dynamic Query Feedback
+function NoResultsState({ 
+  title = 'No results found', 
+  query = '', 
+  entity = 'records',
+  description, 
+  onClear 
+}) {
+  const displayDesc = description || (
+    query 
+      ? `No ${entity} match "${query}". Try adjusting your search or filters.`
+      : `No ${entity} match the selected filter criteria. Try adjusting your filters.`
+  );
+
   return (
     <div className="no-results-container">
       <div className="no-results-badge">
-        <Search size={22} color="var(--text-secondary)" />
+        <Search size={22} color="var(--primary)" />
       </div>
       <h4 className="no-results-title">{title}</h4>
-      <p className="no-results-desc">{description}</p>
+      <p className="no-results-desc">{displayDesc}</p>
       {onClear && (
         <button onClick={onClear} className="btn-clear-filters" style={{ display: 'inline-flex', alignItems: 'center', gap: '6px' }}>
-          <RotateCcw size={13} /> Reset Search & Filters
+          <RotateCcw size={13} /> Clear Filters
         </button>
       )}
     </div>
@@ -118,26 +131,31 @@ function SkeletonTableRows({ columns = 6, rows = 4 }) {
 const RULE_METADATA = {
   CANARY_ACCESS: {
     label: 'Canary Decoy Access',
+    shortName: 'Canary Decoy Access',
     code: 'R-01',
     description: 'High-severity detection triggered when an unauthorized user queries masked honeypot employee accounts.'
   },
   IMPOSSIBLE_TRAVEL: {
     label: 'Impossible Travel Velocity',
+    shortName: 'Impossible Travel',
     code: 'R-03',
     description: 'Flags login sessions originating from geographically distant regions faster than supersonic transport velocities.'
   },
   AFTER_HOURS_ACCESS: {
     label: 'After-Hours Access',
+    shortName: 'After-Hours Access',
     code: 'R-02',
     description: 'Monitors database queries and employee unmasking executed during restricted overnight timeframes (11 PM - 5 AM).'
   },
   MASS_PROFILE_READS: {
-    label: 'Volumetric Profile Harvesting',
+    label: 'Volumetric Profile Scrape',
+    shortName: 'Volumetric Scrape',
     code: 'R-05',
     description: 'Alerts when rapid bulk employee directory scraping exceeds the configured threshold (> 10 records / 10s).'
   },
   ANOMALOUS_SALARY_VIEW: {
-    label: 'Sensitive Salary Query',
+    label: 'Unauthorized Salary Read',
+    shortName: 'Unauthorized Salary Read',
     code: 'R-04',
     description: 'Detects unauthorized attempts by non-privileged accounts to unmask confidential executive compensation.'
   }
@@ -1556,7 +1574,9 @@ function App() {
                           {/* KPI 1: System Threat Index */}
                           <div className={`app-card kpi-metric-card ${isHigh ? 'critical-state' : ''} has-tooltip`}>
                             <div className="kpi-card-header">
-                              <span className="kpi-title">System Threat Index</span>
+                              <span className="kpi-title" style={{ display: 'inline-flex', alignItems: 'center', gap: '5px' }}>
+                                System Threat Index <Info size={13} style={{ color: 'var(--text-muted)', cursor: 'help' }} />
+                              </span>
                               <span className={`kpi-status-badge ${isHigh ? 'critical' : isMed ? 'warning' : 'clean'}`} style={{ display: 'inline-flex', alignItems: 'center', gap: '4px' }}>
                                 {maxRisk === 0 ? <><Check size={12} /> Secured</> : isHigh ? <><AlertTriangle size={12} /> Critical</> : <><Zap size={12} /> Warning</>}
                               </span>
@@ -1565,14 +1585,27 @@ function App() {
                               <span className="kpi-big-number" style={{ color: isHigh ? 'var(--danger)' : isMed ? 'var(--warning)' : 'var(--success)' }}>
                                 {maxRisk}
                               </span>
-                              <span className="kpi-scale">/ 100 Risk Score</span>
+                              <span className="kpi-scale" style={{ display: 'inline-flex', alignItems: 'center', gap: '4px' }}>
+                                / 100 Risk Score <Info size={11} style={{ color: 'var(--text-muted)' }} />
+                              </span>
                             </div>
                             <div className="kpi-footer-text">
                               {maxRisk === 0 ? 'Normal traffic baselines (0/100)' : isHigh ? 'Active security anomaly detected' : 'Elevated velocity patterns'}
                             </div>
-                            <div className="tooltip-bubble">
-                              <strong className="tooltip-title">System Threat Index (0-100)</strong>
-                              <span>Measures the overall composite level of privacy risk based on real-time security events, impossible travel velocities, and canary token hits.</span>
+                            <div className="tooltip-bubble" style={{ minWidth: '240px' }}>
+                              <strong className="tooltip-title">Risk Score (0 - 100)</strong>
+                              <p style={{ margin: '4px 0 6px 0', fontSize: '11px', lineHeight: '1.4' }}>
+                                A composite score representing the current level of detected security and privacy risks. Higher scores indicate greater risk.
+                              </p>
+                              <div style={{ borderTop: '1px solid var(--border-glow)', paddingTop: '6px', fontSize: '10px', color: 'var(--text-muted)' }}>
+                                <strong style={{ color: 'var(--text-primary)', display: 'block', marginBottom: '3px' }}>Calculation Factors:</strong>
+                                <ul style={{ margin: '0 0 0 14px', padding: 0, lineHeight: '1.4' }}>
+                                  <li>Canary Honeypot Decoy Hit (+40 pts)</li>
+                                  <li>Impossible Travel Velocity (+35 pts)</li>
+                                  <li>Volumetric Scrape Probing (+25 pts)</li>
+                                  <li>After-Hours / Salary Unmask (+20 pts)</li>
+                                </ul>
+                              </div>
                             </div>
                           </div>
 
@@ -1708,13 +1741,32 @@ function App() {
                                   </div>
                                   {Object.entries(frequencies).map(([rule, count], idx) => {
                                     const percentage = (count / maxCount) * 100;
-                                    const meta = RULE_METADATA[rule] || { label: rule.replace(/_/g, ' '), code: 'RULE', description: 'Monitors specific access telemetry patterns.' };
+                                    const meta = RULE_METADATA[rule] || { label: rule.replace(/_/g, ' '), shortName: rule.replace(/_/g, ' '), code: 'RULE', description: 'Monitors specific access telemetry patterns.' };
+                                    
+                                    // Locate the most recent incident for this rule to show "Last detected"
+                                    const matchingIncident = incidents.find(inc => {
+                                      const tr = Array.isArray(inc.triggered_rules) 
+                                        ? inc.triggered_rules 
+                                        : JSON.parse(inc.triggered_rules || '[]');
+                                      return tr.includes(rule);
+                                    });
+                                    const lastDetected = matchingIncident?.created_at 
+                                      ? new Date(matchingIncident.created_at).toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' })
+                                      : 'None recorded';
+                                    const riskLevel = (rule === 'CANARY_ACCESS' || rule === 'IMPOSSIBLE_TRAVEL') 
+                                      ? 'Critical' 
+                                      : count > 10 
+                                        ? 'High' 
+                                        : count > 0 
+                                          ? 'Medium' 
+                                          : 'Low';
+
                                     return (
                                       <div key={idx} className="rule-frequency-row has-tooltip" style={{ width: '100%', display: 'flex', flexDirection: 'column', gap: '3px' }}>
                                         <div className="rule-frequency-labels" style={{ width: '100%', display: 'flex', justifyContent: 'space-between' }}>
                                           <span className="rule-name-lbl" style={{ color: 'var(--text-primary)', fontSize: '11px', display: 'flex', alignItems: 'center', gap: '6px' }}>
                                             <span className="rule-card-id" style={{ fontSize: '9px', padding: '1px 5px' }}>{meta.code}</span>
-                                            {meta.label}
+                                            {meta.shortName || meta.label}
                                           </span>
                                           <span className="rule-count-lbl" style={{ fontSize: '11px', fontWeight: '700', color: count > 0 ? (rule === 'CANARY_ACCESS' || rule === 'IMPOSSIBLE_TRAVEL' ? 'var(--danger)' : 'var(--warning)') : 'var(--text-muted)' }}>
                                             {count} {count === 1 ? 'trigger event' : 'trigger events'} ({Math.round(percentage)}%)
@@ -1732,12 +1784,27 @@ function App() {
                                             }}
                                           />
                                         </div>
-                                        <div className="tooltip-bubble">
-                                          <strong className="tooltip-title">{meta.label} ({meta.code})</strong>
-                                          <span>{meta.description}</span>
-                                          <div style={{ marginTop: '5px', borderTop: '1px solid rgba(255,255,255,0.1)', paddingTop: '4px', fontSize: '10px' }}>
-                                            Trigger Count: <strong>{count} event(s)</strong> recorded in telemetry stream.
+                                        <div className="tooltip-bubble" style={{ minWidth: '220px' }}>
+                                          <strong className="tooltip-title">{meta.shortName || meta.label}</strong>
+                                          <div style={{ display: 'flex', flexDirection: 'column', gap: '4px', margin: '6px 0', fontSize: '11px' }}>
+                                            <div style={{ display: 'flex', justifyContent: 'space-between' }}>
+                                              <span style={{ color: 'var(--text-muted)' }}>Triggered:</span>
+                                              <strong style={{ color: 'var(--text-primary)' }}>{count} {count === 1 ? 'time' : 'times'}</strong>
+                                            </div>
+                                            <div style={{ display: 'flex', justifyContent: 'space-between' }}>
+                                              <span style={{ color: 'var(--text-muted)' }}>Risk Level:</span>
+                                              <strong style={{ color: riskLevel === 'Critical' ? 'var(--danger)' : riskLevel === 'High' ? 'var(--warning)' : 'var(--success)' }}>
+                                                {riskLevel}
+                                              </strong>
+                                            </div>
+                                            <div style={{ display: 'flex', justifyContent: 'space-between' }}>
+                                              <span style={{ color: 'var(--text-muted)' }}>Last detected:</span>
+                                              <strong style={{ color: 'var(--text-secondary)' }}>{lastDetected}</strong>
+                                            </div>
                                           </div>
+                                          <span style={{ fontSize: '10.5px', color: 'var(--text-muted)', borderTop: '1px solid var(--border-glow)', paddingTop: '4px', display: 'block', lineHeight: '1.3' }}>
+                                            {meta.description}
+                                          </span>
                                         </div>
                                       </div>
                                     );
@@ -1788,9 +1855,9 @@ function App() {
                                 />
                               ) : getTopRiskAccounts().length === 0 ? (
                                 <EmptyState 
-                                  icon={<Shield size={32} color="var(--success)" />} 
-                                  title="All Active Accounts Compliant" 
-                                  description="No suspicious behavioral anomalies or high-risk accounts detected." 
+                                  icon={<ShieldCheck size={32} color="var(--success)" />} 
+                                  title="No flagged accounts" 
+                                  description="No employee accounts currently exceed the configured risk threshold." 
                                 />
                               ) : (
                                 <div className="risk-accounts-list">
@@ -1903,7 +1970,8 @@ function App() {
                             ) : filteredIncidents.length === 0 ? (
                               <NoResultsState 
                                 title="No results found" 
-                                description="Try changing your search or filter criteria." 
+                                query={alertSearch}
+                                entity="security alerts"
                                 onClear={() => { setAlertSearch(''); setAlertFilter('all'); }} 
                               />
                             ) : (
@@ -2637,8 +2705,8 @@ function App() {
                             <td colSpan="6" style={{ padding: '30px 10px', textAlign: 'center' }}>
                               <EmptyState 
                                 icon={<Users size={32} color="var(--primary)" />} 
-                                title="No data available yet" 
-                                description="No employee activity has been recorded for this period." 
+                                title="No employees recorded" 
+                                description="No employee profiles currently exist in the organization directory." 
                                 actionText={(user.role === 'HR Manager' || user.role === 'System Administrator') ? "Add First Employee" : undefined}
                                 onAction={() => setShowAddEmployeeForm(true)}
                               />
@@ -2649,7 +2717,8 @@ function App() {
                             <td colSpan="6" style={{ padding: '30px 10px', textAlign: 'center' }}>
                               <NoResultsState 
                                 title="No results found" 
-                                description="Try changing your search or filter criteria." 
+                                query={empSearch}
+                                entity="employees"
                                 onClear={() => { setEmpSearch(''); setEmpDeptFilter('all'); }} 
                               />
                             </td>
@@ -2875,8 +2944,8 @@ function App() {
                             <td colSpan={(user.role === 'HR Manager' || user.role === 'System Administrator') ? 7 : 6} style={{ padding: '30px 10px', textAlign: 'center' }}>
                               <EmptyState 
                                 icon={<Calendar size={32} color="var(--primary)" />} 
-                                title="No data available yet" 
-                                description="No employee activity has been recorded for this period." 
+                                title="No leave requests" 
+                                description="No employee leave requests have been submitted for this period." 
                               />
                             </td>
                           </tr>
@@ -2885,7 +2954,8 @@ function App() {
                             <td colSpan={(user.role === 'HR Manager' || user.role === 'System Administrator') ? 7 : 6} style={{ padding: '30px 10px', textAlign: 'center' }}>
                               <NoResultsState 
                                 title="No results found" 
-                                description="Try changing your search or filter criteria." 
+                                query={leaveSearch}
+                                entity="leave requests"
                                 onClear={() => { setLeaveSearch(''); setLeaveStatusFilter('all'); }} 
                               />
                             </td>
