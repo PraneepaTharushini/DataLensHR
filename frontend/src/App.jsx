@@ -127,6 +127,52 @@ function SkeletonTableRows({ columns = 6, rows = 4 }) {
   );
 }
 
+// Skeleton Card Component
+function SkeletonCard({ height = '120px' }) {
+  return (
+    <div className="skeleton-card" style={{ minHeight: height }}>
+      <div className="skeleton-card-header">
+        <div className="skeleton-bar" style={{ width: '45%', height: '14px' }} />
+        <div className="skeleton-bar" style={{ width: '24px', height: '24px', borderRadius: '50%' }} />
+      </div>
+      <div className="skeleton-card-body">
+        <div className="skeleton-bar" style={{ width: '65%', height: '26px' }} />
+        <div className="skeleton-bar" style={{ width: '80%', height: '12px' }} />
+      </div>
+    </div>
+  );
+}
+
+// Skeleton Chart Component with Progress Columns
+function SkeletonChart({ message = 'Loading security analytics...', subtitle }) {
+  return (
+    <div className="skeleton-chart-container">
+      <div className="skeleton-chart-header">
+        <div className="loading-spinner-box" style={{ width: '28px', height: '28px', minWidth: '28px' }}>
+          <div className="loading-spinner" style={{ width: '22px', height: '22px', borderWidth: '2.5px' }} />
+          <div className="loading-spinner-glow" />
+        </div>
+        <div>
+          <p className="loading-state-title" style={{ margin: 0, fontSize: '13.5px', fontWeight: '700', textAlign: 'left' }}>{message}</p>
+          {subtitle && <p className="loading-state-subtext" style={{ margin: '2px 0 0 0', fontSize: '11px', textAlign: 'left' }}>{subtitle}</p>}
+        </div>
+      </div>
+      
+      <div className="skeleton-chart-bars">
+        {[80, 50, 65, 90, 35].map((val, idx) => (
+          <div key={idx} className="skeleton-chart-bar-item">
+            <div className="skeleton-chart-bar-header">
+              <div className="skeleton-bar" style={{ width: `${30 + idx * 9}%`, height: '11px' }} />
+              <div className="skeleton-bar" style={{ width: '18%', height: '11px' }} />
+            </div>
+            <div className="skeleton-bar" style={{ width: `${val}%`, height: '8px' }} />
+          </div>
+        ))}
+      </div>
+    </div>
+  );
+}
+
 // Heuristic Detection Rule Explanatory Metadata for Tooltips and Visualizations
 const RULE_METADATA = {
   CANARY_ACCESS: {
@@ -1687,8 +1733,8 @@ function App() {
                             </div>
                             
                             {isLoadingIncidents ? (
-                              <LoadingState 
-                                message="Loading employee analytics..." 
+                              <SkeletonChart 
+                                message="Loading security analytics..." 
                                 subtitle="Processing real-time access logs and rule trigger frequencies" 
                               />
                             ) : incidents.length === 0 ? (
@@ -1849,10 +1895,19 @@ function App() {
 
                             <div className="analytics-card-content">
                               {isLoadingIncidents ? (
-                                <LoadingState 
-                                  message="Analyzing employee risk profiles..." 
-                                  compact={true} 
-                                />
+                                <div style={{ display: 'flex', flexDirection: 'column', gap: '10px' }}>
+                                  {[1, 2, 3].map((n) => (
+                                    <div key={n} className="skeleton-card" style={{ padding: '12px 14px', minHeight: 'auto', gap: '8px' }}>
+                                      <div style={{ display: 'flex', alignItems: 'center', gap: '10px' }}>
+                                        <div className="skeleton-bar" style={{ width: '32px', height: '32px', borderRadius: '50%' }} />
+                                        <div style={{ flex: 1, display: 'flex', flexDirection: 'column', gap: '4px' }}>
+                                          <div className="skeleton-bar" style={{ width: '60%', height: '12px' }} />
+                                          <div className="skeleton-bar" style={{ width: '35%', height: '10px' }} />
+                                        </div>
+                                      </div>
+                                    </div>
+                                  ))}
+                                </div>
                               ) : getTopRiskAccounts().length === 0 ? (
                                 <EmptyState 
                                   icon={<ShieldCheck size={32} color="var(--success)" />} 
@@ -1955,10 +2010,20 @@ function App() {
                           {/* Streamlined Incident List */}
                           <div className="incident-stream-list">
                             {isLoadingIncidents ? (
-                              <LoadingState 
-                                message="Loading incident telemetry stream..." 
-                                subtitle="Fetching real-time security events and threat audits" 
-                              />
+                              <div style={{ display: 'flex', flexDirection: 'column', gap: '12px' }}>
+                                {[1, 2, 3, 4].map((n) => (
+                                  <div key={n} className="skeleton-ticket-card">
+                                    <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+                                      <div style={{ display: 'flex', gap: '8px', width: '50%' }}>
+                                        <div className="skeleton-bar" style={{ width: '80px', height: '20px', borderRadius: '12px' }} />
+                                        <div className="skeleton-bar" style={{ width: '140px', height: '20px', borderRadius: '12px' }} />
+                                      </div>
+                                      <div className="skeleton-bar" style={{ width: '90px', height: '28px', borderRadius: '8px' }} />
+                                    </div>
+                                    <div className="skeleton-bar" style={{ width: '80%', height: '12px' }} />
+                                  </div>
+                                ))}
+                              </div>
                             ) : incidents.length === 0 ? (
                               <EmptyState 
                                 icon={<BarChart3 size={32} color="var(--primary)" />} 
@@ -2153,16 +2218,15 @@ function App() {
 
                   {/* Grid of Department Cards with Risk Gauge Ticks & Tooltips */}
                   {isLoadingAnalytics ? (
-                    <div className="app-card" style={{ padding: '36px', marginBottom: '24px' }}>
-                      <LoadingState 
-                        message="Loading employee analytics..." 
-                        subtitle="Aggregating department access rates, data leak risks, and compliance scores" 
-                      />
+                    <div className="rules-grid" style={{ marginBottom: '24px' }}>
+                      {[1, 2, 3, 4].map((n) => (
+                        <SkeletonCard key={n} height="200px" />
+                      ))}
                     </div>
                   ) : deptAnalytics.length === 0 ? (
                     <div className="app-card" style={{ padding: '16px', marginBottom: '24px' }}>
                       <EmptyState 
-                        icon="📊" 
+                        icon={<BarChart3 size={32} color="var(--primary)" />} 
                         title="No data available yet" 
                         description="No employee activity has been recorded for this period." 
                         actionText="Refresh Analytics" 
@@ -2307,7 +2371,7 @@ function App() {
                             <tr>
                               <td colSpan="7" style={{ padding: '30px 10px', textAlign: 'center' }}>
                                 <EmptyState 
-                                  icon="📊" 
+                                  icon={<BarChart3 size={32} color="var(--primary)" />} 
                                   title="No data available yet" 
                                   description="No employee activity has been recorded for this period." 
                                 />
@@ -2351,11 +2415,10 @@ function App() {
                   </div>
 
                   {isLoadingRules ? (
-                    <div className="app-card" style={{ padding: '36px' }}>
-                      <LoadingState 
-                        message="Loading privacy detection rules..." 
-                        subtitle="Fetching heuristic thresholds, weights, and active inspection windows" 
-                      />
+                    <div className="rules-grid">
+                      {[1, 2, 3, 4, 5, 6].map((n) => (
+                        <SkeletonCard key={n} height="190px" />
+                      ))}
                     </div>
                   ) : rules.length === 0 ? (
                     <div className="app-card" style={{ padding: '16px' }}>
@@ -2550,11 +2613,10 @@ function App() {
                   </div>
 
                   {isLoadingRecommendations ? (
-                    <div className="app-card" style={{ padding: '36px' }}>
-                      <LoadingState 
-                        message="Evaluating employee access patterns..." 
-                        subtitle="Generating proactive AI policy hardening recommendations" 
-                      />
+                    <div className="rules-grid">
+                      {[1, 2, 3].map((n) => (
+                        <SkeletonCard key={n} height="190px" />
+                      ))}
                     </div>
                   ) : recommendations.length === 0 ? (
                     <div className="app-card" style={{ gridColumn: '1 / -1', padding: '24px' }}>
