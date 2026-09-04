@@ -2177,8 +2177,8 @@ function App() {
                   </div>
 
                   {/* Summary Ribbon Cards with Units & Tooltips */}
-                  <div className="analytics-ribbon" style={{ display: 'flex', gap: '16px', marginBottom: '24px', flexWrap: 'wrap' }}>
-                    <div className="app-card ribbon-card has-tooltip" style={{ flex: 1, minWidth: '220px' }}>
+                  <div className="analytics-ribbon">
+                    <div className="app-card ribbon-card has-tooltip">
                       <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
                         <span className="section-eyebrow">Monitored Departments</span>
                         <Building2 size={16} color="var(--primary)" />
@@ -2190,7 +2190,7 @@ function App() {
                         <span>Total company divisions currently undergoing continuous real-time access log auditing.</span>
                       </div>
                     </div>
-                    <div className="app-card ribbon-card has-tooltip" style={{ flex: 1, minWidth: '220px' }}>
+                    <div className="app-card ribbon-card has-tooltip">
                       <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
                         <span className="section-eyebrow">Top Vulnerability Department</span>
                         <AlertTriangle size={16} color="var(--danger)" />
@@ -2202,7 +2202,7 @@ function App() {
                         <span>Department exhibiting the highest cumulative privacy violation rate and anomalous database access.</span>
                       </div>
                     </div>
-                    <div className="app-card ribbon-card has-tooltip" style={{ flex: 1, minWidth: '220px' }}>
+                    <div className="app-card ribbon-card has-tooltip">
                       <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
                         <span className="section-eyebrow">Highest Data Harvest</span>
                         <FileText size={16} color="var(--warning)" />
@@ -2715,7 +2715,7 @@ function App() {
                     )}
                   </div>
 
-                  <div className="app-card table-wrapper">
+                  <div className="app-card" style={{ padding: '20px' }}>
                     {/* Search & Department Filter Toolbar */}
                     <div className="table-toolbar-bar">
                       <div className="search-box-wrapper">
@@ -2742,13 +2742,14 @@ function App() {
                             {dept === 'all' ? `All (${employees.length})` : dept}
                           </button>
                         ))}
-                        <button onClick={fetchEmployees} className="btn-actions-refresh" title="Refresh Directory" style={{ display: 'inline-flex', alignItems: 'center', gap: '5px' }}>
+                        <button onClick={fetchEmployees} className="btn-secondary" title="Refresh Directory" style={{ display: 'inline-flex', alignItems: 'center', gap: '5px', padding: '7px 12px', fontSize: '12px' }}>
                           <RefreshCw size={12} /> Refresh
                         </button>
                       </div>
                     </div>
 
-                    <table>
+                    <div className="table-wrapper">
+                      <table>
                       <thead>
                         <tr>
                           <th>Name</th>
@@ -2806,12 +2807,12 @@ function App() {
                                   <span style={{ color: 'var(--text-secondary)' }}>{emp.salary}</span>
                                 )}
                               </td>
-                              <td data-label="Action">
-                                <div style={{ display: 'flex', gap: '8px', alignItems: 'center' }}>
+                              <td data-label="Action" style={{ whiteSpace: 'nowrap' }}>
+                                <div style={{ display: 'flex', gap: '8px', alignItems: 'center', flexWrap: 'nowrap', whiteSpace: 'nowrap' }}>
                                   <button 
                                     onClick={() => fetchSensitiveSalary(emp.id)}
                                     className="btn-secondary"
-                                    style={{ padding: '6px 12px', fontSize: '11px' }}
+                                    style={{ padding: '6px 12px', fontSize: '11px', whiteSpace: 'nowrap' }}
                                   >
                                     {salaryMap[emp.id] ? 'Hide Salary' : 'Query Salary'}
                                   </button>
@@ -2819,7 +2820,7 @@ function App() {
                                     <button 
                                       onClick={() => handleRemoveEmployee(emp.id, `${emp.first_name} ${emp.last_name}`)}
                                       className="btn-danger"
-                                      style={{ padding: '6px 12px', fontSize: '11px' }}
+                                      style={{ padding: '6px 12px', fontSize: '11px', whiteSpace: 'nowrap' }}
                                     >
                                       Remove
                                     </button>
@@ -2831,6 +2832,7 @@ function App() {
                         )}
                       </tbody>
                     </table>
+                    </div>
                   </div>
                 </div>
               )}
@@ -2953,7 +2955,7 @@ function App() {
                     </div>
                   )}
 
-                  <div className="app-card table-wrapper">
+                  <div className="app-card" style={{ padding: '20px' }}>
                     {/* Search & Status Filter Toolbar */}
                     <div className="table-toolbar-bar">
                       <div className="search-box-wrapper">
@@ -2980,13 +2982,14 @@ function App() {
                             {status === 'all' ? `All (${leaves.length})` : status}
                           </button>
                         ))}
-                        <button onClick={fetchLeaves} className="btn-actions-refresh" title="Refresh Leaves" style={{ display: 'inline-flex', alignItems: 'center', gap: '5px' }}>
+                        <button onClick={fetchLeaves} className="btn-secondary" title="Refresh Leaves" style={{ display: 'inline-flex', alignItems: 'center', gap: '5px', padding: '7px 12px', fontSize: '12px' }}>
                           <RefreshCw size={12} /> Refresh
                         </button>
                       </div>
                     </div>
 
-                    <table>
+                    <div className="table-wrapper">
+                      <table>
                       <thead>
                         <tr>
                           <th>Employee</th>
@@ -3060,6 +3063,7 @@ function App() {
                         )}
                       </tbody>
                     </table>
+                    </div>
                   </div>
                 </div>
               )}
