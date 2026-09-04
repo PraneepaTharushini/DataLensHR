@@ -1900,9 +1900,9 @@ function App() {
                             <div className="analytics-card-header">
                               <div>
                                 <h3 className="card-title" style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
-                                  <Activity size={18} color="var(--primary)" /> Threat Velocity & Distribution
+                                  <Activity size={18} color="var(--primary)" /> Security Violations by Rule & Threat Level
                                 </h3>
-                                <p className="card-subtitle">Live rule trigger frequency mapped against current composite risk index.</p>
+                                <p className="card-subtitle">Real-time breakdown of which security policies were triggered and the current organization threat score.</p>
                               </div>
                             </div>
                             
@@ -1922,7 +1922,10 @@ function App() {
                             ) : (
                               <div className="threat-dial-and-bars">
                                 {/* Mini Circular Gauge Dial with Tooltip */}
-                                <div className="gauge-panel-compact has-tooltip">
+                                <div className="gauge-panel-compact has-tooltip" style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center' }}>
+                                  <span style={{ fontSize: '11px', fontWeight: '800', color: 'var(--text-secondary)', textTransform: 'uppercase', letterSpacing: '0.6px', marginBottom: '6px' }}>
+                                    System Risk Score
+                                  </span>
                                   <div className={`gauge-ring-outer gauge-ring-compact ${isHigh ? 'high-risk' : isMed ? 'med-risk' : ''}`}>
                                     <svg width="110" height="110" viewBox="0 0 110 110" style={{ transform: 'rotate(-90deg)', position: 'absolute' }}>
                                       <circle cx="55" cy="55" r="44" fill="transparent" stroke="var(--border-glow)" strokeWidth="6" />
@@ -1944,7 +1947,7 @@ function App() {
                                       <span className="gauge-value-lbl" style={{ fontSize: '9px' }}>/ 100 Risk Index</span>
                                     </div>
                                   </div>
-                                  <span style={{ fontSize: '10px', color: 'var(--text-muted)', fontWeight: '700', textTransform: 'uppercase', letterSpacing: '0.4px', display: 'inline-flex', alignItems: 'center', gap: '4px' }}>
+                                  <span style={{ fontSize: '10px', color: 'var(--text-muted)', fontWeight: '700', textTransform: 'uppercase', letterSpacing: '0.4px', display: 'inline-flex', alignItems: 'center', gap: '4px', marginTop: '4px' }}>
                                     {maxRisk === 0 ? <><Check size={11} color="var(--success)" /> Baseline Clean</> : isHigh ? <><AlertTriangle size={11} color="var(--danger)" /> Critical State</> : <><Zap size={11} color="var(--warning)" /> Warning State</>}
                                   </span>
                                   <div className="tooltip-bubble">
@@ -1956,8 +1959,12 @@ function App() {
                                 {/* Trigger Frequency Progress Bars with Axis & Tooltips */}
                                 <div className="rule-frequencies-compact">
                                   <div className="chart-axis-header" style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '8px' }}>
-                                    <span className="chart-axis-badge">Y-Axis: Detection Rule Heuristic</span>
-                                    <span className="chart-axis-badge">X-Axis: Trigger Frequency (Events)</span>
+                                    <span style={{ fontSize: '11px', fontWeight: '800', color: 'var(--text-secondary)', textTransform: 'uppercase', letterSpacing: '0.5px' }}>
+                                      Security Rule
+                                    </span>
+                                    <span style={{ fontSize: '11px', fontWeight: '800', color: 'var(--text-secondary)', textTransform: 'uppercase', letterSpacing: '0.5px' }}>
+                                      Triggered Violations ({totalTriggers} Total)
+                                    </span>
                                   </div>
                                   {Object.entries(frequencies).map(([rule, count], idx) => {
                                     const percentage = (count / maxCount) * 100;
@@ -1989,7 +1996,7 @@ function App() {
                                             {meta.shortName || meta.label}
                                           </span>
                                           <span className="rule-count-lbl" style={{ fontSize: '11px', fontWeight: '700', color: count > 0 ? (rule === 'CANARY_ACCESS' || rule === 'IMPOSSIBLE_TRAVEL' ? 'var(--danger)' : 'var(--warning)') : 'var(--text-muted)' }}>
-                                            {count} {count === 1 ? 'event' : 'events'} ({totalTriggers > 0 ? Math.round((count / totalTriggers) * 100) : 0}% share)
+                                            {count} {count === 1 ? 'violation' : 'violations'} ({totalTriggers > 0 ? Math.round((count / totalTriggers) * 100) : 0}% of all breaches)
                                           </span>
                                         </div>
                                         <div className="rule-frequency-bar-bg" style={{ height: '7px', background: 'var(--bg-input)', borderRadius: '4px', overflow: 'hidden', border: '1px solid var(--border-glow)' }}>
@@ -2008,15 +2015,15 @@ function App() {
                                           <strong className="tooltip-title">{meta.shortName || meta.label}</strong>
                                           <div style={{ display: 'flex', flexDirection: 'column', gap: '4px', margin: '6px 0', fontSize: '11px' }}>
                                             <div style={{ display: 'flex', justifyContent: 'space-between' }}>
-                                              <span style={{ color: 'var(--text-muted)' }}>Triggered:</span>
-                                              <strong style={{ color: 'var(--text-primary)' }}>{count} {count === 1 ? 'event' : 'events'}</strong>
+                                              <span style={{ color: 'var(--text-muted)' }}>Violations Recorded:</span>
+                                              <strong style={{ color: 'var(--text-primary)' }}>{count} {count === 1 ? 'violation' : 'violations'}</strong>
                                             </div>
                                             <div style={{ display: 'flex', justifyContent: 'space-between' }}>
-                                              <span style={{ color: 'var(--text-muted)' }}>Trigger Share:</span>
-                                              <strong style={{ color: 'var(--text-primary)' }}>{totalTriggers > 0 ? ((count / totalTriggers) * 100).toFixed(1) : 0}% of all events</strong>
+                                              <span style={{ color: 'var(--text-muted)' }}>Share of Breaches:</span>
+                                              <strong style={{ color: 'var(--text-primary)' }}>{totalTriggers > 0 ? ((count / totalTriggers) * 100).toFixed(1) : 0}% of all security incidents</strong>
                                             </div>
                                             <div style={{ display: 'flex', justifyContent: 'space-between' }}>
-                                              <span style={{ color: 'var(--text-muted)' }}>Risk Level:</span>
+                                              <span style={{ color: 'var(--text-muted)' }}>Rule Risk Level:</span>
                                               <strong style={{ color: riskLevel === 'Critical' ? 'var(--danger)' : riskLevel === 'High' ? 'var(--warning)' : 'var(--success)' }}>
                                                 {riskLevel}
                                               </strong>
@@ -2041,7 +2048,7 @@ function App() {
                                       <span>{Math.max(1, Math.round(maxCount * 0.25))}</span>
                                       <span>{Math.max(2, Math.round(maxCount * 0.5))}</span>
                                       <span>{Math.max(3, Math.round(maxCount * 0.75))}</span>
-                                      <span>{maxCount} Events</span>
+                                      <span>{maxCount} Violations</span>
                                     </div>
                                     <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', height: '6px', margin: '3px 0 5px 0', borderBottom: '1px solid var(--border-glow)' }}>
                                       <span style={{ width: '1px', height: '6px', background: 'var(--text-muted)' }} />
@@ -2051,8 +2058,8 @@ function App() {
                                       <span style={{ width: '1px', height: '6px', background: 'var(--text-muted)' }} />
                                     </div>
                                     <div style={{ display: 'flex', justifyContent: 'space-between', fontSize: '10px', color: 'var(--text-secondary)' }}>
-                                      <span><strong>X-Axis Scale:</strong> 0 to {maxCount} Recorded Security Events</span>
-                                      <span><strong>Unit:</strong> Breach Events / Rule</span>
+                                      <span><strong>Scale:</strong> 0 to {maxCount} Recorded Violations</span>
+                                      <span><strong>Total Recorded Breaches:</strong> {totalTriggers} incidents</span>
                                     </div>
                                   </div>
                                 </div>
