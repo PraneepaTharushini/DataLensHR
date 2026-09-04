@@ -1919,7 +1919,29 @@ html, body {
   border: 1px solid var(--border-glow);
   border-radius: 16px;
   overflow-x: auto;
+  -webkit-overflow-scrolling: touch;
   box-shadow: 0 10px 25px rgba(0, 0, 0, 0.1);
+  scrollbar-width: thin;
+  scrollbar-color: rgba(148, 163, 184, 0.25) transparent;
+}
+
+.table-wrapper::-webkit-scrollbar {
+  height: 6px;
+}
+
+.table-wrapper::-webkit-scrollbar-track {
+  background: rgba(148, 163, 184, 0.05);
+  border-radius: 999px;
+}
+
+.table-wrapper::-webkit-scrollbar-thumb {
+  background: rgba(148, 163, 184, 0.25);
+  border-radius: 999px;
+  transition: background 0.2s ease;
+}
+
+.table-wrapper::-webkit-scrollbar-thumb:hover {
+  background: rgba(148, 163, 184, 0.45);
 }
 
 .table-wrapper table {
@@ -2383,6 +2405,36 @@ html, body {
   opacity: 0.7;
 }
 
+.incident-stream-list {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+  max-height: 580px;
+  overflow-y: auto;
+  padding-right: 4px;
+  scrollbar-width: thin;
+  scrollbar-color: rgba(148, 163, 184, 0.25) transparent;
+}
+
+.incident-stream-list::-webkit-scrollbar {
+  width: 5px;
+}
+
+.incident-stream-list::-webkit-scrollbar-track {
+  background: rgba(148, 163, 184, 0.05);
+  border-radius: 999px;
+}
+
+.incident-stream-list::-webkit-scrollbar-thumb {
+  background: rgba(148, 163, 184, 0.25);
+  border-radius: 999px;
+  transition: background 0.2s ease;
+}
+
+.incident-stream-list::-webkit-scrollbar-thumb:hover {
+  background: rgba(148, 163, 184, 0.45);
+}
+
 .incident-ticket-stream {
   background-color: var(--bg-input);
   border: 1px solid var(--border-glow);
@@ -2696,191 +2748,6 @@ html, body {
   transform: translateY(-7px) rotate(-45deg);
 }
 
-@media (max-width: 768px) {
-  .navbar {
-    padding: 16px 20px;
-    position: relative;
-  }
-
-  .hamburger-menu-btn {
-    display: flex;
-  }
-
-  .workspace-container {
-    flex-direction: column;
-  }
-
-  .nav-sidebar {
-    position: fixed;
-    top: 0;
-    left: 0;
-    bottom: 0;
-    width: 280px;
-    height: 100vh;
-    transform: translateX(-100%);
-    box-shadow: 10px 0 30px rgba(0, 0, 0, 0.5);
-    z-index: 1000;
-  }
-
-  .nav-sidebar.mobile-open {
-    transform: translateX(0);
-  }
-
-  .workspace-top-bar {
-    padding: 0 16px;
-  }
-
-  .sim-location-pill {
-    display: none;
-  }
-
-  .view-frame {
-    padding: 20px 14px;
-  }
-
-  .incidents-card-log {
-    padding: 20px 14px;
-  }
-
-  .incidents-log-header {
-    flex-direction: column;
-    align-items: flex-start;
-    gap: 14px;
-  }
-
-  .btn-actions-refresh {
-    width: 100%;
-  }
-
-  .footer {
-    flex-direction: column;
-    gap: 12px;
-    text-align: center;
-    padding: 20px 16px;
-  }
-
-  .demo-pills-container {
-    grid-template-columns: 1fr;
-  }
-
-  .login-hero h2 {
-    font-size: 30px;
-    text-align: center;
-  }
-
-  .login-hero p {
-    text-align: center;
-    font-size: 13px;
-  }
-
-  .simulator-widget-header {
-    width: 100%;
-    user-select: none;
-  }
-
-  .simulator-widget-header:hover .menu-header {
-    color: var(--danger) !important;
-  }
-
-  .view-frame {
-    padding: 24px 16px;
-  }
-
-  .incidents-card-log {
-    padding: 24px 16px;
-  }
-
-  .incidents-log-header {
-    flex-direction: column;
-    align-items: flex-start;
-    gap: 16px;
-  }
-
-  .btn-actions-refresh {
-    width: 100%;
-  }
-
-  .footer {
-    flex-direction: column;
-    gap: 12px;
-    text-align: center;
-    padding: 20px 16px;
-  }
-
-  .demo-pills-container {
-    grid-template-columns: 1fr;
-  }
-
-  .login-hero h2 {
-    font-size: 32px;
-    text-align: center;
-  }
-
-  .login-hero p {
-    text-align: center;
-    font-size: 14px;
-  }
-
-  /* Table Card Layout for Mobile */
-  .table-wrapper {
-    background: none;
-    border: none;
-    box-shadow: none;
-    overflow-x: visible;
-  }
-
-  .table-wrapper table,
-  .table-wrapper thead,
-  .table-wrapper tbody,
-  .table-wrapper th,
-  .table-wrapper td,
-  .table-wrapper tr {
-    display: block;
-    width: 100%;
-  }
-
-  .table-wrapper thead {
-    display: none; /* Hide header rows */
-  }
-
-  .table-wrapper tr {
-    border: 1px solid var(--border-glow);
-    background-color: var(--bg-card);
-    margin-bottom: 16px;
-    border-radius: 16px;
-    padding: 12px 6px;
-    box-shadow: 0 8px 20px rgba(0, 0, 0, 0.1);
-  }
-
-  .table-wrapper tr:last-child {
-    border-bottom: 1px solid var(--border-glow);
-  }
-
-  .table-wrapper td {
-    padding: 12px 16px;
-    border-bottom: 1px solid rgba(255, 255, 255, 0.03);
-    display: flex;
-    justify-content: space-between;
-    align-items: center;
-    text-align: right;
-  }
-
-  .table-wrapper td:last-child {
-    border-bottom: none;
-    padding-top: 16px;
-    justify-content: flex-end;
-  }
-
-  .table-wrapper td::before {
-    content: attr(data-label);
-    font-weight: 700;
-    color: var(--text-secondary);
-    font-size: 11px;
-    text-transform: uppercase;
-    text-align: left;
-    letter-spacing: 0.5px;
-  }
-}
 
 /* Swipeable tabs & mobile touch optimizations */
 @media (max-width: 600px) {
@@ -4366,10 +4233,16 @@ textarea:focus:not(:focus-visible),
     border-radius: 14px;
     overflow-x: auto;
     -webkit-overflow-scrolling: touch;
+    border: 1px solid var(--border-glow);
+    background: var(--bg-card);
+    width: 100%;
+    margin-top: 14px;
   }
 
   .table-wrapper table {
-    min-width: 580px;
+    min-width: 620px;
+    width: 100%;
+    border-collapse: collapse;
   }
 
   .table-wrapper th,
@@ -4380,9 +4253,11 @@ textarea:focus:not(:focus-visible),
 
   /* Table Toolbars Stacking */
   .table-toolbar-bar {
+    display: flex;
     flex-direction: column;
     align-items: stretch;
     gap: 12px;
+    width: 100%;
   }
 
   .table-toolbar-bar .search-box-wrapper {
@@ -4392,11 +4267,20 @@ textarea:focus:not(:focus-visible),
   }
 
   .table-filter-pills {
+    display: flex;
+    align-items: center;
+    gap: 8px;
     overflow-x: auto;
     flex-wrap: nowrap;
-    padding-bottom: 4px;
+    padding-bottom: 2px;
     width: 100%;
     -webkit-overflow-scrolling: touch;
+    scrollbar-width: none;
+    -ms-overflow-style: none;
+  }
+
+  .table-filter-pills::-webkit-scrollbar {
+    display: none;
   }
 
   .table-filter-pills .filter-pill-btn {
@@ -4424,11 +4308,20 @@ textarea:focus:not(:focus-visible),
   }
 
   .filter-pill-group {
+    display: flex;
+    align-items: center;
+    gap: 8px;
     overflow-x: auto;
     flex-wrap: nowrap;
-    padding-bottom: 4px;
+    padding-bottom: 2px;
     width: 100%;
     -webkit-overflow-scrolling: touch;
+    scrollbar-width: none;
+    -ms-overflow-style: none;
+  }
+
+  .filter-pill-group::-webkit-scrollbar {
+    display: none;
   }
 
   .filter-pill-group .filter-pill-btn {

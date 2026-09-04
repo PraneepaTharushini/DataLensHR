@@ -2715,7 +2715,7 @@ function App() {
                     )}
                   </div>
 
-                  <div className="app-card table-wrapper">
+                  <div className="app-card" style={{ padding: '20px' }}>
                     {/* Search & Department Filter Toolbar */}
                     <div className="table-toolbar-bar">
                       <div className="search-box-wrapper">
@@ -2742,13 +2742,14 @@ function App() {
                             {dept === 'all' ? `All (${employees.length})` : dept}
                           </button>
                         ))}
-                        <button onClick={fetchEmployees} className="btn-actions-refresh" title="Refresh Directory" style={{ display: 'inline-flex', alignItems: 'center', gap: '5px' }}>
+                        <button onClick={fetchEmployees} className="btn-secondary" title="Refresh Directory" style={{ display: 'inline-flex', alignItems: 'center', gap: '5px', padding: '7px 12px', fontSize: '12px' }}>
                           <RefreshCw size={12} /> Refresh
                         </button>
                       </div>
                     </div>
 
-                    <table>
+                    <div className="table-wrapper">
+                      <table>
                       <thead>
                         <tr>
                           <th>Name</th>
@@ -2831,6 +2832,7 @@ function App() {
                         )}
                       </tbody>
                     </table>
+                    </div>
                   </div>
                 </div>
               )}
@@ -2953,7 +2955,7 @@ function App() {
                     </div>
                   )}
 
-                  <div className="app-card table-wrapper">
+                  <div className="app-card" style={{ padding: '20px' }}>
                     {/* Search & Status Filter Toolbar */}
                     <div className="table-toolbar-bar">
                       <div className="search-box-wrapper">
@@ -2980,13 +2982,14 @@ function App() {
                             {status === 'all' ? `All (${leaves.length})` : status}
                           </button>
                         ))}
-                        <button onClick={fetchLeaves} className="btn-actions-refresh" title="Refresh Leaves" style={{ display: 'inline-flex', alignItems: 'center', gap: '5px' }}>
+                        <button onClick={fetchLeaves} className="btn-secondary" title="Refresh Leaves" style={{ display: 'inline-flex', alignItems: 'center', gap: '5px', padding: '7px 12px', fontSize: '12px' }}>
                           <RefreshCw size={12} /> Refresh
                         </button>
                       </div>
                     </div>
 
-                    <table>
+                    <div className="table-wrapper">
+                      <table>
                       <thead>
                         <tr>
                           <th>Employee</th>
@@ -3060,6 +3063,7 @@ function App() {
                         )}
                       </tbody>
                     </table>
+                    </div>
                   </div>
                 </div>
               )}
