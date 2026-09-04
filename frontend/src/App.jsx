@@ -173,6 +173,51 @@ function SkeletonChart({ message = 'Loading security analytics...', subtitle }) 
   );
 }
 
+// Reusable In-App Toast Notification Component
+function ToastContainer({ toasts, removeToast }) {
+  if (!toasts || toasts.length === 0) return null;
+
+  return (
+    <div className="toast-container" role="region" aria-live="polite" aria-label="Notifications">
+      {toasts.map((toast) => {
+        let IconComponent = CheckCircle2;
+        let typeClass = 'toast-success';
+        if (toast.type === 'warning') {
+          IconComponent = AlertTriangle;
+          typeClass = 'toast-warning';
+        } else if (toast.type === 'error') {
+          IconComponent = AlertCircle;
+          typeClass = 'toast-error';
+        } else if (toast.type === 'info') {
+          IconComponent = Info;
+          typeClass = 'toast-info';
+        }
+
+        return (
+          <div key={toast.id} className={`toast-item ${typeClass}`}>
+            <div className="toast-icon-wrap">
+              <IconComponent size={18} />
+            </div>
+            <div className="toast-content">
+              {toast.title && <div className="toast-title">{toast.title}</div>}
+              <div className="toast-message">{toast.message}</div>
+            </div>
+            <button
+              type="button"
+              onClick={() => removeToast(toast.id)}
+              className="toast-close-btn"
+              aria-label="Dismiss notification"
+            >
+              <X size={15} />
+            </button>
+            <div className="toast-progress-bar" />
+          </div>
+        );
+      })}
+    </div>
+  );
+}
+
 // Heuristic Detection Rule Explanatory Metadata for Tooltips and Visualizations
 const RULE_METADATA = {
   CANARY_ACCESS: {
@@ -254,6 +299,36 @@ function App() {
   const [isScraping, setIsScraping] = useState(false);
   const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
   const [isSimulatorCollapsed, setIsSimulatorCollapsed] = useState(window.innerWidth < 768);
+
+  // In-App Toast Notification System
+  const [toasts, setToasts] = useState([]);
+
+  const showToast = (message, type = 'success', title = '') => {
+    const id = Date.now() + Math.random().toString(36).substring(2, 7);
+    let defaultTitle = 'Notification';
+    if (type === 'success') defaultTitle = 'Success';
+    if (type === 'warning') defaultTitle = 'Security Alert';
+    if (type === 'error') defaultTitle = 'Action Failed';
+    if (type === 'info') defaultTitle = 'Information';
+
+    const newToast = {
+      id,
+      type,
+      title: title || defaultTitle,
+      message,
+      createdAt: Date.now()
+    };
+
+    setToasts((prev) => [...prev.slice(-3), newToast]);
+
+    setTimeout(() => {
+      setToasts((prev) => prev.filter((t) => t.id !== id));
+    }, 4500);
+  };
+
+  const removeToast = (id) => {
+    setToasts((prev) => prev.filter((t) => t.id !== id));
+  };
 
   // Dashboard Interactive Filter & Search States
   const [alertFilter, setAlertFilter] = useState('all'); // 'all', 'open', 'high', 'resolved'
@@ -577,18 +652,18 @@ function App() {
       });
       if (response.ok) {
         const resData = await response.json();
-        alert(resData.message || 'Recommendation policy applied successfully!');
+        showToast(resData.message || 'Recommendation policy applied successfully!', 'success', 'Policy Enforced');
         fetchRecommendations();
         fetchIncidents();
         fetchRules();
         fetchDeptAnalytics();
       } else {
         const errData = await response.json();
-        alert(errData.message || 'Failed to apply recommendation policy.');
+        showToast(errData.message || 'Failed to apply recommendation policy.', 'error', 'Policy Error');
       }
     } catch (err) {
       console.error(err);
-      alert('Error applying policy recommendation.');
+      showToast('Error applying policy recommendation. Please try again.', 'error', 'Policy Error');
     }
   };
 
@@ -606,17 +681,17 @@ function App() {
         })
       });
       if (response.ok) {
-        alert('Rule configuration updated successfully!');
+        showToast('Rule configuration updated successfully!', 'success', 'Rule Updated');
         setEditingRule(null);
         fetchRules();
         fetchIncidents();
       } else {
         const err = await response.json();
-        alert(err.message || 'Failed to update rule.');
+        showToast(err.message || 'Failed to update rule.', 'error', 'Update Failed');
       }
     } catch (err) {
       console.error(err);
-      alert('Error saving rule configuration.');
+      showToast('Error saving rule configuration.', 'error', 'Update Failed');
     }
   };
 
@@ -643,7 +718,7 @@ function App() {
         if (data.message && data.message.includes('suspended')) {
           handleSessionExpiration('Session suspended. High security threat detected.');
         } else {
-          alert('ACCESS DENIED: Insufficient Role-Based permission levels. Threat logged.');
+          showToast('ACCESS DENIED: Insufficient Role-Based permission levels. Threat logged.', 'error', 'Access Restricted');
           fetchIncidents();
         }
         return;
@@ -776,14 +851,37 @@ function App() {
         body: JSON.stringify({ action, userId })
       });
       if (response.ok) {
-        alert(`Mitigation executed: ${action}`);
+        const data = await response.json().catch(() => ({}));
+        let friendlyTitle = 'Action Completed';
+        let friendlyType = 'success';
+        let friendlyMessage = data.message || 'Action executed successfully.';
+
+        if (action === 'REOPEN') {
+          friendlyTitle = 'Incident Reopened';
+          friendlyType = 'success';
+          friendlyMessage = 'Security incident has been reopened and restored to the active investigation queue.';
+        } else if (action === 'LOCK_USER') {
+          friendlyTitle = 'Account Locked';
+          friendlyType = 'warning';
+          friendlyMessage = 'User account has been temporarily locked for 15 minutes to safeguard sensitive employee records.';
+        } else if (action === 'UNLOCK_USER') {
+          friendlyTitle = 'Account Unlocked';
+          friendlyType = 'success';
+          friendlyMessage = 'User account has been successfully unlocked and restored to active access.';
+        } else if (action === 'DISMISS') {
+          friendlyTitle = 'Alert Dismissed';
+          friendlyType = 'info';
+          friendlyMessage = 'Security alert has been dismissed as a false positive and archived.';
+        }
+        showToast(friendlyMessage, friendlyType, friendlyTitle);
         fetchIncidents();
       } else {
-        const errData = await response.json();
-        alert(errData.message || 'Mitigation failed');
+        const errData = await response.json().catch(() => ({}));
+        showToast(errData.message || 'Unable to update incident status. Please try again.', 'error', 'Action Failed');
       }
     } catch (err) {
       console.error(err);
+      showToast('Network error while processing incident mitigation. Please check your connection.', 'error', 'Connection Error');
     }
   };
 
@@ -875,7 +973,7 @@ function App() {
       });
 
       if (response.ok) {
-        alert('Employee added successfully!');
+        showToast('Employee profile added successfully!', 'success', 'Employee Added');
         setNewEmpFirstName('');
         setNewEmpLastName('');
         setNewEmpEmail('');
@@ -887,11 +985,11 @@ function App() {
         fetchEmployees();
       } else {
         const data = await response.json();
-        alert(data.message || 'Failed to add employee.');
+        showToast(data.message || 'Failed to add employee.', 'error', 'Addition Failed');
       }
     } catch (err) {
       console.error(err);
-      alert('Error adding employee.');
+      showToast('Error adding employee.', 'error', 'Addition Failed');
     }
   };
 
@@ -908,15 +1006,15 @@ function App() {
       });
 
       if (response.ok) {
-        alert('Employee removed successfully!');
+        showToast('Employee removed successfully!', 'success', 'Employee Removed');
         fetchEmployees();
       } else {
         const data = await response.json();
-        alert(data.message || 'Failed to remove employee.');
+        showToast(data.message || 'Failed to remove employee.', 'error', 'Removal Failed');
       }
     } catch (err) {
       console.error(err);
-      alert('Error removing employee.');
+      showToast('Error removing employee.', 'error', 'Removal Failed');
     }
   };
 
@@ -929,13 +1027,15 @@ function App() {
         body: JSON.stringify({ status: decision })
       });
       if (response.ok) {
+        showToast(`Leave request marked as ${decision}.`, 'success', 'Leave Decision Recorded');
         fetchLeaves();
       } else {
         const err = await response.json();
-        alert(err.message || 'Action denied');
+        showToast(err.message || 'Action denied', 'error', 'Action Denied');
       }
     } catch (err) {
       console.error(err);
+      showToast('Error recording leave decision.', 'error', 'Action Error');
     }
   };
 
@@ -964,7 +1064,7 @@ function App() {
       });
 
       if (response.ok) {
-        alert('Leave request submitted successfully!');
+        showToast('Leave request submitted successfully!', 'success', 'Request Submitted');
         setStartDate('');
         setEndDate('');
         setReason('');
@@ -972,10 +1072,11 @@ function App() {
         fetchLeaves();
       } else {
         const err = await response.json();
-        alert(err.message || 'Failed to submit leave request');
+        showToast(err.message || 'Failed to submit leave request', 'error', 'Submission Failed');
       }
     } catch (err) {
       console.error(err);
+      showToast('Error submitting leave request.', 'error', 'Submission Failed');
     }
   };
 
@@ -991,7 +1092,7 @@ function App() {
   };
 
   const handleSessionExpiration = (message) => {
-    alert(message);
+    showToast(message, 'warning', 'Session Suspended');
     handleLogout();
   };
 
@@ -1015,9 +1116,10 @@ function App() {
       if (user.role === 'System Administrator' || user.role === 'HR Manager') {
         setActiveTab('dashboard');
       }
-      alert('Simulation completed! Redirecting you to the Security Dashboard to view the active Volumetric Scrape alert.');
+      showToast('Simulation completed! Redirecting you to Security Dashboard to view active Volumetric Scrape alert.', 'warning', 'Threat Simulated');
     } catch (e) {
       console.error(e);
+      showToast('Error simulating volumetric scrape.', 'error', 'Simulation Failed');
     } finally {
       setIsScraping(false);
     }
@@ -1037,13 +1139,14 @@ function App() {
         if (user.role === 'System Administrator' || user.role === 'HR Manager') {
           setActiveTab('dashboard');
         }
-        alert('Impossible travel threat simulated! Redirecting you to the Security Dashboard to view the active alert.');
+        showToast('Impossible travel threat simulated! Redirecting to Security Dashboard to view active alert.', 'warning', 'Threat Simulated');
       } else {
         const data = await response.json();
-        alert(data.message || 'Simulation failed');
+        showToast(data.message || 'Simulation failed', 'error', 'Simulation Failed');
       }
     } catch (err) {
       console.error(err);
+      showToast('Error simulating impossible travel.', 'error', 'Simulation Failed');
     }
   };
 
@@ -1213,7 +1316,7 @@ function App() {
                               body: JSON.stringify({ email: loginEmail })
                             });
                             if (res.ok) {
-                              alert('Account unlocked successfully! You can now sign in.');
+                              showToast('Account unlocked successfully! You can now sign in.', 'success', 'Account Unlocked');
                               setErrorMessage('');
                             }
                           } catch (e) {
@@ -3285,6 +3388,9 @@ function App() {
           </div>
         </div>
       )}
+
+      {/* Global In-App Toast Notification Banner System */}
+      <ToastContainer toasts={toasts} removeToast={removeToast} />
     </div>
   );
 }
