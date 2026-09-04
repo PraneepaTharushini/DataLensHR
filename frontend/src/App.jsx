@@ -776,14 +776,26 @@ function App() {
         body: JSON.stringify({ action, userId })
       });
       if (response.ok) {
-        alert(`Mitigation executed: ${action}`);
+        const data = await response.json().catch(() => ({}));
+        let friendlyMessage = data.message;
+        if (action === 'REOPEN') {
+          friendlyMessage = 'Security incident has been reopened and restored to the active investigation queue.';
+        } else if (action === 'LOCK_USER') {
+          friendlyMessage = 'User account has been temporarily locked for 15 minutes to safeguard sensitive employee records.';
+        } else if (action === 'UNLOCK_USER') {
+          friendlyMessage = 'User account has been successfully unlocked and restored to active access.';
+        } else if (action === 'DISMISS') {
+          friendlyMessage = 'Security alert has been dismissed as a false positive and archived.';
+        }
+        alert(friendlyMessage || 'Action completed successfully.');
         fetchIncidents();
       } else {
-        const errData = await response.json();
-        alert(errData.message || 'Mitigation failed');
+        const errData = await response.json().catch(() => ({}));
+        alert(errData.message || 'Unable to update incident status. Please try again.');
       }
     } catch (err) {
       console.error(err);
+      alert('Network error while processing incident mitigation. Please check your connection.');
     }
   };
 
