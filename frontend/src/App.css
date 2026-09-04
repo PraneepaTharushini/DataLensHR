@@ -916,7 +916,7 @@ html, body {
   border-right: 1px solid var(--border-glow);
   display: flex;
   flex-direction: column;
-  justifyContent: space-between;
+  justify-content: space-between;
   height: 100vh;
   position: sticky;
   top: 0;
@@ -931,6 +931,7 @@ html, body {
   gap: 14px;
   border-bottom: 1px solid var(--border-glow);
   transition: background-color 0.2s ease;
+  flex-shrink: 0;
 }
 
 .sidebar-brand:hover {
@@ -968,7 +969,8 @@ html, body {
 }
 
 .nav-menu-scroll {
-  flex: 1;
+  flex: 1 1 auto;
+  min-height: 0;
   overflow-y: auto;
   overflow-x: hidden;
   padding: 20px 16px;
@@ -1292,6 +1294,7 @@ html, body {
   display: flex;
   flex-direction: column;
   gap: 12px;
+  flex-shrink: 0;
 }
 
 .user-profile-summary {
@@ -1705,6 +1708,11 @@ html, body {
 
 /* Reusable Interactive Hover Tooltip Container */
 .has-tooltip {
+  position: relative;
+  cursor: help;
+}
+
+.has-tooltip-inline {
   position: relative;
   cursor: help;
   display: inline-flex;
@@ -3341,18 +3349,37 @@ html, body {
 }
 
 .analytics-ribbon {
-  display: flex;
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
   gap: 16px;
   margin-bottom: 24px;
+  width: 100%;
 }
 
 .ribbon-card {
+  display: flex;
+  flex-direction: column;
+  justify-content: space-between;
+  gap: 10px;
+  padding: 22px 24px;
   transition: transform 0.2s ease, box-shadow 0.2s ease;
 }
 
 .ribbon-card:hover {
   transform: translateY(-2px);
   box-shadow: 0 4px 20px rgba(0, 0, 0, 0.15);
+}
+
+.risk-scale-axis-ticks {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  font-size: 10px;
+  font-weight: 700;
+  color: var(--text-muted);
+  text-transform: uppercase;
+  letter-spacing: 0.4px;
+  margin-top: 6px;
 }
 
 .risk-score-pill {
