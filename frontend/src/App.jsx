@@ -805,14 +805,14 @@ function App() {
   const getTopRiskDept = () => {
     if (deptAnalytics.length === 0) return 'None';
     const sorted = [...deptAnalytics].sort((a, b) => b.avg_risk_score - a.avg_risk_score);
-    return sorted[0].avg_risk_score > 0 ? `${sorted[0].department} (${Math.round(sorted[0].avg_risk_score)} Avg Risk)` : 'None';
+    return sorted[0].avg_risk_score > 0 ? `${sorted[0].department} (${Math.round(sorted[0].avg_risk_score)} / 100 Avg Risk)` : 'None';
   };
 
   // Helper: Get highest records accessed department
   const getTopHarvesterDept = () => {
     if (deptAnalytics.length === 0) return 'None';
     const sorted = [...deptAnalytics].sort((a, b) => b.total_records_accessed - a.total_records_accessed);
-    return sorted[0].total_records_accessed > 0 ? `${sorted[0].department} (${sorted[0].total_records_accessed} reads)` : 'None';
+    return sorted[0].total_records_accessed > 0 ? `${sorted[0].department} (${sorted[0].total_records_accessed} Records Read)` : 'None';
   };
 
   // Helper: Filter Incidents by Status and Search Query
@@ -1989,7 +1989,7 @@ function App() {
                                             {meta.shortName || meta.label}
                                           </span>
                                           <span className="rule-count-lbl" style={{ fontSize: '11px', fontWeight: '700', color: count > 0 ? (rule === 'CANARY_ACCESS' || rule === 'IMPOSSIBLE_TRAVEL' ? 'var(--danger)' : 'var(--warning)') : 'var(--text-muted)' }}>
-                                            {count} {count === 1 ? 'event' : 'events'} ({Math.round(percentage)}%)
+                                            {count} {count === 1 ? 'event' : 'events'} ({totalTriggers > 0 ? Math.round((count / totalTriggers) * 100) : 0}% share)
                                           </span>
                                         </div>
                                         <div className="rule-frequency-bar-bg" style={{ height: '7px', background: 'var(--bg-input)', borderRadius: '4px', overflow: 'hidden', border: '1px solid var(--border-glow)' }}>
@@ -2010,6 +2010,10 @@ function App() {
                                             <div style={{ display: 'flex', justifyContent: 'space-between' }}>
                                               <span style={{ color: 'var(--text-muted)' }}>Triggered:</span>
                                               <strong style={{ color: 'var(--text-primary)' }}>{count} {count === 1 ? 'event' : 'events'}</strong>
+                                            </div>
+                                            <div style={{ display: 'flex', justifyContent: 'space-between' }}>
+                                              <span style={{ color: 'var(--text-muted)' }}>Trigger Share:</span>
+                                              <strong style={{ color: 'var(--text-primary)' }}>{totalTriggers > 0 ? ((count / totalTriggers) * 100).toFixed(1) : 0}% of all events</strong>
                                             </div>
                                             <div style={{ display: 'flex', justifyContent: 'space-between' }}>
                                               <span style={{ color: 'var(--text-muted)' }}>Risk Level:</span>
@@ -2033,11 +2037,11 @@ function App() {
                                   {/* Graphical Scale & Axis Ticks with Units */}
                                   <div className="chart-axis-container" style={{ marginTop: '10px', paddingTop: '8px', borderTop: '1px dashed var(--border-glow)' }}>
                                     <div style={{ display: 'flex', justifyContent: 'space-between', fontSize: '10px', color: 'var(--text-muted)', fontFamily: 'var(--font-mono)', fontWeight: '700' }}>
-                                      <span>0 Events</span>
-                                      <span>{Math.max(1, Math.round(maxCount * 0.25))} Events</span>
-                                      <span>{Math.max(2, Math.round(maxCount * 0.5))} Events</span>
-                                      <span>{Math.max(3, Math.round(maxCount * 0.75))} Events</span>
-                                      <span>{maxCount} Events (Peak Volume)</span>
+                                      <span>0</span>
+                                      <span>{Math.max(1, Math.round(maxCount * 0.25))}</span>
+                                      <span>{Math.max(2, Math.round(maxCount * 0.5))}</span>
+                                      <span>{Math.max(3, Math.round(maxCount * 0.75))}</span>
+                                      <span>{maxCount} Events</span>
                                     </div>
                                     <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', height: '6px', margin: '3px 0 5px 0', borderBottom: '1px solid var(--border-glow)' }}>
                                       <span style={{ width: '1px', height: '6px', background: 'var(--text-muted)' }} />
@@ -2229,7 +2233,7 @@ function App() {
                                     <div className="ticket-summary-row">
                                       <div className="ticket-summary-left">
                                         <span className={`risk-level-badge ${inc.risk_level.toLowerCase()}`}>
-                                          {inc.risk_level} ({inc.risk_score})
+                                          {inc.risk_level} • {inc.risk_score}/100 Risk
                                         </span>
                                         <span className="ticket-user-pill" style={{ display: 'inline-flex', alignItems: 'center', gap: '4px' }}>
                                           <User size={12} /> <strong>{inc.user_email || 'Anonymous'}</strong> ({inc.user_role || 'Guest'})
@@ -2468,7 +2472,7 @@ function App() {
                               <div className="has-tooltip" style={{ marginBottom: '14px', width: '100%', display: 'flex', flexDirection: 'column' }}>
                                 <div style={{ display: 'flex', justifyContent: 'space-between', fontSize: '11px', marginBottom: '4px' }}>
                                   <span style={{ color: 'var(--text-secondary)' }}>Average Privacy Risk Score:</span>
-                                  <span style={{ fontWeight: 'bold', color: 'var(--text-primary)' }}>{Math.round(avgRisk)} / 100 Risk</span>
+                                  <span style={{ fontWeight: 'bold', color: 'var(--text-primary)' }}>{Math.round(avgRisk)} / 100 Risk Score</span>
                                 </div>
                                 <div style={{ height: '7px', background: 'var(--bg-input)', borderRadius: '4px', overflow: 'hidden', border: '1px solid var(--border-glow)' }}>
                                   <div style={{
@@ -2579,9 +2583,9 @@ function App() {
                             deptAnalytics.map((dept, i) => (
                               <tr key={i}>
                                 <td data-label="Department" style={{ fontWeight: '700', color: 'var(--text-primary)' }}>{dept.department || 'General'}</td>
-                                <td data-label="Active Members" style={{ color: 'var(--text-primary)' }}>{dept.employee_count} members</td>
+                                <td data-label="Active Members" style={{ color: 'var(--text-primary)' }}>{dept.employee_count} {dept.employee_count === 1 ? 'member' : 'members'}</td>
                                 <td data-label="Incident Violations" style={{ color: dept.incident_count > 0 ? 'var(--danger)' : 'var(--text-primary)', fontWeight: dept.incident_count > 0 ? 'bold' : 'normal' }}>
-                                  {dept.incident_count} events
+                                  {dept.incident_count} {dept.incident_count === 1 ? 'event' : 'events'}
                                 </td>
                                 <td data-label="Average Risk">
                                   <span className="risk-score-pill" style={{
@@ -2592,8 +2596,8 @@ function App() {
                                   </span>
                                 </td>
                                 <td data-label="Peak Risk" style={{ color: 'var(--text-primary)' }}>{dept.max_risk_score} / 100</td>
-                                <td data-label="Sensitive Records" style={{ color: 'var(--text-primary)', fontWeight: 'bold' }}>{dept.total_records_accessed} records</td>
-                                <td data-label="Audit Transactions" style={{ color: 'var(--text-primary)' }}>{dept.total_actions} ops</td>
+                                <td data-label="Sensitive Records" style={{ color: 'var(--text-primary)', fontWeight: 'bold' }}>{dept.total_records_accessed} {dept.total_records_accessed === 1 ? 'record' : 'records'}</td>
+                                <td data-label="Audit Transactions" style={{ color: 'var(--text-primary)' }}>{dept.total_actions} {dept.total_actions === 1 ? 'operation' : 'operations'}</td>
                               </tr>
                             ))
                           )}
@@ -2750,40 +2754,79 @@ function App() {
                               </form>
                             ) : (
                               <div className="rule-card-metrics" style={{ marginTop: '14px' }}>
-                                <div className="metric-row has-tooltip" style={{ display: 'flex', justifyContent: 'space-between', padding: '6px 0', borderBottom: '1px solid rgba(255,255,255,0.05)', width: '100%' }}>
-                                  <span style={{ color: 'var(--text-secondary)', fontSize: '12px' }}>Risk Score Weight:</span>
-                                  <span style={{ color: 'var(--text-primary)', fontWeight: 'bold', fontSize: '12px' }}>{rule.weight} / 100 Points</span>
-                                  <div className="tooltip-bubble">
-                                    <strong className="tooltip-title">Risk Weight Impact</strong>
-                                    <span>Added directly to an incident's composite threat score when this rule detects a breach.</span>
-                                  </div>
-                                </div>
-                                
-                                {rule.id === 'R-02' && (
-                                  <div className="metric-row has-tooltip" style={{ display: 'flex', justifyContent: 'space-between', padding: '6px 0', borderBottom: '1px solid rgba(255,255,255,0.05)', width: '100%' }}>
-                                    <span style={{ color: 'var(--text-secondary)', fontSize: '12px' }}>Restricted Timeframe:</span>
-                                    <span style={{ color: 'var(--text-primary)', fontSize: '12px', fontWeight: '500' }}>
-                                      {params.start_hour ?? 23}:00 to {params.end_hour ?? 5}:00 (Overnight)
-                                    </span>
-                                    <div className="tooltip-bubble">
-                                      <strong className="tooltip-title">Restricted Hours</strong>
-                                      <span>Access attempts between {params.start_hour ?? 23}:00 and {params.end_hour ?? 5}:00 are automatically flagged.</span>
-                                    </div>
-                                  </div>
-                                )}
+                                 <div className="metric-row has-tooltip" style={{ display: 'flex', justifyContent: 'space-between', padding: '6px 0', borderBottom: '1px solid rgba(255,255,255,0.05)', width: '100%' }}>
+                                   <span style={{ color: 'var(--text-secondary)', fontSize: '12px' }}>Risk Score Weight:</span>
+                                   <span style={{ color: 'var(--text-primary)', fontWeight: 'bold', fontSize: '12px' }}>{rule.weight} / 100 Points</span>
+                                   <div className="tooltip-bubble">
+                                     <strong className="tooltip-title">Risk Weight Impact</strong>
+                                     <span>Added directly to an incident's composite threat score when this rule detects a breach.</span>
+                                   </div>
+                                 </div>
 
-                                {rule.id === 'R-05' && (
-                                  <div className="metric-row has-tooltip" style={{ display: 'flex', justifyContent: 'space-between', padding: '6px 0', borderBottom: '1px solid rgba(255,255,255,0.05)', width: '100%' }}>
-                                    <span style={{ color: 'var(--text-secondary)', fontSize: '12px' }}>Alert Limit Threshold:</span>
-                                    <span style={{ color: 'var(--text-primary)', fontSize: '12px', fontWeight: '500' }}>
-                                      &gt; {params.limit ?? 10} reads / {(params.window_ms ?? 10000) / 1000}s window
-                                    </span>
-                                    <div className="tooltip-bubble">
-                                      <strong className="tooltip-title">Volumetric Threshold</strong>
-                                      <span>Triggers when an account queries more than {params.limit ?? 10} records within {(params.window_ms ?? 10000) / 1000} seconds.</span>
-                                    </div>
-                                  </div>
-                                )}
+                                 {rule.id === 'R-01' && (
+                                   <div className="metric-row has-tooltip" style={{ display: 'flex', justifyContent: 'space-between', padding: '6px 0', borderBottom: '1px solid rgba(255,255,255,0.05)', width: '100%' }}>
+                                     <span style={{ color: 'var(--text-secondary)', fontSize: '12px' }}>Detection Mode:</span>
+                                     <span style={{ color: 'var(--danger)', fontSize: '12px', fontWeight: '700' }}>
+                                       Zero-Tolerance Canary Decoy
+                                     </span>
+                                     <div className="tooltip-bubble">
+                                       <strong className="tooltip-title">Canary Trap</strong>
+                                       <span>Instant high-severity incident created upon any query to decoy employee profile accounts.</span>
+                                     </div>
+                                   </div>
+                                 )}
+                                 
+                                 {rule.id === 'R-02' && (
+                                   <div className="metric-row has-tooltip" style={{ display: 'flex', justifyContent: 'space-between', padding: '6px 0', borderBottom: '1px solid rgba(255,255,255,0.05)', width: '100%' }}>
+                                     <span style={{ color: 'var(--text-secondary)', fontSize: '12px' }}>Restricted Timeframe:</span>
+                                     <span style={{ color: 'var(--text-primary)', fontSize: '12px', fontWeight: '500' }}>
+                                       {params.start_hour ?? 23}:00 to {params.end_hour ?? 5}:00 (Overnight)
+                                     </span>
+                                     <div className="tooltip-bubble">
+                                       <strong className="tooltip-title">Restricted Hours</strong>
+                                       <span>Access attempts between {params.start_hour ?? 23}:00 and {params.end_hour ?? 5}:00 are automatically flagged.</span>
+                                     </div>
+                                   </div>
+                                 )}
+
+                                 {rule.id === 'R-03' && (
+                                   <div className="metric-row has-tooltip" style={{ display: 'flex', justifyContent: 'space-between', padding: '6px 0', borderBottom: '1px solid rgba(255,255,255,0.05)', width: '100%' }}>
+                                     <span style={{ color: 'var(--text-secondary)', fontSize: '12px' }}>Velocity Threshold:</span>
+                                     <span style={{ color: 'var(--text-primary)', fontSize: '12px', fontWeight: '500' }}>
+                                       &gt; 500 km/h login velocity
+                                     </span>
+                                     <div className="tooltip-bubble">
+                                       <strong className="tooltip-title">Impossible Travel Speed</strong>
+                                       <span>Flags consecutive logins across distinct geographical cities exceeding 500 km/h.</span>
+                                     </div>
+                                   </div>
+                                 )}
+
+                                 {rule.id === 'R-04' && (
+                                   <div className="metric-row has-tooltip" style={{ display: 'flex', justifyContent: 'space-between', padding: '6px 0', borderBottom: '1px solid rgba(255,255,255,0.05)', width: '100%' }}>
+                                     <span style={{ color: 'var(--text-secondary)', fontSize: '12px' }}>Inspection Scope:</span>
+                                     <span style={{ color: 'var(--text-primary)', fontSize: '12px', fontWeight: '500' }}>
+                                       Role-Based Salary Unmasking
+                                     </span>
+                                     <div className="tooltip-bubble">
+                                       <strong className="tooltip-title">Salary Shielding</strong>
+                                       <span>Protects against unauthorized role-based decryption of employee compensation.</span>
+                                     </div>
+                                   </div>
+                                 )}
+
+                                 {rule.id === 'R-05' && (
+                                   <div className="metric-row has-tooltip" style={{ display: 'flex', justifyContent: 'space-between', padding: '6px 0', borderBottom: '1px solid rgba(255,255,255,0.05)', width: '100%' }}>
+                                     <span style={{ color: 'var(--text-secondary)', fontSize: '12px' }}>Alert Limit Threshold:</span>
+                                     <span style={{ color: 'var(--text-primary)', fontSize: '12px', fontWeight: '500' }}>
+                                       &gt; {params.limit ?? 10} reads / {(params.window_ms ?? 10000) / 1000}s window
+                                     </span>
+                                     <div className="tooltip-bubble">
+                                       <strong className="tooltip-title">Volumetric Threshold</strong>
+                                       <span>Triggers when an account queries more than {params.limit ?? 10} records within {(params.window_ms ?? 10000) / 1000} seconds.</span>
+                                     </div>
+                                   </div>
+                                 )}
 
                                 <button 
                                   onClick={() => {
@@ -2966,7 +3009,7 @@ function App() {
                           <th>Department</th>
                           <th>Position</th>
                           <th>Hire Date</th>
-                          <th>Sensitive Salary</th>
+                          <th>Sensitive Salary (Annual USD)</th>
                           <th>Action</th>
                         </tr>
                       </thead>
@@ -3012,9 +3055,9 @@ function App() {
                               <td data-label="Hire Date" style={{ color: 'var(--text-secondary)' }}>{new Date(emp.hire_date).toLocaleDateString()}</td>
                               <td data-label="Sensitive Salary" className="salary-val-sensitive">
                                 {salaryMap[emp.id] ? (
-                                  <span className="visible">${parseFloat(salaryMap[emp.id]).toLocaleString()}</span>
+                                  <span className="visible">${parseFloat(salaryMap[emp.id]).toLocaleString()} / year</span>
                                 ) : (
-                                  <span style={{ color: 'var(--text-secondary)' }}>{emp.salary}</span>
+                                  <span style={{ color: 'var(--text-secondary)' }}>•••••••• (Masked)</span>
                                 )}
                               </td>
                               <td data-label="Action" style={{ whiteSpace: 'nowrap' }}>
