@@ -44,3 +44,6 @@ build/
 out/
 .next/
 .vite/
+
+# Temporary user screenshots
+Screenshot*.png

@@ -1398,10 +1398,56 @@ html, body {
   backdrop-filter: blur(12px);
 }
 
+/* Hamburger Menu Toggle Button (Mobile/Tablet Only) */
+.hamburger-menu-btn {
+  display: none;
+  background: var(--bg-input);
+  border: 1px solid var(--border-glow);
+  width: 38px;
+  height: 38px;
+  min-width: 38px;
+  border-radius: 10px;
+  padding: 9px 8px;
+  flex-direction: column;
+  justify-content: space-between;
+  cursor: pointer;
+  transition: all 0.2s ease;
+  z-index: 60;
+}
+
+.hamburger-menu-btn:hover {
+  background: var(--primary-glow);
+  border-color: var(--primary);
+}
+
+.hamburger-menu-btn span {
+  display: block;
+  height: 2px;
+  width: 100%;
+  background-color: var(--text-primary);
+  border-radius: 2px;
+  transition: all 0.3s cubic-bezier(0.16, 1, 0.3, 1);
+  transform-origin: center;
+}
+
+.hamburger-menu-btn.open span:nth-child(1) {
+  transform: translateY(8px) rotate(45deg);
+}
+
+.hamburger-menu-btn.open span:nth-child(2) {
+  opacity: 0;
+  transform: scale(0);
+}
+
+.hamburger-menu-btn.open span:nth-child(3) {
+  transform: translateY(-8px) rotate(-45deg);
+}
+
 .top-bar-left {
   display: flex;
   align-items: center;
   gap: 16px;
+  min-width: 0;
 }
 
 .breadcrumb-box {
@@ -4185,6 +4231,372 @@ textarea:focus:not(:focus-visible),
   cursor: not-allowed;
   filter: grayscale(0.5);
   box-shadow: none;
+}
+
+/* ==========================================================================
+   COMPREHENSIVE MOBILE & TABLET RESPONSIVE DESIGN SYSTEM
+   ========================================================================== */
+
+/* ------------------ TABLETS & SMALL DESKTOPS (<= 1024px) ------------------ */
+@media (max-width: 1024px) {
+  .hamburger-menu-btn {
+    display: flex;
+  }
+
+  .nav-sidebar {
+    position: fixed;
+    top: 0;
+    left: 0;
+    bottom: 0;
+    width: 290px;
+    max-width: 85vw;
+    height: 100vh;
+    z-index: 1000;
+    transform: translateX(-100%);
+    box-shadow: none;
+    transition: transform 0.3s cubic-bezier(0.16, 1, 0.3, 1), box-shadow 0.3s ease;
+  }
+
+  .nav-sidebar.mobile-open {
+    transform: translateX(0);
+    box-shadow: 0 0 60px rgba(0, 0, 0, 0.7);
+  }
+
+  .sidebar-mobile-backdrop {
+    position: fixed;
+    inset: 0;
+    background: rgba(0, 0, 0, 0.65);
+    backdrop-filter: blur(4px);
+    z-index: 999;
+    animation: fadeIn 0.2s ease-out;
+  }
+
+  .workspace-top-bar {
+    padding: 0 20px;
+    height: 60px;
+  }
+
+  .view-frame {
+    padding: 24px 20px;
+  }
+
+  .login-view {
+    flex-direction: column;
+    gap: 36px;
+    padding: 32px 20px;
+    max-width: 680px;
+  }
+
+  .login-hero {
+    max-width: 100%;
+    text-align: center;
+  }
+
+  .login-hero h2 {
+    font-size: 32px;
+  }
+
+  .login-hero p {
+    font-size: 14px;
+    margin-bottom: 24px;
+  }
+
+  .demo-accounts-card {
+    text-align: left;
+  }
+
+  .login-form-box {
+    max-width: 100%;
+  }
+
+  .dashboard-kpi-grid {
+    grid-template-columns: repeat(2, 1fr);
+    gap: 16px;
+  }
+
+  .dashboard-analytics-row {
+    grid-template-columns: 1fr;
+    gap: 20px;
+  }
+}
+
+/* ------------------ PHABLETS & MOBILE SCREENS (<= 768px) ------------------ */
+@media (max-width: 768px) {
+  .workspace-top-bar {
+    padding: 0 14px;
+    height: 56px;
+  }
+
+  .top-bar-left {
+    gap: 10px;
+  }
+
+  .top-bar-right {
+    gap: 8px;
+  }
+
+  .breadcrumb-box {
+    font-size: 12px;
+    gap: 5px;
+  }
+
+  .breadcrumb-icon {
+    font-size: 14px;
+  }
+
+  .view-frame {
+    padding: 18px 14px;
+  }
+
+  .view-title-block {
+    margin-bottom: 20px;
+  }
+
+  .view-title-block h3 {
+    font-size: 20px;
+  }
+
+  .view-title-block p {
+    font-size: 12.5px;
+    line-height: 1.45;
+  }
+
+  /* Tables Mobile Smooth Scrolling */
+  .table-wrapper {
+    border-radius: 14px;
+    overflow-x: auto;
+    -webkit-overflow-scrolling: touch;
+  }
+
+  .table-wrapper table {
+    min-width: 580px;
+  }
+
+  .table-wrapper th,
+  .table-wrapper td {
+    padding: 12px 14px;
+    font-size: 12px;
+  }
+
+  /* Table Toolbars Stacking */
+  .table-toolbar-bar {
+    flex-direction: column;
+    align-items: stretch;
+    gap: 12px;
+  }
+
+  .table-toolbar-bar .search-box-wrapper {
+    width: 100%;
+    min-width: 100%;
+    max-width: 100%;
+  }
+
+  .table-filter-pills {
+    overflow-x: auto;
+    flex-wrap: nowrap;
+    padding-bottom: 4px;
+    width: 100%;
+    -webkit-overflow-scrolling: touch;
+  }
+
+  .table-filter-pills .filter-pill-btn {
+    flex-shrink: 0;
+    white-space: nowrap;
+  }
+
+  /* Incident Stream Mobile Layout */
+  .incident-toolbar-container {
+    flex-direction: column;
+    align-items: stretch;
+    gap: 14px;
+  }
+
+  .incident-filter-bar {
+    flex-direction: column;
+    align-items: stretch;
+    gap: 10px;
+    width: 100%;
+  }
+
+  .incident-filter-bar .search-box-wrapper {
+    width: 100%;
+    min-width: 100%;
+  }
+
+  .filter-pill-group {
+    overflow-x: auto;
+    flex-wrap: nowrap;
+    padding-bottom: 4px;
+    width: 100%;
+    -webkit-overflow-scrolling: touch;
+  }
+
+  .filter-pill-group .filter-pill-btn {
+    flex-shrink: 0;
+    white-space: nowrap;
+  }
+
+  .ticket-summary-row {
+    flex-direction: column;
+    align-items: flex-start;
+    gap: 10px;
+  }
+
+  .ticket-summary-left {
+    width: 100%;
+    gap: 6px;
+  }
+
+  .ticket-summary-right {
+    width: 100%;
+    display: flex;
+    justify-content: flex-end;
+    gap: 8px;
+  }
+
+  .evidence-grid {
+    grid-template-columns: 1fr;
+    gap: 10px;
+  }
+
+  /* Department Analytics Mobile */
+  .analytics-ribbon {
+    flex-direction: column;
+    gap: 12px;
+    margin-bottom: 16px;
+  }
+
+  .ribbon-card {
+    min-width: 100%;
+  }
+
+  .rules-grid {
+    grid-template-columns: 1fr;
+    gap: 14px;
+  }
+
+  /* Modals Mobile Adaptation */
+  .modal-backdrop {
+    padding: 12px;
+  }
+
+  .modal-card {
+    max-width: 100%;
+    padding: 20px 16px;
+    border-radius: 16px;
+    max-height: 94vh;
+  }
+
+  .modal-form {
+    grid-template-columns: 1fr;
+    gap: 12px;
+  }
+
+  .modal-actions {
+    flex-direction: column-reverse;
+    gap: 8px;
+    width: 100%;
+  }
+
+  .modal-actions button {
+    width: 100%;
+    padding: 12px;
+    font-size: 13px;
+  }
+
+  /* Leave Request Form Mobile */
+  .leave-form-card form {
+    flex-direction: column;
+    align-items: stretch;
+  }
+
+  .leave-form-card form > div {
+    width: 100% !important;
+    flex: 1 1 100% !important;
+  }
+
+  .leave-form-card form button {
+    width: 100%;
+  }
+}
+
+/* ------------------ SMARTPHONES (<= 540px) ------------------ */
+@media (max-width: 540px) {
+  .breadcrumb-cat,
+  .breadcrumb-separator {
+    display: none;
+  }
+
+  .breadcrumb-page {
+    font-size: 12px;
+  }
+
+  .sim-location-pill {
+    display: none !important;
+  }
+
+  .live-status-pill {
+    font-size: 10px;
+    padding: 5px 9px;
+    gap: 5px;
+  }
+
+  .dashboard-kpi-grid {
+    grid-template-columns: 1fr;
+    gap: 12px;
+  }
+
+  /* Threat Velocity Chart: Stack Risk Dial and Bars Vertically */
+  .threat-dial-and-bars {
+    flex-direction: column;
+    align-items: center;
+    gap: 20px;
+  }
+
+  .gauge-panel-compact {
+    width: 100%;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+  }
+
+  .rule-frequencies-compact {
+    width: 100%;
+    min-width: 0;
+  }
+
+  .chart-axis-header {
+    font-size: 10px;
+  }
+
+  .chart-axis-container {
+    font-size: 9px;
+  }
+
+  .login-hero h2 {
+    font-size: 24px;
+  }
+
+  .demo-pills-container {
+    grid-template-columns: 1fr;
+    gap: 8px;
+  }
+
+  /* Form inputs touch height */
+  .form-input-field,
+  .search-input-field,
+  .text-input-field,
+  .select-dropdown {
+    font-size: 14px;
+    min-height: 42px;
+  }
+
+  .btn-primary,
+  .btn-secondary,
+  .btn-danger,
+  .btn-login-submit {
+    min-height: 40px;
+  }
 }
 
 
