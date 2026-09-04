@@ -330,6 +330,17 @@ function App() {
     setToasts((prev) => prev.filter((t) => t.id !== id));
   };
 
+  // Action Loading States for Instant Visual Feedback & Prevention of Duplicate Clicks
+  const [mitigatingIncident, setMitigatingIncident] = useState({}); // { [id]: 'REOPEN' | 'LOCK_USER' | 'UNLOCK_USER' | 'DISMISS' }
+  const [applyingRec, setApplyingRec] = useState({}); // { [id]: true }
+  const [isSavingRule, setIsSavingRule] = useState(false);
+  const [isSubmittingEmployee, setIsSubmittingEmployee] = useState(false);
+  const [deletingEmployee, setDeletingEmployee] = useState({}); // { [id]: true }
+  const [processingLeave, setProcessingLeave] = useState({}); // { [id]: 'Approved' | 'Rejected' }
+  const [isSubmittingLeave, setIsSubmittingLeave] = useState(false);
+  const [loadingSalary, setLoadingSalary] = useState({}); // { [id]: true }
+  const [isSimulatingTravel, setIsSimulatingTravel] = useState(false);
+
   // Dashboard Interactive Filter & Search States
   const [alertFilter, setAlertFilter] = useState('all'); // 'all', 'open', 'high', 'resolved'
   const [alertSearch, setAlertSearch] = useState('');
@@ -637,6 +648,7 @@ function App() {
 
   // API Call: Enforce Dynamic Recommendation Action
   const handleApplyRecommendation = async (rec) => {
+    setApplyingRec(prev => ({ ...prev, [rec.id]: true }));
     try {
       const response = await fetch(`${API_BASE}/recommendations/apply`, {
         method: 'POST',
@@ -664,12 +676,19 @@ function App() {
     } catch (err) {
       console.error(err);
       showToast('Error applying policy recommendation. Please try again.', 'error', 'Policy Error');
+    } finally {
+      setApplyingRec(prev => {
+        const next = { ...prev };
+        delete next[rec.id];
+        return next;
+      });
     }
   };
 
   // API Call: Save Privacy Rule modifications
   const handleSaveRule = async (e, ruleId) => {
     e.preventDefault();
+    setIsSavingRule(true);
     try {
       const response = await fetch(`${API_BASE}/rules/${ruleId}`, {
         method: 'PUT',
@@ -692,6 +711,8 @@ function App() {
     } catch (err) {
       console.error(err);
       showToast('Error saving rule configuration.', 'error', 'Update Failed');
+    } finally {
+      setIsSavingRule(false);
     }
   };
 
@@ -705,6 +726,7 @@ function App() {
       });
       return;
     }
+    setLoadingSalary(prev => ({ ...prev, [employeeId]: true }));
     try {
       const response = await fetch(`${API_BASE}/employees/${employeeId}/salary`, {
         headers: getHeaders()
@@ -728,6 +750,12 @@ function App() {
       fetchIncidents();
     } catch (err) {
       console.error(err);
+    } finally {
+      setLoadingSalary(prev => {
+        const next = { ...prev };
+        delete next[employeeId];
+        return next;
+      });
     }
   };
 
@@ -844,6 +872,7 @@ function App() {
 
   // API Call: Resolve / Mitigate Incident
   const executeMitigation = async (incidentId, action, userId) => {
+    setMitigatingIncident(prev => ({ ...prev, [incidentId]: action }));
     try {
       const response = await fetch(`${API_BASE}/incidents/${incidentId}/mitigate`, {
         method: 'POST',
@@ -882,6 +911,12 @@ function App() {
     } catch (err) {
       console.error(err);
       showToast('Network error while processing incident mitigation. Please check your connection.', 'error', 'Connection Error');
+    } finally {
+      setMitigatingIncident(prev => {
+        const next = { ...prev };
+        delete next[incidentId];
+        return next;
+      });
     }
   };
 
@@ -931,7 +966,15 @@ function App() {
   const handleAutofill = (email) => {
     setLoginEmail(email);
     setLoginPassword('admin123');
-    setLoginTouched({ email: true, password: true });
+    setLoginTouched({ email: false, password: false });
+    setErrorMessage('');
+  };
+
+  const handleDemoFill = (email, password = 'admin123') => {
+    setLoginEmail(email);
+    setLoginPassword(password);
+    setLoginTouched({ email: false, password: false });
+    setErrorMessage('');
   };
 
   // Toggle Theme
@@ -948,6 +991,7 @@ function App() {
       first_name: true,
       last_name: true,
       email: true,
+      department: true,
       position: true,
       salary: true,
       hire_date: true
@@ -957,6 +1001,7 @@ function App() {
       return;
     }
 
+    setIsSubmittingEmployee(true);
     try {
       const response = await fetch(`${API_BASE}/employees`, {
         method: 'POST',
@@ -990,6 +1035,8 @@ function App() {
     } catch (err) {
       console.error(err);
       showToast('Error adding employee.', 'error', 'Addition Failed');
+    } finally {
+      setIsSubmittingEmployee(false);
     }
   };
 
@@ -999,6 +1046,7 @@ function App() {
       return;
     }
 
+    setDeletingEmployee(prev => ({ ...prev, [employeeId]: true }));
     try {
       const response = await fetch(`${API_BASE}/employees/${employeeId}`, {
         method: 'DELETE',
@@ -1015,11 +1063,18 @@ function App() {
     } catch (err) {
       console.error(err);
       showToast('Error removing employee.', 'error', 'Removal Failed');
+    } finally {
+      setDeletingEmployee(prev => {
+        const next = { ...prev };
+        delete next[employeeId];
+        return next;
+      });
     }
   };
 
   // API Call: Approve/Reject Leave Request
   const handleLeaveDecision = async (leaveId, decision) => {
+    setProcessingLeave(prev => ({ ...prev, [leaveId]: decision }));
     try {
       const response = await fetch(`${API_BASE}/leaves/${leaveId}/status`, {
         method: 'PUT',
@@ -1036,6 +1091,12 @@ function App() {
     } catch (err) {
       console.error(err);
       showToast('Error recording leave decision.', 'error', 'Action Error');
+    } finally {
+      setProcessingLeave(prev => {
+        const next = { ...prev };
+        delete next[leaveId];
+        return next;
+      });
     }
   };
 
@@ -1051,6 +1112,7 @@ function App() {
       return;
     }
 
+    setIsSubmittingLeave(true);
     try {
       const response = await fetch(`${API_BASE}/leaves`, {
         method: 'POST',
@@ -1077,6 +1139,8 @@ function App() {
     } catch (err) {
       console.error(err);
       showToast('Error submitting leave request.', 'error', 'Submission Failed');
+    } finally {
+      setIsSubmittingLeave(false);
     }
   };
 
@@ -1128,6 +1192,7 @@ function App() {
   // Run the new server-side impossible travel simulator
   const simulateImpossibleTravel = async () => {
     if (!token) return;
+    setIsSimulatingTravel(true);
     try {
       const response = await fetch(`${API_BASE}/simulate/threat`, {
         method: 'POST',
@@ -1147,6 +1212,8 @@ function App() {
     } catch (err) {
       console.error(err);
       showToast('Error simulating impossible travel.', 'error', 'Simulation Failed');
+    } finally {
+      setIsSimulatingTravel(false);
     }
   };
 
@@ -1591,18 +1658,21 @@ function App() {
                     <button
                       onClick={simulateScraping}
                       disabled={isScraping}
-                      className="btn-simulate-threat"
+                      className={`btn-simulate-threat ${isScraping ? 'btn-loading' : ''}`}
                       style={{ display: 'inline-flex', alignItems: 'center', justifyContent: 'center', gap: '6px' }}
                     >
-                      <Zap size={13} /> {isScraping ? 'Scraping...' : 'Simulate Volumetric Scrape'}
+                      {isScraping ? <span className="btn-spinner" /> : <Zap size={13} />}
+                      {isScraping ? 'Scraping Records...' : 'Simulate Volumetric Scrape'}
                     </button>
                     
                     <button
                       onClick={simulateImpossibleTravel}
-                      className="btn-simulate-threat"
+                      disabled={isSimulatingTravel}
+                      className={`btn-simulate-threat ${isSimulatingTravel ? 'btn-loading' : ''}`}
                       style={{ display: 'inline-flex', alignItems: 'center', justifyContent: 'center', gap: '6px' }}
                     >
-                      <MapPin size={13} /> Simulate Impossible Travel
+                      {isSimulatingTravel ? <span className="btn-spinner" /> : <MapPin size={13} />}
+                      {isSimulatingTravel ? 'Simulating Travel...' : 'Simulate Impossible Travel'}
                     </button>
 
                     <div className="client-status-card">
@@ -1712,6 +1782,7 @@ function App() {
                     const activeRulesCount = rules.filter(r => r.is_enabled).length;
                     const filteredIncidents = getFilteredIncidents();
                     const frequencies = getRuleFrequencies();
+                    const totalTriggers = Object.values(frequencies).reduce((sum, val) => sum + val, 0);
                     const maxCount = Math.max(...Object.values(frequencies), 1);
                     const strokeDash = 2 * Math.PI * 44; // ~276.46
                     const strokeOffset = strokeDash * (1 - maxRisk / 100);
@@ -1735,14 +1806,14 @@ function App() {
                                 {maxRisk}
                               </span>
                               <span className="kpi-scale" style={{ display: 'inline-flex', alignItems: 'center', gap: '4px' }}>
-                                / 100 Risk Score <Info size={11} style={{ color: 'var(--text-muted)' }} />
+                                / 100 Risk Score Index <Info size={11} style={{ color: 'var(--text-muted)' }} />
                               </span>
                             </div>
                             <div className="kpi-footer-text">
-                              {maxRisk === 0 ? 'Normal traffic baselines (0/100)' : isHigh ? 'Active security anomaly detected' : 'Elevated velocity patterns'}
+                              {maxRisk === 0 ? 'Normal traffic baselines (0/100 Risk Index)' : isHigh ? 'Active critical threat detected' : 'Elevated velocity patterns'}
                             </div>
                             <div className="tooltip-bubble" style={{ minWidth: '240px' }}>
-                              <strong className="tooltip-title">Risk Score (0 - 100)</strong>
+                              <strong className="tooltip-title">Risk Score (0 - 100 Index)</strong>
                               <p style={{ margin: '4px 0 6px 0', fontSize: '11px', lineHeight: '1.4' }}>
                                 A composite score representing the current level of detected security and privacy risks. Higher scores indicate greater risk.
                               </p>
@@ -1768,10 +1839,10 @@ function App() {
                               <span className="kpi-big-number" style={{ color: openAlertsCount > 0 ? 'var(--danger)' : 'var(--text-primary)' }}>
                                 {openAlertsCount}
                               </span>
-                              <span className="kpi-scale">Unresolved Tickets</span>
+                              <span className="kpi-scale">Unresolved Incidents</span>
                             </div>
                             <div className="kpi-footer-text">
-                              {openAlertsCount > 0 ? `${openAlertsCount} incident(s) require action` : 'All telemetry alerts cleared'}
+                              {openAlertsCount > 0 ? `${openAlertsCount} incident event(s) require action` : 'All telemetry alerts cleared'}
                             </div>
                             <div className="tooltip-bubble">
                               <strong className="tooltip-title">Active Security Alerts</strong>
@@ -1789,10 +1860,10 @@ function App() {
                               <span className="kpi-big-number" style={{ color: highRiskCount > 0 ? 'var(--danger)' : 'var(--text-primary)' }}>
                                 {highRiskCount}
                               </span>
-                              <span className="kpi-scale">High-Risk Events</span>
+                              <span className="kpi-scale">High-Risk Incidents (≥ 70)</span>
                             </div>
                             <div className="kpi-footer-text">
-                              {highRiskCount > 0 ? 'Lockout triggers available below' : 'Zero severe policy breaches'}
+                              {highRiskCount > 0 ? 'Account lockouts recommended' : 'Zero severe policy breaches'}
                             </div>
                             <div className="tooltip-bubble">
                               <strong className="tooltip-title">Critical Security Anomalies</strong>
@@ -1810,10 +1881,10 @@ function App() {
                               <span className="kpi-big-number" style={{ color: 'var(--text-primary)' }}>
                                 {activeRulesCount}
                               </span>
-                              <span className="kpi-scale">Active Rules</span>
+                              <span className="kpi-scale">Active Inspection Rules</span>
                             </div>
                             <div className="kpi-footer-text">
-                              {incidents.length} total events audited
+                              {incidents.length} security audit events tracked
                             </div>
                             <div className="tooltip-bubble">
                               <strong className="tooltip-title">Active Detection Rules</strong>
@@ -1840,11 +1911,11 @@ function App() {
                                 message="Loading security analytics..." 
                                 subtitle="Processing real-time access logs and rule trigger frequencies" 
                               />
-                            ) : incidents.length === 0 ? (
+                            ) : (incidents.length === 0 || totalTriggers === 0) ? (
                               <EmptyState 
-                                icon={<BarChart3 size={32} color="var(--primary)" />} 
-                                title="No data available yet" 
-                                description="No employee activity has been recorded for this period." 
+                                icon={<ShieldCheck size={32} color="var(--success)" />} 
+                                title="Zero Rule Violations Detected" 
+                                description="No security rule breaches or anomalous access triggers recorded during this audit cycle. System operating at baseline clean state (0 Risk)." 
                                 actionText="Trigger Threat Simulation"
                                 onAction={simulateScraping}
                               />
@@ -1870,7 +1941,7 @@ function App() {
                                     </svg>
                                     <div style={{ position: 'relative', zIndex: 2, textAlign: 'center' }}>
                                       <span className="gauge-value-number" style={{ fontSize: '26px', color: 'var(--text-primary)' }}>{maxRisk}</span>
-                                      <span className="gauge-value-lbl" style={{ fontSize: '9px' }}>/ 100 Risk</span>
+                                      <span className="gauge-value-lbl" style={{ fontSize: '9px' }}>/ 100 Risk Index</span>
                                     </div>
                                   </div>
                                   <span style={{ fontSize: '10px', color: 'var(--text-muted)', fontWeight: '700', textTransform: 'uppercase', letterSpacing: '0.4px', display: 'inline-flex', alignItems: 'center', gap: '4px' }}>
@@ -1878,15 +1949,15 @@ function App() {
                                   </span>
                                   <div className="tooltip-bubble">
                                     <strong className="tooltip-title">Composite Privacy Threat Index</strong>
-                                    <span>Threat Score: <strong>{maxRisk}/100</strong>. Measures the overall level of privacy risk based on employee access velocity, anomalous locations, and security activity.</span>
+                                    <span>Threat Score: <strong>{maxRisk}/100 Risk Index</strong>. Measures the overall level of privacy risk based on employee access velocity, anomalous locations, and security activity.</span>
                                   </div>
                                 </div>
 
                                 {/* Trigger Frequency Progress Bars with Axis & Tooltips */}
                                 <div className="rule-frequencies-compact">
-                                  <div className="chart-axis-header">
-                                    <span>Detection Rule Heuristic</span>
-                                    <span>Rule Trigger Frequency (Events)</span>
+                                  <div className="chart-axis-header" style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '8px' }}>
+                                    <span className="chart-axis-badge">Y-Axis: Detection Rule Heuristic</span>
+                                    <span className="chart-axis-badge">X-Axis: Trigger Frequency (Events)</span>
                                   </div>
                                   {Object.entries(frequencies).map(([rule, count], idx) => {
                                     const percentage = (count / maxCount) * 100;
@@ -1918,7 +1989,7 @@ function App() {
                                             {meta.shortName || meta.label}
                                           </span>
                                           <span className="rule-count-lbl" style={{ fontSize: '11px', fontWeight: '700', color: count > 0 ? (rule === 'CANARY_ACCESS' || rule === 'IMPOSSIBLE_TRAVEL' ? 'var(--danger)' : 'var(--warning)') : 'var(--text-muted)' }}>
-                                            {count} {count === 1 ? 'trigger event' : 'trigger events'} ({Math.round(percentage)}%)
+                                            {count} {count === 1 ? 'event' : 'events'} ({Math.round(percentage)}%)
                                           </span>
                                         </div>
                                         <div className="rule-frequency-bar-bg" style={{ height: '7px', background: 'var(--bg-input)', borderRadius: '4px', overflow: 'hidden', border: '1px solid var(--border-glow)' }}>
@@ -1938,7 +2009,7 @@ function App() {
                                           <div style={{ display: 'flex', flexDirection: 'column', gap: '4px', margin: '6px 0', fontSize: '11px' }}>
                                             <div style={{ display: 'flex', justifyContent: 'space-between' }}>
                                               <span style={{ color: 'var(--text-muted)' }}>Triggered:</span>
-                                              <strong style={{ color: 'var(--text-primary)' }}>{count} {count === 1 ? 'time' : 'times'}</strong>
+                                              <strong style={{ color: 'var(--text-primary)' }}>{count} {count === 1 ? 'event' : 'events'}</strong>
                                             </div>
                                             <div style={{ display: 'flex', justifyContent: 'space-between' }}>
                                               <span style={{ color: 'var(--text-muted)' }}>Risk Level:</span>
@@ -1960,15 +2031,15 @@ function App() {
                                   })}
                                   
                                   {/* Graphical Scale & Axis Ticks with Units */}
-                                  <div className="chart-axis-container" style={{ marginTop: '8px', paddingTop: '8px', borderTop: '1px dashed var(--border-glow)' }}>
-                                    <div style={{ display: 'flex', justifyContent: 'space-between', fontSize: '10px', color: 'var(--text-muted)', fontFamily: 'var(--font-mono)', fontWeight: '600' }}>
-                                      <span>0</span>
-                                      <span>{Math.max(1, Math.round(maxCount * 0.25))}</span>
-                                      <span>{Math.max(2, Math.round(maxCount * 0.5))}</span>
-                                      <span>{Math.max(3, Math.round(maxCount * 0.75))}</span>
-                                      <span>{maxCount} Events (Peak)</span>
+                                  <div className="chart-axis-container" style={{ marginTop: '10px', paddingTop: '8px', borderTop: '1px dashed var(--border-glow)' }}>
+                                    <div style={{ display: 'flex', justifyContent: 'space-between', fontSize: '10px', color: 'var(--text-muted)', fontFamily: 'var(--font-mono)', fontWeight: '700' }}>
+                                      <span>0 Events</span>
+                                      <span>{Math.max(1, Math.round(maxCount * 0.25))} Events</span>
+                                      <span>{Math.max(2, Math.round(maxCount * 0.5))} Events</span>
+                                      <span>{Math.max(3, Math.round(maxCount * 0.75))} Events</span>
+                                      <span>{maxCount} Events (Peak Volume)</span>
                                     </div>
-                                    <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', height: '6px', margin: '2px 0 4px 0', borderBottom: '1px solid var(--border-glow)' }}>
+                                    <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', height: '6px', margin: '3px 0 5px 0', borderBottom: '1px solid var(--border-glow)' }}>
                                       <span style={{ width: '1px', height: '6px', background: 'var(--text-muted)' }} />
                                       <span style={{ width: '1px', height: '4px', background: 'var(--border-glow)' }} />
                                       <span style={{ width: '1px', height: '4px', background: 'var(--border-glow)' }} />
@@ -1976,8 +2047,8 @@ function App() {
                                       <span style={{ width: '1px', height: '6px', background: 'var(--text-muted)' }} />
                                     </div>
                                     <div style={{ display: 'flex', justifyContent: 'space-between', fontSize: '10px', color: 'var(--text-secondary)' }}>
-                                      <span>Scale: Trigger Count (0 to Peak)</span>
-                                      <span>Unit: Recorded Security Events</span>
+                                      <span><strong>X-Axis Scale:</strong> 0 to {maxCount} Recorded Security Events</span>
+                                      <span><strong>Unit:</strong> Breach Events / Rule</span>
                                     </div>
                                   </div>
                                 </div>
@@ -2188,16 +2259,28 @@ function App() {
                                           <div className="ticket-action-btns">
                                             <button
                                               onClick={() => executeMitigation(inc.id, 'DISMISS', null)}
-                                              className="btn-mitigation-dismiss-sm"
+                                              disabled={!!mitigatingIncident[inc.id]}
+                                              className={`btn-mitigation-dismiss-sm ${mitigatingIncident[inc.id] === 'DISMISS' ? 'btn-loading' : ''}`}
+                                              style={{ display: 'inline-flex', alignItems: 'center', gap: '4px' }}
                                             >
-                                              Dismiss
+                                              {mitigatingIncident[inc.id] === 'DISMISS' ? (
+                                                <><span className="btn-spinner btn-spinner-sm" /> Dismissing...</>
+                                              ) : (
+                                                'Dismiss'
+                                              )}
                                             </button>
                                             {inc.risk_level === 'High' && (
                                               <button
                                                 onClick={() => executeMitigation(inc.id, 'LOCK_USER', inc.user_id)}
-                                                className="btn-mitigation-lock-sm"
+                                                disabled={!!mitigatingIncident[inc.id]}
+                                                className={`btn-mitigation-lock-sm ${mitigatingIncident[inc.id] === 'LOCK_USER' ? 'btn-loading' : ''}`}
+                                                style={{ display: 'inline-flex', alignItems: 'center', gap: '4px' }}
                                               >
-                                                Lock Account
+                                                {mitigatingIncident[inc.id] === 'LOCK_USER' ? (
+                                                  <><span className="btn-spinner btn-spinner-sm" /> Locking...</>
+                                                ) : (
+                                                  'Lock Account'
+                                                )}
                                               </button>
                                             )}
                                           </div>
@@ -2209,16 +2292,28 @@ function App() {
                                             {inc.risk_level === 'High' && inc.status === 'Resolved' && (
                                               <button
                                                 onClick={() => executeMitigation(inc.id, 'UNLOCK_USER', inc.user_id)}
-                                                className="btn-mitigation-unlock-sm"
+                                                disabled={!!mitigatingIncident[inc.id]}
+                                                className={`btn-mitigation-unlock-sm ${mitigatingIncident[inc.id] === 'UNLOCK_USER' ? 'btn-loading' : ''}`}
+                                                style={{ display: 'inline-flex', alignItems: 'center', gap: '4px' }}
                                               >
-                                                Unlock
+                                                {mitigatingIncident[inc.id] === 'UNLOCK_USER' ? (
+                                                  <><span className="btn-spinner btn-spinner-sm" /> Unlocking...</>
+                                                ) : (
+                                                  'Unlock'
+                                                )}
                                               </button>
                                             )}
                                             <button
                                               onClick={() => executeMitigation(inc.id, 'REOPEN', null)}
-                                              className="btn-mitigation-reopen-sm"
+                                              disabled={!!mitigatingIncident[inc.id]}
+                                              className={`btn-mitigation-reopen-sm ${mitigatingIncident[inc.id] === 'REOPEN' ? 'btn-loading' : ''}`}
+                                              style={{ display: 'inline-flex', alignItems: 'center', gap: '4px' }}
                                             >
-                                              Reopen
+                                              {mitigatingIncident[inc.id] === 'REOPEN' ? (
+                                                <><span className="btn-spinner btn-spinner-sm" /> Reopening...</>
+                                              ) : (
+                                                'Reopen'
+                                              )}
                                             </button>
                                           </div>
                                         )}
@@ -2642,7 +2737,14 @@ function App() {
                                 )}
 
                                 <div className="edit-form-actions" style={{ display: 'flex', gap: '10px', marginTop: '16px' }}>
-                                  <button type="submit" className="btn-primary">Save Changes</button>
+                                  <button 
+                                    type="submit" 
+                                    disabled={isSavingRule}
+                                    className={`btn-primary ${isSavingRule ? 'btn-loading' : ''}`}
+                                    style={{ display: 'inline-flex', alignItems: 'center', gap: '6px' }}
+                                  >
+                                    {isSavingRule ? <><span className="btn-spinner" /> Saving Configuration...</> : 'Save Changes'}
+                                  </button>
                                   <button type="button" onClick={() => setEditingRule(null)} className="btn-secondary">Cancel</button>
                                 </div>
                               </form>
@@ -2772,10 +2874,15 @@ function App() {
                               {user.role === 'System Administrator' ? (
                                 <button
                                   onClick={() => handleApplyRecommendation(rec)}
-                                  className="btn-primary"
+                                  disabled={applyingRec[rec.id]}
+                                  className={`btn-primary ${applyingRec[rec.id] ? 'btn-loading' : ''}`}
                                   style={{ width: '100%', display: 'inline-flex', alignItems: 'center', justifyContent: 'center', gap: '6px' }}
                                 >
-                                  <Zap size={14} /> Apply Policy Recommendation
+                                  {applyingRec[rec.id] ? (
+                                    <><span className="btn-spinner" /> Applying Policy Recommendation...</>
+                                  ) : (
+                                    <><Zap size={14} /> Apply Policy Recommendation</>
+                                  )}
                                 </button>
                               ) : (
                                 <div style={{ 
@@ -2914,18 +3021,26 @@ function App() {
                                 <div style={{ display: 'flex', gap: '8px', alignItems: 'center', flexWrap: 'nowrap', whiteSpace: 'nowrap' }}>
                                   <button 
                                     onClick={() => fetchSensitiveSalary(emp.id)}
-                                    className="btn-secondary"
-                                    style={{ padding: '6px 12px', fontSize: '11px', whiteSpace: 'nowrap' }}
+                                    disabled={loadingSalary[emp.id]}
+                                    className={`btn-secondary ${loadingSalary[emp.id] ? 'btn-loading' : ''}`}
+                                    style={{ padding: '6px 12px', fontSize: '11px', whiteSpace: 'nowrap', display: 'inline-flex', alignItems: 'center', gap: '4px' }}
                                   >
-                                    {salaryMap[emp.id] ? 'Hide Salary' : 'Query Salary'}
+                                    {loadingSalary[emp.id] ? (
+                                      <><span className="btn-spinner btn-spinner-sm" /> Unmasking...</>
+                                    ) : salaryMap[emp.id] ? (
+                                      'Hide Salary'
+                                    ) : (
+                                      'Query Salary'
+                                    )}
                                   </button>
                                   {(user.role === 'HR Manager' || user.role === 'System Administrator') && !emp.is_canary && (
                                     <button 
                                       onClick={() => handleRemoveEmployee(emp.id, `${emp.first_name} ${emp.last_name}`)}
-                                      className="btn-danger"
-                                      style={{ padding: '6px 12px', fontSize: '11px', whiteSpace: 'nowrap' }}
+                                      disabled={deletingEmployee[emp.id]}
+                                      className={`btn-danger ${deletingEmployee[emp.id] ? 'btn-loading' : ''}`}
+                                      style={{ padding: '6px 12px', fontSize: '11px', whiteSpace: 'nowrap', display: 'inline-flex', alignItems: 'center', gap: '4px' }}
                                     >
-                                      Remove
+                                      {deletingEmployee[emp.id] ? <><span className="btn-spinner btn-spinner-sm" /> Removing...</> : 'Remove'}
                                     </button>
                                   )}
                                 </div>
@@ -3047,10 +3162,12 @@ function App() {
                             </div>
                             <button 
                               type="submit" 
-                              className="btn-primary"
-                              style={{ alignSelf: 'flex-start' }}
+                              disabled={isSubmittingLeave}
+                              className={`btn-primary ${isSubmittingLeave ? 'btn-loading' : ''}`}
+                              style={{ alignSelf: 'flex-start', display: 'inline-flex', alignItems: 'center', gap: '6px' }}
                             >
-                              Submit Leave Request
+                              {isSubmittingLeave && <span className="btn-spinner" />}
+                              {isSubmittingLeave ? 'Submitting Request...' : 'Submit Leave Request'}
                             </button>
                           </form>
                         );
@@ -3147,15 +3264,21 @@ function App() {
                                     <div style={{ display: 'flex', gap: '8px' }}>
                                       <button 
                                         onClick={() => handleLeaveDecision(l.id, 'Approved')}
-                                        className="btn-success"
+                                        disabled={!!processingLeave[l.id]}
+                                        className={`btn-success ${processingLeave[l.id] === 'Approved' ? 'btn-loading' : ''}`}
+                                        style={{ display: 'inline-flex', alignItems: 'center', gap: '5px' }}
                                       >
-                                        Approve
+                                        {processingLeave[l.id] === 'Approved' && <span className="btn-spinner-sm" />}
+                                        {processingLeave[l.id] === 'Approved' ? 'Approving...' : 'Approve'}
                                       </button>
                                       <button 
                                         onClick={() => handleLeaveDecision(l.id, 'Rejected')}
-                                        className="btn-danger"
+                                        disabled={!!processingLeave[l.id]}
+                                        className={`btn-danger ${processingLeave[l.id] === 'Rejected' ? 'btn-loading' : ''}`}
+                                        style={{ display: 'inline-flex', alignItems: 'center', gap: '5px' }}
                                       >
-                                        Reject
+                                        {processingLeave[l.id] === 'Rejected' && <span className="btn-spinner-sm" />}
+                                        {processingLeave[l.id] === 'Rejected' ? 'Rejecting...' : 'Reject'}
                                       </button>
                                     </div>
                                   )}
@@ -3377,9 +3500,12 @@ function App() {
                     </button>
                     <button 
                       type="submit" 
-                      className="btn-modal-submit"
+                      disabled={isSubmittingEmployee}
+                      className={`btn-modal-submit ${isSubmittingEmployee ? 'btn-loading' : ''}`}
+                      style={{ display: 'inline-flex', alignItems: 'center', gap: '6px' }}
                     >
-                      Add Employee
+                      {isSubmittingEmployee && <span className="btn-spinner" />}
+                      {isSubmittingEmployee ? 'Adding Employee...' : 'Add Employee'}
                     </button>
                   </div>
                 </form>
