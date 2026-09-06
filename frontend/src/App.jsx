@@ -1960,11 +1960,19 @@ function App() {
                                 {/* Trigger Frequency Progress Bars with Axis & Tooltips */}
                                 <div className="rule-frequencies-compact">
                                   <div className="chart-axis-header" style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '8px' }}>
-                                    <span style={{ fontSize: '11px', fontWeight: '800', color: 'var(--text-secondary)', textTransform: 'uppercase', letterSpacing: '0.5px' }}>
+                                    <span className="has-tooltip-inline" style={{ fontSize: '11px', fontWeight: '800', color: 'var(--text-secondary)', textTransform: 'uppercase', letterSpacing: '0.5px' }}>
                                       Security Rule
+                                      <div className="tooltip-bubble">
+                                        <strong className="tooltip-title">Heuristic Detection Rules</strong>
+                                        <span>Active privacy algorithms inspecting access logs for anomalous behavior.</span>
+                                      </div>
                                     </span>
-                                    <span style={{ fontSize: '11px', fontWeight: '800', color: 'var(--text-secondary)', textTransform: 'uppercase', letterSpacing: '0.5px' }}>
+                                    <span className="has-tooltip-inline" style={{ fontSize: '11px', fontWeight: '800', color: 'var(--text-secondary)', textTransform: 'uppercase', letterSpacing: '0.5px' }}>
                                       Triggered Violations ({totalTriggers} Total)
+                                      <div className="tooltip-bubble tooltip-right">
+                                        <strong className="tooltip-title">Trigger Frequency</strong>
+                                        <span>Total volume of access requests flagged by privacy detection rules during this audit cycle.</span>
+                                      </div>
                                     </span>
                                   </div>
                                   {Object.entries(frequencies).map(([rule, count], idx) => {
@@ -2012,29 +2020,29 @@ function App() {
                                             }}
                                           />
                                         </div>
-                                        <div className="tooltip-bubble" style={{ minWidth: '220px' }}>
+                                        <div className="tooltip-bubble tooltip-wide">
                                           <strong className="tooltip-title">{meta.shortName || meta.label}</strong>
                                           <div style={{ display: 'flex', flexDirection: 'column', gap: '4px', margin: '6px 0', fontSize: '11px' }}>
                                             <div style={{ display: 'flex', justifyContent: 'space-between' }}>
-                                              <span style={{ color: 'var(--text-muted)' }}>Violations Recorded:</span>
-                                              <strong style={{ color: 'var(--text-primary)' }}>{count} {count === 1 ? 'violation' : 'violations'}</strong>
+                                              <span style={{ color: '#94a3b8' }}>Violations Recorded:</span>
+                                              <strong style={{ color: '#f8fafc' }}>{count} {count === 1 ? 'violation' : 'violations'}</strong>
                                             </div>
                                             <div style={{ display: 'flex', justifyContent: 'space-between' }}>
-                                              <span style={{ color: 'var(--text-muted)' }}>Share of Breaches:</span>
-                                              <strong style={{ color: 'var(--text-primary)' }}>{totalTriggers > 0 ? ((count / totalTriggers) * 100).toFixed(1) : 0}% of all security incidents</strong>
+                                              <span style={{ color: '#94a3b8' }}>Share of Breaches:</span>
+                                              <strong style={{ color: '#f8fafc' }}>{totalTriggers > 0 ? ((count / totalTriggers) * 100).toFixed(1) : 0}% of all security incidents</strong>
                                             </div>
                                             <div style={{ display: 'flex', justifyContent: 'space-between' }}>
-                                              <span style={{ color: 'var(--text-muted)' }}>Rule Risk Level:</span>
+                                              <span style={{ color: '#94a3b8' }}>Rule Risk Level:</span>
                                               <strong style={{ color: riskLevel === 'Critical' ? 'var(--danger)' : riskLevel === 'High' ? 'var(--warning)' : 'var(--success)' }}>
                                                 {riskLevel}
                                               </strong>
                                             </div>
                                             <div style={{ display: 'flex', justifyContent: 'space-between' }}>
-                                              <span style={{ color: 'var(--text-muted)' }}>Last detected:</span>
-                                              <strong style={{ color: 'var(--text-secondary)' }}>{lastDetected}</strong>
+                                              <span style={{ color: '#94a3b8' }}>Last detected:</span>
+                                              <strong style={{ color: '#cbd5e1' }}>{lastDetected}</strong>
                                             </div>
                                           </div>
-                                          <span style={{ fontSize: '10.5px', color: 'var(--text-muted)', borderTop: '1px solid var(--border-glow)', paddingTop: '4px', display: 'block', lineHeight: '1.3' }}>
+                                          <span style={{ fontSize: '10.5px', color: '#94a3b8', borderTop: '1px solid rgba(255,255,255,0.1)', paddingTop: '4px', display: 'block', lineHeight: '1.3' }}>
                                             {meta.description}
                                           </span>
                                         </div>
@@ -2042,8 +2050,8 @@ function App() {
                                     );
                                   })}
                                   
-                                  {/* Graphical Scale & Axis Ticks with Units */}
-                                  <div className="chart-axis-container" style={{ marginTop: '10px', paddingTop: '8px', borderTop: '1px dashed var(--border-glow)' }}>
+                                  {/* Graphical Scale & Axis Ticks with Tooltip */}
+                                  <div className="chart-axis-container has-tooltip" style={{ marginTop: '10px', paddingTop: '8px', borderTop: '1px dashed var(--border-glow)' }}>
                                     <div style={{ display: 'flex', justifyContent: 'space-between', fontSize: '10px', color: 'var(--text-muted)', fontFamily: 'var(--font-mono)', fontWeight: '700' }}>
                                       <span>0</span>
                                       <span>{Math.max(1, Math.round(maxCount * 0.25))}</span>
@@ -2061,6 +2069,10 @@ function App() {
                                     <div style={{ display: 'flex', justifyContent: 'space-between', fontSize: '10px', color: 'var(--text-secondary)' }}>
                                       <span><strong>Scale:</strong> 0 to {maxCount} Recorded Violations</span>
                                       <span><strong>Total Recorded Breaches:</strong> {totalTriggers} incidents</span>
+                                    </div>
+                                    <div className="tooltip-bubble tooltip-wide">
+                                      <strong className="tooltip-title">Heuristic Threat Velocity Scale</strong>
+                                      <span>Linear scale measuring violation frequency from 0 to {maxCount} events per heuristic rule across {totalTriggers} total detected incidents.</span>
                                     </div>
                                   </div>
                                 </div>
@@ -2121,9 +2133,25 @@ function App() {
                                         </span>
                                         <span className="risk-incident-count">{acc.incidentCount} incident(s)</span>
                                       </div>
-                                      <div className="tooltip-bubble">
+                                      <div className="tooltip-bubble tooltip-wide">
                                         <strong className="tooltip-title">Account Risk Profile: {acc.email}</strong>
-                                        <span>Peak Risk: <strong>{acc.peakScore}/100</strong> across <strong>{acc.incidentCount} triggered violation(s)</strong>.</span>
+                                        <div style={{ display: 'flex', flexDirection: 'column', gap: '3px', margin: '4px 0', fontSize: '11px' }}>
+                                          <div style={{ display: 'flex', justifyContent: 'space-between' }}>
+                                            <span style={{ color: '#94a3b8' }}>User Role:</span>
+                                            <strong style={{ color: '#f8fafc' }}>{acc.role}</strong>
+                                          </div>
+                                          <div style={{ display: 'flex', justifyContent: 'space-between' }}>
+                                            <span style={{ color: '#94a3b8' }}>Peak Threat Score:</span>
+                                            <strong style={{ color: acc.peakScore >= 70 ? 'var(--danger)' : 'var(--warning)' }}>{acc.peakScore} / 100</strong>
+                                          </div>
+                                          <div style={{ display: 'flex', justifyContent: 'space-between' }}>
+                                            <span style={{ color: '#94a3b8' }}>Triggered Breaches:</span>
+                                            <strong style={{ color: '#f8fafc' }}>{acc.incidentCount} violation(s)</strong>
+                                          </div>
+                                        </div>
+                                        <span style={{ fontSize: '10.5px', color: '#94a3b8', borderTop: '1px solid rgba(255,255,255,0.1)', paddingTop: '4px', display: 'block' }}>
+                                          {acc.peakScore >= 70 ? 'Account qualifies for automated administrative lockout.' : 'Monitored for potential escalation.'}
+                                        </span>
                                       </div>
                                     </div>
                                   ))}
@@ -2242,18 +2270,34 @@ function App() {
                                   >
                                     <div className="ticket-summary-row">
                                       <div className="ticket-summary-left">
-                                        <span className={`risk-level-badge ${inc.risk_level.toLowerCase()}`}>
+                                        <span className={`risk-level-badge ${inc.risk_level.toLowerCase()} has-tooltip`}>
                                           {inc.risk_level} • {inc.risk_score}/100 Risk
+                                          <div className="tooltip-bubble">
+                                            <strong className="tooltip-title">Threat Level: {inc.risk_level}</strong>
+                                            <span>Calculated composite risk score: <strong>{inc.risk_score} / 100</strong> based on active heuristic evaluation weights.</span>
+                                          </div>
                                         </span>
-                                        <span className="ticket-user-pill" style={{ display: 'inline-flex', alignItems: 'center', gap: '4px' }}>
+                                        <span className="ticket-user-pill has-tooltip" style={{ display: 'inline-flex', alignItems: 'center', gap: '4px' }}>
                                           <User size={12} /> <strong>{inc.user_email || 'Anonymous'}</strong> ({inc.user_role || 'Guest'})
+                                          <div className="tooltip-bubble">
+                                            <strong className="tooltip-title">Monitored Account Profile</strong>
+                                            <span>User: <strong>{inc.user_email}</strong><br />Role: <strong>{inc.user_role}</strong><br />Status: <strong>{inc.status}</strong></span>
+                                          </div>
                                         </span>
-                                        <span className="ticket-rule-tag">
+                                        <span className="ticket-rule-tag has-tooltip">
                                           {triggeredRules.join(', ')}
+                                          <div className="tooltip-bubble">
+                                            <strong className="tooltip-title">Triggered Heuristics</strong>
+                                            <span>Rule policies violated during this security telemetry event: {triggeredRules.map(r => RULE_METADATA[r]?.shortName || r).join(', ')}.</span>
+                                          </div>
                                         </span>
                                         {evidence.metadata && (
-                                          <span className="ticket-geo-pill" style={{ display: 'inline-flex', alignItems: 'center', gap: '4px' }}>
+                                          <span className="ticket-geo-pill has-tooltip" style={{ display: 'inline-flex', alignItems: 'center', gap: '4px' }}>
                                             <MapPin size={12} /> {evidence.metadata.city || 'Unknown'}, {evidence.metadata.country || ''}
+                                            <div className="tooltip-bubble">
+                                              <strong className="tooltip-title">Origin Geolocation Telemetry</strong>
+                                              <span>Origin: <strong>{evidence.metadata.city}, {evidence.metadata.country}</strong><br />Client IP: <strong>{evidence.metadata.ip || inc.ip_address || '127.0.0.1'}</strong></span>
+                                            </div>
                                           </span>
                                         )}
                                       </div>
@@ -2271,64 +2315,92 @@ function App() {
 
                                         {!isResolved ? (
                                           <div className="ticket-action-btns">
-                                            <button
-                                              onClick={() => executeMitigation(inc.id, 'DISMISS', null)}
-                                              disabled={!!mitigatingIncident[inc.id]}
-                                              className={`btn-mitigation-dismiss-sm ${mitigatingIncident[inc.id] === 'DISMISS' ? 'btn-loading' : ''}`}
-                                              style={{ display: 'inline-flex', alignItems: 'center', gap: '4px' }}
-                                            >
-                                              {mitigatingIncident[inc.id] === 'DISMISS' ? (
-                                                <><span className="btn-spinner btn-spinner-sm" /> Dismissing...</>
-                                              ) : (
-                                                'Dismiss'
-                                              )}
-                                            </button>
-                                            {inc.risk_level === 'High' && (
+                                            <div className="has-tooltip-inline">
                                               <button
-                                                onClick={() => executeMitigation(inc.id, 'LOCK_USER', inc.user_id)}
+                                                onClick={() => executeMitigation(inc.id, 'DISMISS', null)}
                                                 disabled={!!mitigatingIncident[inc.id]}
-                                                className={`btn-mitigation-lock-sm ${mitigatingIncident[inc.id] === 'LOCK_USER' ? 'btn-loading' : ''}`}
+                                                className={`btn-mitigation-dismiss-sm ${mitigatingIncident[inc.id] === 'DISMISS' ? 'btn-loading' : ''}`}
                                                 style={{ display: 'inline-flex', alignItems: 'center', gap: '4px' }}
                                               >
-                                                {mitigatingIncident[inc.id] === 'LOCK_USER' ? (
-                                                  <><span className="btn-spinner btn-spinner-sm" /> Locking...</>
+                                                {mitigatingIncident[inc.id] === 'DISMISS' ? (
+                                                  <><span className="btn-spinner btn-spinner-sm" /> Dismissing...</>
                                                 ) : (
-                                                  'Lock Account'
+                                                  'Dismiss'
                                                 )}
                                               </button>
+                                              <div className="tooltip-bubble tooltip-right">
+                                                <strong className="tooltip-title">Dismiss Alert</strong>
+                                                <span>Acknowledge and mark this security event as Dismissed.</span>
+                                              </div>
+                                            </div>
+                                            {inc.risk_level === 'High' && (
+                                              <div className="has-tooltip-inline">
+                                                <button
+                                                  onClick={() => executeMitigation(inc.id, 'LOCK_USER', inc.user_id)}
+                                                  disabled={!!mitigatingIncident[inc.id]}
+                                                  className={`btn-mitigation-lock-sm ${mitigatingIncident[inc.id] === 'LOCK_USER' ? 'btn-loading' : ''}`}
+                                                  style={{ display: 'inline-flex', alignItems: 'center', gap: '4px' }}
+                                                >
+                                                  {mitigatingIncident[inc.id] === 'LOCK_USER' ? (
+                                                    <><span className="btn-spinner btn-spinner-sm" /> Locking...</>
+                                                  ) : (
+                                                    'Lock Account'
+                                                  )}
+                                                </button>
+                                                <div className="tooltip-bubble tooltip-right">
+                                                  <strong className="tooltip-title">Automated Lockout Response</strong>
+                                                  <span>Instantly locks user account and blocks sensitive data access until reviewed.</span>
+                                                </div>
+                                              </div>
                                             )}
                                           </div>
                                         ) : (
                                           <div className="ticket-action-btns">
-                                            <span className="ticket-resolved-pill" style={{ display: 'inline-flex', alignItems: 'center', gap: '4px' }}>
+                                            <span className="ticket-resolved-pill has-tooltip" style={{ display: 'inline-flex', alignItems: 'center', gap: '4px' }}>
                                               <Check size={12} /> {inc.status === 'Resolved' ? 'Mitigated' : 'Dismissed'}
+                                              <div className="tooltip-bubble tooltip-right">
+                                                <strong className="tooltip-title">Mitigation Complete</strong>
+                                                <span>This incident has been audited and resolved by security protocols.</span>
+                                              </div>
                                             </span>
                                             {inc.risk_level === 'High' && inc.status === 'Resolved' && (
+                                              <div className="has-tooltip-inline">
+                                                <button
+                                                  onClick={() => executeMitigation(inc.id, 'UNLOCK_USER', inc.user_id)}
+                                                  disabled={!!mitigatingIncident[inc.id]}
+                                                  className={`btn-mitigation-unlock-sm ${mitigatingIncident[inc.id] === 'UNLOCK_USER' ? 'btn-loading' : ''}`}
+                                                  style={{ display: 'inline-flex', alignItems: 'center', gap: '4px' }}
+                                                >
+                                                  {mitigatingIncident[inc.id] === 'UNLOCK_USER' ? (
+                                                    <><span className="btn-spinner btn-spinner-sm" /> Unlocking...</>
+                                                  ) : (
+                                                    'Unlock'
+                                                  )}
+                                                </button>
+                                                <div className="tooltip-bubble tooltip-right">
+                                                  <strong className="tooltip-title">Restore Account</strong>
+                                                  <span>Restores user account credentials and operational access permissions.</span>
+                                                </div>
+                                              </div>
+                                            )}
+                                            <div className="has-tooltip-inline">
                                               <button
-                                                onClick={() => executeMitigation(inc.id, 'UNLOCK_USER', inc.user_id)}
+                                                onClick={() => executeMitigation(inc.id, 'REOPEN', null)}
                                                 disabled={!!mitigatingIncident[inc.id]}
-                                                className={`btn-mitigation-unlock-sm ${mitigatingIncident[inc.id] === 'UNLOCK_USER' ? 'btn-loading' : ''}`}
+                                                className={`btn-mitigation-reopen-sm ${mitigatingIncident[inc.id] === 'REOPEN' ? 'btn-loading' : ''}`}
                                                 style={{ display: 'inline-flex', alignItems: 'center', gap: '4px' }}
                                               >
-                                                {mitigatingIncident[inc.id] === 'UNLOCK_USER' ? (
-                                                  <><span className="btn-spinner btn-spinner-sm" /> Unlocking...</>
+                                                {mitigatingIncident[inc.id] === 'REOPEN' ? (
+                                                  <><span className="btn-spinner btn-spinner-sm" /> Reopening...</>
                                                 ) : (
-                                                  'Unlock'
+                                                  'Reopen'
                                                 )}
                                               </button>
-                                            )}
-                                            <button
-                                              onClick={() => executeMitigation(inc.id, 'REOPEN', null)}
-                                              disabled={!!mitigatingIncident[inc.id]}
-                                              className={`btn-mitigation-reopen-sm ${mitigatingIncident[inc.id] === 'REOPEN' ? 'btn-loading' : ''}`}
-                                              style={{ display: 'inline-flex', alignItems: 'center', gap: '4px' }}
-                                            >
-                                              {mitigatingIncident[inc.id] === 'REOPEN' ? (
-                                                <><span className="btn-spinner btn-spinner-sm" /> Reopening...</>
-                                              ) : (
-                                                'Reopen'
-                                              )}
-                                            </button>
+                                              <div className="tooltip-bubble tooltip-right">
+                                                <strong className="tooltip-title">Reopen Incident</strong>
+                                                <span>Re-activates alert back to Open status for further forensic audit.</span>
+                                              </div>
+                                            </div>
                                           </div>
                                         )}
                                       </div>
@@ -2472,7 +2544,7 @@ function App() {
                                 </span>
                                 <h4 className="card-title" style={{ marginTop: '8px' }}>{dept.department || 'General'}</h4>
                               </div>
-                              <span className="status-badge-indicator" style={{
+                              <span className="status-badge-indicator has-tooltip" style={{
                                 backgroundColor: isHighRisk 
                                   ? 'rgba(239, 68, 68, 0.15)' 
                                   : isMedRisk 
@@ -2481,6 +2553,10 @@ function App() {
                                 color: isHighRisk ? 'var(--danger)' : isMedRisk ? 'var(--warning)' : 'var(--success)'
                               }}>
                                 {isHighRisk ? 'Critical Risk' : isMedRisk ? 'Elevated' : 'Secured'}
+                                <div className="tooltip-bubble tooltip-right">
+                                  <strong className="tooltip-title">Department Risk Status</strong>
+                                  <span>{isHighRisk ? 'Critical Risk: Average threat score ≥ 60/100 or single peak violation ≥ 75/100.' : isMedRisk ? 'Elevated Risk: Heightened activity requiring active monitoring.' : 'Secured: Normal privacy baseline maintained.'}</span>
+                                </div>
                               </span>
                             </div>
 
@@ -2505,7 +2581,7 @@ function App() {
                                   <span>50 Elevated</span>
                                   <span>100 Critical</span>
                                 </div>
-                                <div className="tooltip-bubble">
+                                <div className="tooltip-bubble tooltip-wide">
                                   <strong className="tooltip-title">{dept.department || 'General'} Privacy Score</strong>
                                   <span>Privacy Score: <strong>{Math.round(avgRisk)}/100</strong>. Measures the overall level of privacy risk based on employee access, record harvest volumes, and policy violations in {dept.department}.</span>
                                 </div>
@@ -2558,7 +2634,7 @@ function App() {
                     </div>
                   )}
 
-                  {/* Analytics Detail Data Table with Units in Columns */}
+                  {/* Analytics Detail Data Table with Units in Columns & Tooltips */}
                   <div className="app-card incidents-card-log">
                     <div className="incidents-log-header">
                       <div>
@@ -2577,13 +2653,55 @@ function App() {
                       <table>
                         <thead>
                           <tr>
-                            <th>Department</th>
-                            <th>Active Members (Staff)</th>
-                            <th>Incident Violations (Events)</th>
-                            <th>Average Risk Score (/ 100)</th>
-                            <th>Peak Risk Score (/ 100)</th>
-                            <th>Sensitive Records Read (Records)</th>
-                            <th>Audit Transactions (Operations)</th>
+                            <th className="has-tooltip tooltip-bottom">
+                              Department
+                              <div className="tooltip-bubble">
+                                <strong className="tooltip-title">Department Name</strong>
+                                <span>Organizational business unit or operational division.</span>
+                              </div>
+                            </th>
+                            <th className="has-tooltip tooltip-bottom">
+                              Active Members (Staff)
+                              <div className="tooltip-bubble">
+                                <strong className="tooltip-title">Active Personnel</strong>
+                                <span>Total headcount of staff members assigned to this department.</span>
+                              </div>
+                            </th>
+                            <th className="has-tooltip tooltip-bottom">
+                              Incident Violations (Events)
+                              <div className="tooltip-bubble">
+                                <strong className="tooltip-title">Policy Violations</strong>
+                                <span>Count of anomalous access breaches triggered by members of this department.</span>
+                              </div>
+                            </th>
+                            <th className="has-tooltip tooltip-bottom">
+                              Average Risk Score (/ 100)
+                              <div className="tooltip-bubble">
+                                <strong className="tooltip-title">Mean Threat Index</strong>
+                                <span>Mean calculated risk score based on telemetry events (0-100 scale).</span>
+                              </div>
+                            </th>
+                            <th className="has-tooltip tooltip-bottom">
+                              Peak Risk Score (/ 100)
+                              <div className="tooltip-bubble">
+                                <strong className="tooltip-title">Peak Incident Severity</strong>
+                                <span>Highest single violation risk score recorded in this department.</span>
+                              </div>
+                            </th>
+                            <th className="has-tooltip tooltip-bottom">
+                              Sensitive Records Read (Records)
+                              <div className="tooltip-bubble">
+                                <strong className="tooltip-title">Data Harvest Volume</strong>
+                                <span>Total sensitive employee records and salary fields queried.</span>
+                              </div>
+                            </th>
+                            <th className="has-tooltip tooltip-bottom">
+                              Audit Transactions (Operations)
+                              <div className="tooltip-bubble">
+                                <strong className="tooltip-title">Total Operations</strong>
+                                <span>Aggregate count of access actions logged in audit telemetry.</span>
+                              </div>
+                            </th>
                           </tr>
                         </thead>
                         <tbody>
@@ -2608,11 +2726,15 @@ function App() {
                                   {dept.incident_count} {dept.incident_count === 1 ? 'event' : 'events'}
                                 </td>
                                 <td data-label="Average Risk">
-                                  <span className="risk-score-pill" style={{
+                                  <span className="risk-score-pill has-tooltip" style={{
                                     backgroundColor: parseFloat(dept.avg_risk_score) >= 60 ? 'rgba(239, 68, 68, 0.15)' : parseFloat(dept.avg_risk_score) >= 30 ? 'rgba(245, 158, 11, 0.15)' : 'rgba(16, 185, 129, 0.15)',
                                     color: parseFloat(dept.avg_risk_score) >= 60 ? '#fca5a5' : parseFloat(dept.avg_risk_score) >= 30 ? '#fcd34d' : '#a7f3d0'
                                   }}>
                                     {Math.round(dept.avg_risk_score)} / 100
+                                    <div className="tooltip-bubble">
+                                      <strong className="tooltip-title">{dept.department || 'General'} Mean Threat Score</strong>
+                                      <span>Average risk: <strong>{Math.round(dept.avg_risk_score)} / 100</strong> across {dept.incident_count} recorded incident(s).</span>
+                                    </div>
                                   </span>
                                 </td>
                                 <td data-label="Peak Risk" style={{ color: 'var(--text-primary)' }}>{dept.max_risk_score} / 100</td>
@@ -2669,11 +2791,21 @@ function App() {
                           <div key={rule.id} className={`app-card rule-config-card ${rule.is_enabled ? 'enabled' : 'disabled'}`}>
                             <div className="rule-card-header">
                               <div>
-                                <span className="rule-card-id">{rule.id}</span>
+                                <span className="rule-card-id has-tooltip">
+                                  {rule.id}
+                                  <div className="tooltip-bubble tooltip-left">
+                                    <strong className="tooltip-title">Rule Identifier: {rule.id}</strong>
+                                    <span>Unique system code for the {rule.name.replace(/_/g, ' ')} heuristic engine.</span>
+                                  </div>
+                                </span>
                                 <h4 className="card-title" style={{ marginTop: '4px' }}>{rule.name.replace(/_/g, ' ')}</h4>
                               </div>
-                              <span className={`status-badge-indicator ${rule.is_enabled ? 'active' : 'inactive'}`}>
+                              <span className={`status-badge-indicator ${rule.is_enabled ? 'active' : 'inactive'} has-tooltip`}>
                                 {rule.is_enabled ? 'Active Policy' : 'Disabled'}
+                                <div className="tooltip-bubble tooltip-right">
+                                  <strong className="tooltip-title">Heuristic Enforcement</strong>
+                                  <span>{rule.is_enabled ? 'Rule is active and actively intercepting access requests in real-time.' : 'Rule is currently disabled. Access matching this heuristic is not flagged.'}</span>
+                                </div>
                               </span>
                             </div>
                             
@@ -2925,10 +3057,16 @@ function App() {
                             <div>
                               <div className="rule-card-header" style={{ marginBottom: '12px' }}>
                                 <div>
-                                  <span className="rule-card-id" style={{ background: 'var(--primary-glow)', color: 'var(--text-primary)' }}>{rec.id}</span>
+                                  <span className="rule-card-id has-tooltip" style={{ background: 'var(--primary-glow)', color: 'var(--text-primary)' }}>
+                                    {rec.id}
+                                    <div className="tooltip-bubble tooltip-left">
+                                      <strong className="tooltip-title">Advisor Recommendation: {rec.id}</strong>
+                                      <span>Algorithmic security recommendation derived from recent audit logs.</span>
+                                    </div>
+                                  </span>
                                   <h4 className="card-title" style={{ marginTop: '8px' }}>{rec.title}</h4>
                                 </div>
-                                <span className="status-badge-indicator" style={{
+                                <span className="status-badge-indicator has-tooltip" style={{
                                   backgroundColor: rec.severity === 'Critical' 
                                     ? 'rgba(220, 38, 38, 0.2)' 
                                     : rec.severity === 'High' 
@@ -2937,6 +3075,10 @@ function App() {
                                   color: isHigh ? 'var(--danger)' : 'var(--warning)'
                                 }}>
                                   {rec.severity} Priority
+                                  <div className="tooltip-bubble tooltip-right">
+                                    <strong className="tooltip-title">{rec.severity} Priority Advisory</strong>
+                                    <span>Recommended action priority based on breach recurrence and threat velocity.</span>
+                                  </div>
                                 </span>
                               </div>
 
@@ -2947,18 +3089,24 @@ function App() {
 
                             <div style={{ marginTop: 'auto' }}>
                               {user.role === 'System Administrator' ? (
-                                <button
-                                  onClick={() => handleApplyRecommendation(rec)}
-                                  disabled={applyingRec[rec.id]}
-                                  className={`btn-primary ${applyingRec[rec.id] ? 'btn-loading' : ''}`}
-                                  style={{ width: '100%', display: 'inline-flex', alignItems: 'center', justifyContent: 'center', gap: '6px' }}
-                                >
-                                  {applyingRec[rec.id] ? (
-                                    <><span className="btn-spinner" /> Applying Policy Recommendation...</>
-                                  ) : (
-                                    <><Zap size={14} /> Apply Policy Recommendation</>
-                                  )}
-                                </button>
+                                <div className="has-tooltip" style={{ width: '100%' }}>
+                                  <button
+                                    onClick={() => handleApplyRecommendation(rec)}
+                                    disabled={applyingRec[rec.id]}
+                                    className={`btn-primary ${applyingRec[rec.id] ? 'btn-loading' : ''}`}
+                                    style={{ width: '100%', display: 'inline-flex', alignItems: 'center', justifyContent: 'center', gap: '6px' }}
+                                  >
+                                    {applyingRec[rec.id] ? (
+                                      <><span className="btn-spinner" /> Applying Policy Recommendation...</>
+                                    ) : (
+                                      <><Zap size={14} /> Apply Policy Recommendation</>
+                                    )}
+                                  </button>
+                                  <div className="tooltip-bubble tooltip-bottom">
+                                    <strong className="tooltip-title">Enforce Security Policy</strong>
+                                    <span>Directly applies configuration modifications to active privacy engine heuristics.</span>
+                                  </div>
+                                </div>
                               ) : (
                                 <div style={{ 
                                   textAlign: 'center', 
@@ -3042,12 +3190,48 @@ function App() {
                       <table>
                       <thead>
                         <tr>
-                          <th>Name</th>
-                          <th>Department</th>
-                          <th>Position</th>
-                          <th>Hire Date</th>
-                          <th>Sensitive Salary (Annual USD)</th>
-                          <th>Action</th>
+                          <th className="has-tooltip tooltip-bottom">
+                            Name
+                            <div className="tooltip-bubble">
+                              <strong className="tooltip-title">Employee Identity</strong>
+                              <span>Full registered legal name and canary honeypot indicators.</span>
+                            </div>
+                          </th>
+                          <th className="has-tooltip tooltip-bottom">
+                            Department
+                            <div className="tooltip-bubble">
+                              <strong className="tooltip-title">Department Unit</strong>
+                              <span>Assigned organizational division.</span>
+                            </div>
+                          </th>
+                          <th className="has-tooltip tooltip-bottom">
+                            Position
+                            <div className="tooltip-bubble">
+                              <strong className="tooltip-title">Job Title & Scope</strong>
+                              <span>Employee corporate role and permission level.</span>
+                            </div>
+                          </th>
+                          <th className="has-tooltip tooltip-bottom">
+                            Hire Date
+                            <div className="tooltip-bubble">
+                              <strong className="tooltip-title">Employment Start</strong>
+                              <span>Official date of record onboarding.</span>
+                            </div>
+                          </th>
+                          <th className="has-tooltip tooltip-bottom">
+                            Sensitive Salary (Annual USD)
+                            <div className="tooltip-bubble">
+                              <strong className="tooltip-title">Protected Compensation</strong>
+                              <span>Protected salary data encrypted under role-based privacy policies. Querying logs an immutable security event.</span>
+                            </div>
+                          </th>
+                          <th className="has-tooltip tooltip-bottom">
+                            Action
+                            <div className="tooltip-bubble">
+                              <strong className="tooltip-title">Administrative Operations</strong>
+                              <span>Salary inspection, re-masking, and directory management actions.</span>
+                            </div>
+                          </th>
                         </tr>
                       </thead>
                       <tbody>
@@ -3082,46 +3266,66 @@ function App() {
                               <td data-label="Name" style={{ fontWeight: '700', color: 'var(--text-primary)' }}>
                                 {emp.first_name} {emp.last_name}
                                 {emp.is_canary && (
-                                  <span className="honeypot-badge" style={{ display: 'inline-flex', alignItems: 'center', gap: '4px' }}>
+                                  <span className="honeypot-badge has-tooltip" style={{ display: 'inline-flex', alignItems: 'center', gap: '4px' }}>
                                     <Radio size={11} /> Honeypot Decoy
+                                    <div className="tooltip-bubble">
+                                      <strong className="tooltip-title">Canary Decoy Trap</strong>
+                                      <span>Decoy profile. Access attempts trigger immediate high-severity security alerts.</span>
+                                    </div>
                                   </span>
                                 )}
                               </td>
                               <td data-label="Department" style={{ color: 'var(--text-secondary)' }}>{emp.department}</td>
                               <td data-label="Position" style={{ color: 'var(--text-secondary)' }}>{emp.position}</td>
                               <td data-label="Hire Date" style={{ color: 'var(--text-secondary)' }}>{new Date(emp.hire_date).toLocaleDateString()}</td>
-                              <td data-label="Sensitive Salary" className="salary-val-sensitive">
+                              <td data-label="Sensitive Salary" className="salary-val-sensitive has-tooltip">
                                 {salaryMap[emp.id] ? (
                                   <span className="visible">${parseFloat(salaryMap[emp.id]).toLocaleString()} / year</span>
                                 ) : (
                                   <span style={{ color: 'var(--text-secondary)' }}>•••••••• (Masked)</span>
                                 )}
+                                <div className="tooltip-bubble">
+                                  <strong className="tooltip-title">{salaryMap[emp.id] ? 'Decrypted Salary' : 'Masked Salary Data'}</strong>
+                                  <span>{salaryMap[emp.id] ? `Unmasked annual compensation: $${parseFloat(salaryMap[emp.id]).toLocaleString()}. Access logged in compliance audit trail.` : 'Sensitive salary is masked to prevent unauthorized inspection. Click "Query Salary" to decrypt (logs an audit transaction).'}</span>
+                                </div>
                               </td>
                               <td data-label="Action" style={{ whiteSpace: 'nowrap' }}>
                                 <div style={{ display: 'flex', gap: '8px', alignItems: 'center', flexWrap: 'nowrap', whiteSpace: 'nowrap' }}>
-                                  <button 
-                                    onClick={() => fetchSensitiveSalary(emp.id)}
-                                    disabled={loadingSalary[emp.id]}
-                                    className={`btn-secondary ${loadingSalary[emp.id] ? 'btn-loading' : ''}`}
-                                    style={{ padding: '6px 12px', fontSize: '11px', whiteSpace: 'nowrap', display: 'inline-flex', alignItems: 'center', gap: '4px' }}
-                                  >
-                                    {loadingSalary[emp.id] ? (
-                                      <><span className="btn-spinner btn-spinner-sm" /> Unmasking...</>
-                                    ) : salaryMap[emp.id] ? (
-                                      'Hide Salary'
-                                    ) : (
-                                      'Query Salary'
-                                    )}
-                                  </button>
-                                  {(user.role === 'HR Manager' || user.role === 'System Administrator') && !emp.is_canary && (
+                                  <div className="has-tooltip-inline">
                                     <button 
-                                      onClick={() => handleRemoveEmployee(emp.id, `${emp.first_name} ${emp.last_name}`)}
-                                      disabled={deletingEmployee[emp.id]}
-                                      className={`btn-danger ${deletingEmployee[emp.id] ? 'btn-loading' : ''}`}
+                                      onClick={() => fetchSensitiveSalary(emp.id)}
+                                      disabled={loadingSalary[emp.id]}
+                                      className={`btn-secondary ${loadingSalary[emp.id] ? 'btn-loading' : ''}`}
                                       style={{ padding: '6px 12px', fontSize: '11px', whiteSpace: 'nowrap', display: 'inline-flex', alignItems: 'center', gap: '4px' }}
                                     >
-                                      {deletingEmployee[emp.id] ? <><span className="btn-spinner btn-spinner-sm" /> Removing...</> : 'Remove'}
+                                      {loadingSalary[emp.id] ? (
+                                        <><span className="btn-spinner btn-spinner-sm" /> Unmasking...</>
+                                      ) : salaryMap[emp.id] ? (
+                                        'Hide Salary'
+                                      ) : (
+                                        'Query Salary'
+                                      )}
                                     </button>
+                                    <div className="tooltip-bubble tooltip-right">
+                                      <strong className="tooltip-title">{salaryMap[emp.id] ? 'Re-mask Salary' : 'Decrypt Salary Record'}</strong>
+                                      <span>{salaryMap[emp.id] ? 'Hides decrypted compensation data from screen.' : 'Queries backend to decrypt compensation. Automatically triggers an access audit log entry.'}</span>
+                                    </div>
+                                  </div>
+                                  {(user.role === 'HR Manager' || user.role === 'System Administrator') && !emp.is_canary && (
+                                    <div className="has-tooltip-inline">
+                                      <button 
+                                        onClick={() => handleRemoveEmployee(emp.id, `${emp.first_name} ${emp.last_name}`)}
+                                        disabled={deletingEmployee[emp.id]}
+                                        className={`btn-danger ${deletingEmployee[emp.id] ? 'btn-loading' : ''}`}
+                                        style={{ padding: '6px 12px', fontSize: '11px', whiteSpace: 'nowrap', display: 'inline-flex', alignItems: 'center', gap: '4px' }}
+                                      >
+                                        {deletingEmployee[emp.id] ? <><span className="btn-spinner btn-spinner-sm" /> Removing...</> : 'Remove'}
+                                      </button>
+                                      <div className="tooltip-bubble tooltip-right">
+                                        <strong className="tooltip-title">Delete Employee Record</strong>
+                                        <span>Permanently removes profile from organization directory and invalidates credentials.</span>
+                                      </div>
+                                    </div>
                                   )}
                                 </div>
                               </td>
@@ -3303,13 +3507,57 @@ function App() {
                       <table>
                       <thead>
                         <tr>
-                          <th>Employee</th>
-                          <th>Leave Type</th>
-                          <th>Start Date</th>
-                          <th>End Date</th>
-                          <th>Reason</th>
-                          <th>Status</th>
-                          {(user.role === 'HR Manager' || user.role === 'System Administrator') && <th>Actions</th>}
+                          <th className="has-tooltip tooltip-bottom">
+                            Employee
+                            <div className="tooltip-bubble">
+                              <strong className="tooltip-title">Applicant Employee</strong>
+                              <span>Staff member requesting leave schedule.</span>
+                            </div>
+                          </th>
+                          <th className="has-tooltip tooltip-bottom">
+                            Leave Type
+                            <div className="tooltip-bubble">
+                              <strong className="tooltip-title">Leave Classification</strong>
+                              <span>Category of absence under organizational policy.</span>
+                            </div>
+                          </th>
+                          <th className="has-tooltip tooltip-bottom">
+                            Start Date
+                            <div className="tooltip-bubble">
+                              <strong className="tooltip-title">Commencement Date</strong>
+                              <span>First scheduled day of requested absence.</span>
+                            </div>
+                          </th>
+                          <th className="has-tooltip tooltip-bottom">
+                            End Date
+                            <div className="tooltip-bubble">
+                              <strong className="tooltip-title">Conclusion Date</strong>
+                              <span>Final scheduled day of requested absence.</span>
+                            </div>
+                          </th>
+                          <th className="has-tooltip tooltip-bottom">
+                            Reason
+                            <div className="tooltip-bubble">
+                              <strong className="tooltip-title">Leave Justification</strong>
+                              <span>Staff-provided contextual reason for absence.</span>
+                            </div>
+                          </th>
+                          <th className="has-tooltip tooltip-bottom">
+                            Status
+                            <div className="tooltip-bubble">
+                              <strong className="tooltip-title">Approval State</strong>
+                              <span>Current managerial and compliance audit review status.</span>
+                            </div>
+                          </th>
+                          {(user.role === 'HR Manager' || user.role === 'System Administrator') && (
+                            <th className="has-tooltip tooltip-bottom">
+                              Actions
+                              <div className="tooltip-bubble">
+                                <strong className="tooltip-title">Managerial Actions</strong>
+                                <span>Approve or reject employee leave request.</span>
+                              </div>
+                            </th>
+                          )}
                         </tr>
                       </thead>
                       <tbody>
@@ -3345,8 +3593,12 @@ function App() {
                               <td data-label="End Date" style={{ color: 'var(--text-secondary)' }}>{new Date(l.end_date).toLocaleDateString()}</td>
                               <td data-label="Reason" style={{ fontSize: '12px', color: 'var(--text-secondary)' }}>{l.reason}</td>
                               <td data-label="Status">
-                                <span className={`status-indicator ${l.status.toLowerCase()}`}>
+                                <span className={`status-indicator ${l.status.toLowerCase()} has-tooltip`}>
                                   {l.status}
+                                  <div className="tooltip-bubble">
+                                    <strong className="tooltip-title">Request Status: {l.status}</strong>
+                                    <span>{l.status === 'Approved' ? 'Leave request is formally approved and logged.' : l.status === 'Pending' ? 'Pending administrative review and compliance check.' : 'Leave request rejected by management.'}</span>
+                                  </div>
                                 </span>
                               </td>
                               {(user.role === 'HR Manager' || user.role === 'System Administrator') && (
