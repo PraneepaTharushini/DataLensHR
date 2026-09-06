@@ -354,6 +354,18 @@ function App() {
   const [leaveSearch, setLeaveSearch] = useState('');
   const [leaveStatusFilter, setLeaveStatusFilter] = useState('all');
 
+  // Department Privacy Analytics Filter & Search States
+  const [deptSearch, setDeptSearch] = useState('');
+  const [deptRiskFilter, setDeptRiskFilter] = useState('all');
+
+  // Privacy Detection Rules Filter & Search States
+  const [ruleSearch, setRuleSearch] = useState('');
+  const [ruleStatusFilter, setRuleStatusFilter] = useState('all');
+
+  // Proactive Policy Recommendations Filter & Search States
+  const [recSearch, setRecSearch] = useState('');
+  const [recSeverityFilter, setRecSeverityFilter] = useState('all');
+
   const toggleIncidentExpand = (id) => {
     setExpandedIncidents(prev => ({ ...prev, [id]: !prev[id] }));
   };
@@ -688,6 +700,30 @@ function App() {
   // API Call: Save Privacy Rule modifications
   const handleSaveRule = async (e, ruleId) => {
     e.preventDefault();
+    setRuleTouched({
+      weight: true,
+      start_hour: true,
+      end_hour: true,
+      limit: true,
+      window_ms: true
+    });
+    const errors = getRuleErrors();
+    if (Object.keys(errors).length > 0) {
+      showToast('Please correct the highlighted rule parameter errors before saving.', 'error', 'Validation Error');
+      if (errors.weight) {
+        document.getElementById(`rule-weight-input-${ruleId}`)?.focus();
+      } else if (errors.start_hour) {
+        document.getElementById(`rule-start-hour-${ruleId}`)?.focus();
+      } else if (errors.end_hour) {
+        document.getElementById(`rule-end-hour-${ruleId}`)?.focus();
+      } else if (errors.limit) {
+        document.getElementById(`rule-limit-${ruleId}`)?.focus();
+      } else if (errors.window_ms) {
+        document.getElementById(`rule-window-${ruleId}`)?.focus();
+      }
+      return;
+    }
+
     setIsSavingRule(true);
     try {
       const response = await fetch(`${API_BASE}/rules/${ruleId}`, {
@@ -702,6 +738,7 @@ function App() {
       if (response.ok) {
         showToast('Rule configuration updated successfully!', 'success', 'Rule Updated');
         setEditingRule(null);
+        setRuleTouched({});
         fetchRules();
         fetchIncidents();
       } else {
@@ -870,6 +907,61 @@ function App() {
     });
   };
 
+  // Helper: Filter Department Analytics by Risk Level and Search Query
+  const getFilteredDeptAnalytics = () => {
+    return deptAnalytics.filter(dept => {
+      const avgRisk = parseFloat(dept.avg_risk_score || 0);
+      const maxRisk = parseInt(dept.max_risk_score || 0);
+      const isHighRisk = avgRisk >= 60 || maxRisk >= 75;
+      const isMedRisk = (avgRisk >= 30 && avgRisk < 60) || (maxRisk >= 40 && maxRisk < 75);
+      const isSecured = !isHighRisk && !isMedRisk;
+
+      if (deptRiskFilter === 'critical' && !isHighRisk) return false;
+      if (deptRiskFilter === 'elevated' && !isMedRisk) return false;
+      if (deptRiskFilter === 'secured' && !isSecured) return false;
+
+      if (deptSearch.trim()) {
+        const query = deptSearch.toLowerCase();
+        const deptMatch = (dept.department || '').toLowerCase().includes(query);
+        return deptMatch;
+      }
+      return true;
+    });
+  };
+
+  // Helper: Filter Privacy Detection Rules by Status and Search Query
+  const getFilteredRules = () => {
+    return rules.filter(rule => {
+      if (ruleStatusFilter === 'active' && !rule.is_enabled) return false;
+      if (ruleStatusFilter === 'disabled' && rule.is_enabled) return false;
+
+      if (ruleSearch.trim()) {
+        const query = ruleSearch.toLowerCase();
+        const idMatch = (rule.id || '').toLowerCase().includes(query);
+        const nameMatch = (rule.name || '').toLowerCase().replace(/_/g, ' ').includes(query);
+        const descMatch = (rule.description || '').toLowerCase().includes(query);
+        return idMatch || nameMatch || descMatch;
+      }
+      return true;
+    });
+  };
+
+  // Helper: Filter Policy Recommendations by Severity and Search Query
+  const getFilteredRecommendations = () => {
+    return recommendations.filter(rec => {
+      if (recSeverityFilter !== 'all' && rec.severity !== recSeverityFilter) return false;
+
+      if (recSearch.trim()) {
+        const query = recSearch.toLowerCase();
+        const idMatch = (rec.id || '').toLowerCase().includes(query);
+        const titleMatch = (rec.title || '').toLowerCase().includes(query);
+        const descMatch = (rec.description || '').toLowerCase().includes(query);
+        return idMatch || titleMatch || descMatch;
+      }
+      return true;
+    });
+  };
+
   // API Call: Resolve / Mitigate Incident
   const executeMitigation = async (incidentId, action, userId) => {
     setMitigatingIncident(prev => ({ ...prev, [incidentId]: action }));
@@ -926,6 +1018,12 @@ function App() {
     setLoginTouched({ email: true, password: true });
     const errors = getLoginErrors();
     if (Object.keys(errors).length > 0) {
+      showToast('Please provide a valid email and password to sign in.', 'error', 'Validation Error');
+      if (errors.email) {
+        document.getElementById('login-email-input')?.focus();
+      } else if (errors.password) {
+        document.getElementById('login-password-input')?.focus();
+      }
       return;
     }
     setErrorMessage('');
@@ -998,6 +1096,20 @@ function App() {
     });
     const errors = getEmpFormErrors();
     if (Object.keys(errors).length > 0) {
+      showToast('Please resolve the highlighted form errors before adding an employee.', 'error', 'Validation Error');
+      if (errors.first_name) {
+        document.getElementById('new-emp-first-name')?.focus();
+      } else if (errors.last_name) {
+        document.getElementById('new-emp-last-name')?.focus();
+      } else if (errors.email) {
+        document.getElementById('new-emp-email')?.focus();
+      } else if (errors.position) {
+        document.getElementById('new-emp-position')?.focus();
+      } else if (errors.salary) {
+        document.getElementById('new-emp-salary')?.focus();
+      } else if (errors.hire_date) {
+        document.getElementById('new-emp-hire-date')?.focus();
+      }
       return;
     }
 
@@ -1109,6 +1221,14 @@ function App() {
     });
     const errors = getLeaveFormErrors();
     if (Object.keys(errors).length > 0) {
+      showToast('Please complete all required fields before submitting your leave request.', 'error', 'Validation Error');
+      if (errors.startDate) {
+        document.getElementById('leave-start-date')?.focus();
+      } else if (errors.endDate) {
+        document.getElementById('leave-end-date')?.focus();
+      } else if (errors.reason) {
+        document.getElementById('leave-reason-input')?.focus();
+      }
       return;
     }
 
@@ -1401,8 +1521,20 @@ function App() {
                 
                 {(() => {
                   const loginErrors = getLoginErrors();
+                  const hasLoginErrors = Object.keys(loginErrors).length > 0;
+                  const isSubmittedWithErrors = loginTouched.email && loginTouched.password && hasLoginErrors;
                   return (
                     <form onSubmit={handleLogin} noValidate>
+                      {isSubmittedWithErrors && (
+                        <div className="form-error-summary-banner" role="alert">
+                          <AlertCircle size={16} color="var(--danger)" style={{ flexShrink: 0, marginTop: '2px' }} />
+                          <div>
+                            <div className="form-error-summary-title">Authentication details required:</div>
+                            <div style={{ fontSize: '11.5px', opacity: 0.9 }}>{loginErrors.email || loginErrors.password}</div>
+                          </div>
+                        </div>
+                      )}
+
                       <div className="input-field-group">
                         <label htmlFor="login-email-input" style={{ color: 'var(--text-primary)' }}>Email Address</label>
                         <input 
@@ -2507,6 +2639,53 @@ function App() {
                     </div>
                   </div>
 
+                  {/* Search & Risk Filter Toolbar */}
+                  <div className="table-toolbar-bar" style={{ marginBottom: '20px' }}>
+                    <div className="search-box-wrapper">
+                      <span className="search-icon"><Search size={14} /></span>
+                      <input 
+                        type="text" 
+                        placeholder="Search departments by name..." 
+                        value={deptSearch}
+                        onChange={(e) => setDeptSearch(e.target.value)}
+                        className="search-input-field"
+                      />
+                      {deptSearch && (
+                        <button onClick={() => setDeptSearch('')} className="btn-clear-search" title="Clear Search">×</button>
+                      )}
+                    </div>
+
+                    <div className="table-filter-pills">
+                      <button
+                        onClick={() => setDeptRiskFilter('all')}
+                        className={`filter-pill-btn ${deptRiskFilter === 'all' ? 'active' : ''}`}
+                      >
+                        All ({deptAnalytics.length})
+                      </button>
+                      <button
+                        onClick={() => setDeptRiskFilter('critical')}
+                        className={`filter-pill-btn ${deptRiskFilter === 'critical' ? 'active' : ''}`}
+                      >
+                        Critical Risk
+                      </button>
+                      <button
+                        onClick={() => setDeptRiskFilter('elevated')}
+                        className={`filter-pill-btn ${deptRiskFilter === 'elevated' ? 'active' : ''}`}
+                      >
+                        Elevated
+                      </button>
+                      <button
+                        onClick={() => setDeptRiskFilter('secured')}
+                        className={`filter-pill-btn ${deptRiskFilter === 'secured' ? 'active' : ''}`}
+                      >
+                        Secured
+                      </button>
+                      <button onClick={fetchDeptAnalytics} className="btn-secondary" title="Refresh Analytics" style={{ display: 'inline-flex', alignItems: 'center', gap: '5px', padding: '7px 12px', fontSize: '12px' }}>
+                        <RefreshCw size={12} /> Refresh
+                      </button>
+                    </div>
+                  </div>
+
                   {/* Grid of Department Cards with Risk Gauge Ticks & Tooltips */}
                   {isLoadingAnalytics ? (
                     <div className="rules-grid" style={{ marginBottom: '24px' }}>
@@ -2524,9 +2703,18 @@ function App() {
                         onAction={fetchDeptAnalytics} 
                       />
                     </div>
+                  ) : getFilteredDeptAnalytics().length === 0 ? (
+                    <div style={{ marginBottom: '24px' }}>
+                      <NoResultsState 
+                        title="No departments found" 
+                        query={deptSearch}
+                        entity="departments"
+                        onClear={() => { setDeptSearch(''); setDeptRiskFilter('all'); }} 
+                      />
+                    </div>
                   ) : (
                     <div className="rules-grid" style={{ marginBottom: '24px' }}>
-                      {deptAnalytics.map((dept) => {
+                      {getFilteredDeptAnalytics().map((dept) => {
                         const avgRisk = parseFloat(dept.avg_risk_score || 0);
                         const maxRisk = parseInt(dept.max_risk_score || 0);
                         const isHighRisk = avgRisk >= 60 || maxRisk >= 75;
@@ -2717,8 +2905,19 @@ function App() {
                                 />
                               </td>
                             </tr>
+                          ) : getFilteredDeptAnalytics().length === 0 ? (
+                            <tr>
+                              <td colSpan="7" style={{ padding: '30px 10px', textAlign: 'center' }}>
+                                <NoResultsState 
+                                  title="No departments found" 
+                                  query={deptSearch}
+                                  entity="departments"
+                                  onClear={() => { setDeptSearch(''); setDeptRiskFilter('all'); }} 
+                                />
+                              </td>
+                            </tr>
                           ) : (
-                            deptAnalytics.map((dept, i) => (
+                            getFilteredDeptAnalytics().map((dept, i) => (
                               <tr key={i}>
                                 <td data-label="Department" style={{ fontWeight: '700', color: 'var(--text-primary)' }}>{dept.department || 'General'}</td>
                                 <td data-label="Active Members" style={{ color: 'var(--text-primary)' }}>{dept.employee_count} {dept.employee_count === 1 ? 'member' : 'members'}</td>
@@ -2765,6 +2964,47 @@ function App() {
                     </div>
                   </div>
 
+                  {/* Search & Status Filter Toolbar */}
+                  <div className="table-toolbar-bar" style={{ marginBottom: '20px' }}>
+                    <div className="search-box-wrapper">
+                      <span className="search-icon"><Search size={14} /></span>
+                      <input 
+                        type="text" 
+                        placeholder="Search rules by ID, name, or description..." 
+                        value={ruleSearch}
+                        onChange={(e) => setRuleSearch(e.target.value)}
+                        className="search-input-field"
+                      />
+                      {ruleSearch && (
+                        <button onClick={() => setRuleSearch('')} className="btn-clear-search" title="Clear Search">×</button>
+                      )}
+                    </div>
+
+                    <div className="table-filter-pills">
+                      <button
+                        onClick={() => setRuleStatusFilter('all')}
+                        className={`filter-pill-btn ${ruleStatusFilter === 'all' ? 'active' : ''}`}
+                      >
+                        All ({rules.length})
+                      </button>
+                      <button
+                        onClick={() => setRuleStatusFilter('active')}
+                        className={`filter-pill-btn ${ruleStatusFilter === 'active' ? 'active' : ''}`}
+                      >
+                        Active ({rules.filter(r => r.is_enabled).length})
+                      </button>
+                      <button
+                        onClick={() => setRuleStatusFilter('disabled')}
+                        className={`filter-pill-btn ${ruleStatusFilter === 'disabled' ? 'active' : ''}`}
+                      >
+                        Disabled ({rules.filter(r => !r.is_enabled).length})
+                      </button>
+                      <button onClick={fetchRules} className="btn-secondary" title="Reload Rules" style={{ display: 'inline-flex', alignItems: 'center', gap: '5px', padding: '7px 12px', fontSize: '12px' }}>
+                        <RefreshCw size={12} /> Reload
+                      </button>
+                    </div>
+                  </div>
+
                   {isLoadingRules ? (
                     <div className="rules-grid">
                       {[1, 2, 3, 4, 5, 6].map((n) => (
@@ -2781,9 +3021,18 @@ function App() {
                         onAction={fetchRules} 
                       />
                     </div>
+                  ) : getFilteredRules().length === 0 ? (
+                    <div style={{ marginBottom: '24px' }}>
+                      <NoResultsState 
+                        title="No detection rules found" 
+                        query={ruleSearch}
+                        entity="detection rules"
+                        onClear={() => { setRuleSearch(''); setRuleStatusFilter('all'); }} 
+                      />
+                    </div>
                   ) : (
                     <div className="rules-grid">
-                      {rules.map((rule) => {
+                      {getFilteredRules().map((rule) => {
                         const params = typeof rule.parameters === 'object' ? rule.parameters : JSON.parse(rule.parameters || '{}');
                         const isEditing = editingRule && editingRule.id === rule.id;
 
@@ -2811,107 +3060,173 @@ function App() {
                             
                             <p className="card-subtitle" style={{ minHeight: '38px', marginBottom: '16px' }}>{rule.description}</p>
 
-                            {isEditing ? (
-                              <form onSubmit={(e) => handleSaveRule(e, rule.id)} className="rule-edit-form">
-                                <div className="edit-form-field">
-                                  <label style={{ display: 'block', color: 'var(--text-primary)', marginBottom: '6px', fontSize: '12px' }}>Risk Score Weight (1 - 100 Points):</label>
-                                  <div style={{ display: 'flex', alignItems: 'center', gap: '12px' }}>
-                                    <input 
-                                      type="range" 
-                                      min="1" 
-                                      max="100" 
-                                      value={editWeight} 
-                                      onChange={(e) => setEditWeight(parseInt(e.target.value))}
-                                      style={{ flex: 1 }}
-                                    />
-                                    <span style={{ fontWeight: 'bold', minWidth: '45px', textAlign: 'right', color: 'var(--text-primary)' }}>{editWeight} pts</span>
-                                  </div>
-                                </div>
-
-                                <div className="edit-form-field checkbox-field" style={{ display: 'flex', alignItems: 'center', gap: '8px', margin: '14px 0' }}>
-                                  <input 
-                                    type="checkbox" 
-                                    id={`enabled-chk-${rule.id}`}
-                                    checked={editIsEnabled} 
-                                    onChange={(e) => setEditIsEnabled(e.target.checked)}
-                                    style={{ cursor: 'pointer', width: '16px', height: '16px' }}
-                                  />
-                                  <label htmlFor={`enabled-chk-${rule.id}`} style={{ cursor: 'pointer', fontSize: '13px', color: 'var(--text-primary)' }}>
-                                    Enable threat detection check
-                                  </label>
-                                </div>
-
-                                {/* Custom Parameter Fields with Units */}
-                                {rule.id === 'R-02' && (
-                                  <div className="edit-form-field inline-fields" style={{ display: 'flex', gap: '12px', margin: '14px 0' }}>
-                                    <div style={{ flex: 1 }}>
-                                      <label style={{ display: 'block', color: 'var(--text-secondary)', marginBottom: '4px', fontSize: '11px' }}>Start Hour (24h Clock, 11 PM = 23):</label>
-                                      <input 
-                                        type="number" 
-                                        min="0" 
-                                        max="23" 
-                                        value={editParams.start_hour ?? 23} 
-                                        onChange={(e) => setEditParams(prev => ({ ...prev, start_hour: parseInt(e.target.value) }))}
-                                        className="form-input-field" 
-                                        style={{ padding: '8px' }}
-                                      />
+                            {isEditing ? (() => {
+                              const ruleErrors = getRuleErrors();
+                              return (
+                                <form onSubmit={(e) => handleSaveRule(e, rule.id)} noValidate className="rule-edit-form">
+                                  {Object.keys(ruleTouched).length > 0 && Object.keys(ruleErrors).length > 0 && (
+                                    <div className="form-error-summary-banner" role="alert" style={{ marginBottom: '12px', padding: '10px 12px' }}>
+                                      <AlertCircle size={15} color="var(--danger)" style={{ flexShrink: 0, marginTop: '1px' }} />
+                                      <div>
+                                        <div className="form-error-summary-title">Invalid Rule Parameters:</div>
+                                        <div style={{ fontSize: '11px' }}>{ruleErrors.weight || ruleErrors.start_hour || ruleErrors.end_hour || ruleErrors.limit || ruleErrors.window_ms}</div>
+                                      </div>
                                     </div>
-                                    <div style={{ flex: 1 }}>
-                                      <label style={{ display: 'block', color: 'var(--text-secondary)', marginBottom: '4px', fontSize: '11px' }}>End Hour (24h Clock, 5 AM = 5):</label>
-                                      <input 
-                                        type="number" 
-                                        min="0" 
-                                        max="23" 
-                                        value={editParams.end_hour ?? 5} 
-                                        onChange={(e) => setEditParams(prev => ({ ...prev, end_hour: parseInt(e.target.value) }))}
-                                        className="form-input-field" 
-                                        style={{ padding: '8px' }}
-                                      />
-                                    </div>
-                                  </div>
-                                )}
+                                  )}
 
-                                {rule.id === 'R-05' && (
-                                  <div className="edit-form-field inline-fields" style={{ display: 'flex', gap: '12px', margin: '14px 0' }}>
-                                    <div style={{ flex: 1 }}>
-                                      <label style={{ display: 'block', color: 'var(--text-secondary)', marginBottom: '4px', fontSize: '11px' }}>Profile Reads Threshold (Records):</label>
+                                  <div className="edit-form-field">
+                                    <label htmlFor={`rule-weight-input-${rule.id}`} style={{ display: 'block', color: 'var(--text-primary)', marginBottom: '6px', fontSize: '12px' }}>
+                                      Risk Score Weight (1 - 100 Points):
+                                    </label>
+                                    <div style={{ display: 'flex', alignItems: 'center', gap: '12px' }}>
                                       <input 
-                                        type="number" 
+                                        id={`rule-weight-input-${rule.id}`}
+                                        type="range" 
                                         min="1" 
-                                        value={editParams.limit ?? 10} 
-                                        onChange={(e) => setEditParams(prev => ({ ...prev, limit: parseInt(e.target.value) }))}
-                                        className="form-input-field" 
-                                        style={{ padding: '8px' }}
+                                        max="100" 
+                                        value={editWeight} 
+                                        onChange={(e) => {
+                                          setEditWeight(parseInt(e.target.value));
+                                          setRuleTouched(prev => ({ ...prev, weight: true }));
+                                        }}
+                                        style={{ flex: 1 }}
                                       />
+                                      <span style={{ fontWeight: 'bold', minWidth: '45px', textAlign: 'right', color: 'var(--text-primary)' }}>{editWeight} pts</span>
                                     </div>
-                                    <div style={{ flex: 1 }}>
-                                      <label style={{ display: 'block', color: 'var(--text-secondary)', marginBottom: '4px', fontSize: '11px' }}>Sliding Window (Milliseconds):</label>
-                                      <input 
-                                        type="number" 
-                                        min="1000" 
-                                        step="1000"
-                                        value={editParams.window_ms ?? 10000} 
-                                        onChange={(e) => setEditParams(prev => ({ ...prev, window_ms: parseInt(e.target.value) }))}
-                                        className="form-input-field" 
-                                        style={{ padding: '8px' }}
-                                      />
-                                    </div>
+                                    {ruleTouched.weight && ruleErrors.weight && (
+                                      <div className="field-error-msg" role="alert"><AlertTriangle size={12} /> {ruleErrors.weight}</div>
+                                    )}
                                   </div>
-                                )}
 
-                                <div className="edit-form-actions" style={{ display: 'flex', gap: '10px', marginTop: '16px' }}>
-                                  <button 
-                                    type="submit" 
-                                    disabled={isSavingRule}
-                                    className={`btn-primary ${isSavingRule ? 'btn-loading' : ''}`}
-                                    style={{ display: 'inline-flex', alignItems: 'center', gap: '6px' }}
-                                  >
-                                    {isSavingRule ? <><span className="btn-spinner" /> Saving Configuration...</> : 'Save Changes'}
-                                  </button>
-                                  <button type="button" onClick={() => setEditingRule(null)} className="btn-secondary">Cancel</button>
-                                </div>
-                              </form>
-                            ) : (
+                                  <div className="edit-form-field checkbox-field" style={{ display: 'flex', alignItems: 'center', gap: '8px', margin: '14px 0' }}>
+                                    <input 
+                                      type="checkbox" 
+                                      id={`enabled-chk-${rule.id}`}
+                                      checked={editIsEnabled} 
+                                      onChange={(e) => setEditIsEnabled(e.target.checked)}
+                                      style={{ cursor: 'pointer', width: '16px', height: '16px' }}
+                                    />
+                                    <label htmlFor={`enabled-chk-${rule.id}`} style={{ cursor: 'pointer', fontSize: '13px', color: 'var(--text-primary)' }}>
+                                      Enable threat detection check
+                                    </label>
+                                  </div>
+
+                                  {/* Custom Parameter Fields with Units */}
+                                  {rule.id === 'R-02' && (
+                                    <div className="edit-form-field inline-fields" style={{ display: 'flex', gap: '12px', margin: '14px 0' }}>
+                                      <div style={{ flex: 1 }}>
+                                        <label htmlFor={`rule-start-hour-${rule.id}`} style={{ display: 'block', color: 'var(--text-secondary)', marginBottom: '4px', fontSize: '11px' }}>
+                                          Start Hour (24h Clock, 11 PM = 23):
+                                        </label>
+                                        <input 
+                                          id={`rule-start-hour-${rule.id}`}
+                                          type="number" 
+                                          min="0" 
+                                          max="23" 
+                                          value={editParams.start_hour ?? 23} 
+                                          aria-invalid={ruleTouched.start_hour && !!ruleErrors.start_hour}
+                                          onBlur={() => setRuleTouched(prev => ({ ...prev, start_hour: true }))}
+                                          onChange={(e) => {
+                                            setEditParams(prev => ({ ...prev, start_hour: parseInt(e.target.value) }));
+                                            setRuleTouched(prev => ({ ...prev, start_hour: true }));
+                                          }}
+                                          className={`form-input-field ${ruleTouched.start_hour && ruleErrors.start_hour ? 'input-error' : ''}`}
+                                          style={{ padding: '8px' }}
+                                        />
+                                        {ruleTouched.start_hour && ruleErrors.start_hour && (
+                                          <div className="field-error-msg" role="alert"><AlertTriangle size={12} /> {ruleErrors.start_hour}</div>
+                                        )}
+                                      </div>
+                                      <div style={{ flex: 1 }}>
+                                        <label htmlFor={`rule-end-hour-${rule.id}`} style={{ display: 'block', color: 'var(--text-secondary)', marginBottom: '4px', fontSize: '11px' }}>
+                                          End Hour (24h Clock, 5 AM = 5):
+                                        </label>
+                                        <input 
+                                          id={`rule-end-hour-${rule.id}`}
+                                          type="number" 
+                                          min="0" 
+                                          max="23" 
+                                          value={editParams.end_hour ?? 5} 
+                                          aria-invalid={ruleTouched.end_hour && !!ruleErrors.end_hour}
+                                          onBlur={() => setRuleTouched(prev => ({ ...prev, end_hour: true }))}
+                                          onChange={(e) => {
+                                            setEditParams(prev => ({ ...prev, end_hour: parseInt(e.target.value) }));
+                                            setRuleTouched(prev => ({ ...prev, end_hour: true }));
+                                          }}
+                                          className={`form-input-field ${ruleTouched.end_hour && ruleErrors.end_hour ? 'input-error' : ''}`}
+                                          style={{ padding: '8px' }}
+                                        />
+                                        {ruleTouched.end_hour && ruleErrors.end_hour && (
+                                          <div className="field-error-msg" role="alert"><AlertTriangle size={12} /> {ruleErrors.end_hour}</div>
+                                        )}
+                                      </div>
+                                    </div>
+                                  )}
+
+                                  {rule.id === 'R-05' && (
+                                    <div className="edit-form-field inline-fields" style={{ display: 'flex', gap: '12px', margin: '14px 0' }}>
+                                      <div style={{ flex: 1 }}>
+                                        <label htmlFor={`rule-limit-${rule.id}`} style={{ display: 'block', color: 'var(--text-secondary)', marginBottom: '4px', fontSize: '11px' }}>
+                                          Profile Reads Threshold (Records):
+                                        </label>
+                                        <input 
+                                          id={`rule-limit-${rule.id}`}
+                                          type="number" 
+                                          min="1" 
+                                          value={editParams.limit ?? 10} 
+                                          aria-invalid={ruleTouched.limit && !!ruleErrors.limit}
+                                          onBlur={() => setRuleTouched(prev => ({ ...prev, limit: true }))}
+                                          onChange={(e) => {
+                                            setEditParams(prev => ({ ...prev, limit: parseInt(e.target.value) }));
+                                            setRuleTouched(prev => ({ ...prev, limit: true }));
+                                          }}
+                                          className={`form-input-field ${ruleTouched.limit && ruleErrors.limit ? 'input-error' : ''}`}
+                                          style={{ padding: '8px' }}
+                                        />
+                                        {ruleTouched.limit && ruleErrors.limit && (
+                                          <div className="field-error-msg" role="alert"><AlertTriangle size={12} /> {ruleErrors.limit}</div>
+                                        )}
+                                      </div>
+                                      <div style={{ flex: 1 }}>
+                                        <label htmlFor={`rule-window-${rule.id}`} style={{ display: 'block', color: 'var(--text-secondary)', marginBottom: '4px', fontSize: '11px' }}>
+                                          Sliding Window (Milliseconds):
+                                        </label>
+                                        <input 
+                                          id={`rule-window-${rule.id}`}
+                                          type="number" 
+                                          min="1000" 
+                                          step="1000"
+                                          value={editParams.window_ms ?? 10000} 
+                                          aria-invalid={ruleTouched.window_ms && !!ruleErrors.window_ms}
+                                          onBlur={() => setRuleTouched(prev => ({ ...prev, window_ms: true }))}
+                                          onChange={(e) => {
+                                            setEditParams(prev => ({ ...prev, window_ms: parseInt(e.target.value) }));
+                                            setRuleTouched(prev => ({ ...prev, window_ms: true }));
+                                          }}
+                                          className={`form-input-field ${ruleTouched.window_ms && ruleErrors.window_ms ? 'input-error' : ''}`}
+                                          style={{ padding: '8px' }}
+                                        />
+                                        {ruleTouched.window_ms && ruleErrors.window_ms && (
+                                          <div className="field-error-msg" role="alert"><AlertTriangle size={12} /> {ruleErrors.window_ms}</div>
+                                        )}
+                                      </div>
+                                    </div>
+                                  )}
+
+                                  <div className="edit-form-actions" style={{ display: 'flex', gap: '10px', marginTop: '16px' }}>
+                                    <button 
+                                      type="submit" 
+                                      disabled={isSavingRule}
+                                      className={`btn-primary ${isSavingRule ? 'btn-loading' : ''}`}
+                                      style={{ display: 'inline-flex', alignItems: 'center', gap: '6px' }}
+                                    >
+                                      {isSavingRule ? <><span className="btn-spinner" /> Saving Configuration...</> : 'Save Changes'}
+                                    </button>
+                                    <button type="button" onClick={() => { setEditingRule(null); setRuleTouched({}); }} className="btn-secondary">Cancel</button>
+                                  </div>
+                                </form>
+                              );
+                            })() : (
                               <div className="rule-card-metrics" style={{ marginTop: '14px' }}>
                                  <div className="metric-row has-tooltip" style={{ display: 'flex', justifyContent: 'space-between', padding: '6px 0', borderBottom: '1px solid rgba(255,255,255,0.05)', width: '100%' }}>
                                    <span style={{ color: 'var(--text-secondary)', fontSize: '12px' }}>Risk Score Weight:</span>
@@ -3024,6 +3339,53 @@ function App() {
                     </div>
                   </div>
 
+                  {/* Search & Priority Filter Toolbar */}
+                  <div className="table-toolbar-bar" style={{ marginBottom: '20px' }}>
+                    <div className="search-box-wrapper">
+                      <span className="search-icon"><Search size={14} /></span>
+                      <input 
+                        type="text" 
+                        placeholder="Search recommendations by title, severity, or ID..." 
+                        value={recSearch}
+                        onChange={(e) => setRecSearch(e.target.value)}
+                        className="search-input-field"
+                      />
+                      {recSearch && (
+                        <button onClick={() => setRecSearch('')} className="btn-clear-search" title="Clear Search">×</button>
+                      )}
+                    </div>
+
+                    <div className="table-filter-pills">
+                      <button
+                        onClick={() => setRecSeverityFilter('all')}
+                        className={`filter-pill-btn ${recSeverityFilter === 'all' ? 'active' : ''}`}
+                      >
+                        All ({recommendations.length})
+                      </button>
+                      <button
+                        onClick={() => setRecSeverityFilter('Critical')}
+                        className={`filter-pill-btn ${recSeverityFilter === 'Critical' ? 'active' : ''}`}
+                      >
+                        Critical ({recommendations.filter(r => r.severity === 'Critical').length})
+                      </button>
+                      <button
+                        onClick={() => setRecSeverityFilter('High')}
+                        className={`filter-pill-btn ${recSeverityFilter === 'High' ? 'active' : ''}`}
+                      >
+                        High ({recommendations.filter(r => r.severity === 'High').length})
+                      </button>
+                      <button
+                        onClick={() => setRecSeverityFilter('Medium')}
+                        className={`filter-pill-btn ${recSeverityFilter === 'Medium' ? 'active' : ''}`}
+                      >
+                        Medium ({recommendations.filter(r => r.severity === 'Medium').length})
+                      </button>
+                      <button onClick={fetchRecommendations} className="btn-secondary" title="Refresh Recommendations" style={{ display: 'inline-flex', alignItems: 'center', gap: '5px', padding: '7px 12px', fontSize: '12px' }}>
+                        <RefreshCw size={12} /> Refresh
+                      </button>
+                    </div>
+                  </div>
+
                   {isLoadingRecommendations ? (
                     <div className="rules-grid">
                       {[1, 2, 3].map((n) => (
@@ -3040,9 +3402,18 @@ function App() {
                         onAction={fetchRecommendations}
                       />
                     </div>
+                  ) : getFilteredRecommendations().length === 0 ? (
+                    <div style={{ marginBottom: '24px' }}>
+                      <NoResultsState 
+                        title="No recommendations found" 
+                        query={recSearch}
+                        entity="policy recommendations"
+                        onClear={() => { setRecSearch(''); setRecSeverityFilter('all'); }} 
+                      />
+                    </div>
                   ) : (
                     <div className="rules-grid">
-                      {recommendations.map((rec) => {
+                      {getFilteredRecommendations().map((rec) => {
                         const isHigh = rec.severity === 'High' || rec.severity === 'Critical';
                         return (
                           <div 
@@ -3372,8 +3743,21 @@ function App() {
                       </div>
                       {(() => {
                         const leaveErrors = getLeaveFormErrors();
+                        const hasErrors = Object.keys(leaveErrors).length > 0;
+                        const isSubmittedWithErrors = Object.keys(leaveTouched).length > 0 && hasErrors;
                         return (
                           <form onSubmit={handleRequestLeave} noValidate style={{ display: 'flex', flexWrap: 'wrap', gap: '16px', alignItems: 'flex-start' }}>
+                            {isSubmittedWithErrors && (
+                              <div className="form-error-summary-banner" role="alert">
+                                <AlertCircle size={16} color="var(--danger)" style={{ flexShrink: 0, marginTop: '2px' }} />
+                                <div>
+                                  <div className="form-error-summary-title">Please review the following error{Object.keys(leaveErrors).length > 1 ? 's' : ''}:</div>
+                                  <div style={{ fontSize: '11.5px', opacity: 0.9 }}>
+                                    {Object.values(leaveErrors).join(' • ')}
+                                  </div>
+                                </div>
+                              </div>
+                            )}
                             <div style={{ flex: '1 1 200px', display: 'flex', flexDirection: 'column', gap: '4px' }}>
                               <label htmlFor="leave-type-select" style={{ fontSize: '11px', fontWeight: '700', color: 'var(--text-secondary)' }}>Leave Type</label>
                               <select 
@@ -3676,8 +4060,21 @@ function App() {
             </div>
             {(() => {
               const empErrors = getEmpFormErrors();
+              const hasErrors = Object.keys(empErrors).length > 0;
+              const isSubmittedWithErrors = Object.keys(empFormTouched).length > 0 && hasErrors;
               return (
                 <form onSubmit={handleAddEmployee} noValidate className="modal-form">
+                  {isSubmittedWithErrors && (
+                    <div className="form-error-summary-banner" role="alert">
+                      <AlertCircle size={16} color="var(--danger)" style={{ flexShrink: 0, marginTop: '2px' }} />
+                      <div>
+                        <div className="form-error-summary-title">Please correct {Object.keys(empErrors).length} required field{Object.keys(empErrors).length > 1 ? 's' : ''}:</div>
+                        <div style={{ fontSize: '11.5px', opacity: 0.9 }}>
+                          {Object.values(empErrors).join(' • ')}
+                        </div>
+                      </div>
+                    </div>
+                  )}
                   <div className="form-group">
                     <label htmlFor="new-emp-first-name">First Name</label>
                     <input 
