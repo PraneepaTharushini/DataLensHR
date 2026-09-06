@@ -77,44 +77,72 @@
   --danger-glow: rgba(220, 38, 38, 0.14);
 }
 
-/* ================= MINI DESIGN SYSTEM FOUNDATION ================= */
+/* ================= COMMANDING TYPOGRAPHY & HIERARCHY SYSTEM ================= */
 
-/* Typography Scale */
+/* Level 1: Page Category Pill Badge */
+.page-category-badge,
+.dashboard-suite-badge {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  font-size: 11px;
+  font-weight: 800;
+  color: var(--primary);
+  text-transform: uppercase;
+  letter-spacing: 0.8px;
+  margin-bottom: 8px;
+  background: var(--primary-glow);
+  padding: 4px 10px;
+  border-radius: 6px;
+  border: 1px solid rgba(37, 99, 235, 0.2);
+  line-height: 1.2;
+}
+
+.dark-theme .page-category-badge,
+.dark-theme .dashboard-suite-badge {
+  border-color: rgba(59, 130, 246, 0.3);
+  color: #93c5fd;
+  background: rgba(59, 130, 246, 0.15);
+}
+
+/* Level 2: Main Page Header Title */
 .view-title-block {
-  margin-bottom: 24px;
+  margin-bottom: 28px;
 }
 
+.view-page-title,
+.view-title-block h2,
 .view-title-block h3 {
-  font-size: 24px;
-  font-weight: 800;
-  color: var(--text-primary);
-  letter-spacing: -0.5px;
-  line-height: 1.25;
-  margin: 0 0 6px 0;
+  font-size: 26px !important;
+  font-weight: 900 !important;
+  color: var(--text-primary) !important;
+  letter-spacing: -0.6px !important;
+  line-height: 1.25 !important;
+  margin: 2px 0 6px 0 !important;
 }
 
+.light-theme .view-page-title,
+.light-theme .view-title-block h2,
+.light-theme .view-title-block h3 {
+  color: #0f172a !important;
+}
+
+.dark-theme .view-page-title,
+.dark-theme .view-title-block h2,
+.dark-theme .view-title-block h3 {
+  color: #f8fafc !important;
+}
+
+.view-page-subtitle,
 .view-title-block p {
-  font-size: 13px;
-  color: var(--text-secondary);
-  line-height: 1.5;
-  margin: 0;
+  font-size: 13.5px !important;
+  color: var(--text-secondary) !important;
+  line-height: 1.55 !important;
+  max-width: 850px;
+  margin: 0 !important;
 }
 
-.card-title {
-  font-size: 16px;
-  font-weight: 800;
-  color: var(--text-primary);
-  letter-spacing: -0.3px;
-  margin: 0 0 4px 0;
-}
-
-.card-subtitle {
-  font-size: 12px;
-  color: var(--text-muted);
-  line-height: 1.4;
-  margin: 0;
-}
-
+/* Level 3: Section Eyebrows & Section Headings */
 .section-eyebrow {
   font-size: 10px;
   font-weight: 800;
@@ -122,7 +150,80 @@
   letter-spacing: 0.8px;
   color: var(--text-muted);
   display: inline-block;
-  margin-bottom: 6px;
+  margin-bottom: 4px;
+}
+
+.light-theme .section-eyebrow {
+  color: #64748b;
+}
+
+.section-heading,
+.incidents-log-header h3,
+.toolbar-header-text h3,
+.analytics-card-header h3 {
+  font-size: 17px !important;
+  font-weight: 800 !important;
+  color: var(--text-primary) !important;
+  letter-spacing: -0.3px !important;
+  margin: 0 0 4px 0 !important;
+  line-height: 1.3 !important;
+}
+
+.light-theme .section-heading,
+.light-theme .incidents-log-header h3,
+.light-theme .toolbar-header-text h3,
+.light-theme .analytics-card-header h3 {
+  color: #0f172a !important;
+}
+
+.dark-theme .section-heading,
+.dark-theme .incidents-log-header h3,
+.dark-theme .toolbar-header-text h3,
+.dark-theme .analytics-card-header h3 {
+  color: #f8fafc !important;
+}
+
+.section-subtext,
+.incidents-log-header p,
+.toolbar-header-text p,
+.analytics-card-header p {
+  font-size: 12.5px !important;
+  color: var(--text-secondary) !important;
+  line-height: 1.45 !important;
+  margin: 0 !important;
+}
+
+/* Level 4: Card Headings & Item Titles */
+.item-card-title,
+.rule-config-card .card-title,
+.leave-form-card .card-title,
+.card-title {
+  font-size: 15px !important;
+  font-weight: 800 !important;
+  color: var(--text-primary) !important;
+  letter-spacing: -0.2px !important;
+  margin: 0 0 4px 0 !important;
+}
+
+.light-theme .item-card-title,
+.light-theme .rule-config-card .card-title,
+.light-theme .leave-form-card .card-title,
+.light-theme .card-title {
+  color: #0f172a !important;
+}
+
+.dark-theme .item-card-title,
+.dark-theme .rule-config-card .card-title,
+.dark-theme .leave-form-card .card-title,
+.dark-theme .card-title {
+  color: #f8fafc !important;
+}
+
+.card-subtitle {
+  font-size: 12px;
+  color: var(--text-secondary);
+  line-height: 1.45;
+  margin: 0;
 }
 
 /* ================= STANDARDIZED ENTERPRISE CARD SYSTEM ================= */

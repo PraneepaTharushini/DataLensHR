@@ -1762,11 +1762,11 @@ function App() {
                   {/* Dashboard Executive Header Block */}
                   <div className="view-title-block dashboard-header-block">
                     <div>
-                      <div className="dashboard-suite-badge" style={{ display: 'inline-flex', alignItems: 'center', gap: '6px', fontSize: '11px', fontWeight: '800', color: 'var(--primary)', textTransform: 'uppercase', letterSpacing: '0.8px', marginBottom: '6px', background: 'var(--primary-glow)', padding: '4px 10px', borderRadius: '6px' }}>
+                      <div className="page-category-badge">
                         <Shield size={12} /> Privacy Analytics Suite
                       </div>
-                      <h3 style={{ color: 'var(--text-primary)', margin: '2px 0 6px 0' }}>Security Operations Dashboard</h3>
-                      <p style={{ maxWidth: '850px', fontSize: '13.5px', lineHeight: '1.5', color: 'var(--text-secondary)' }}>
+                      <h2 className="view-page-title">Security Operations Dashboard</h2>
+                      <p className="view-page-subtitle">
                         Monitor employee data access, identify suspicious activity, and manage privacy and security risks across your organization.
                       </p>
                     </div>
@@ -1899,10 +1899,11 @@ function App() {
                           <div className="app-card unified-threat-card">
                             <div className="analytics-card-header">
                               <div>
-                                <h3 className="card-title" style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
+                                <span className="section-eyebrow">HEURISTIC BREAKDOWN</span>
+                                <h3 className="section-heading" style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
                                   <Activity size={18} color="var(--primary)" /> Security Violations by Rule & Threat Level
                                 </h3>
-                                <p className="card-subtitle">Real-time breakdown of which security policies were triggered and the current organization threat score.</p>
+                                <p className="section-subtext">Real-time breakdown of which security policies were triggered and the current organization threat score.</p>
                               </div>
                             </div>
                             
@@ -2071,10 +2072,11 @@ function App() {
                           <div className="app-card flagged-accounts-card">
                             <div className="analytics-card-header">
                               <div>
-                                <h3 className="card-title" style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
+                                <span className="section-eyebrow">ANOMALY LEADERBOARD</span>
+                                <h3 className="section-heading" style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
                                   <AlertTriangle size={18} color="var(--danger)" /> Flagged Accounts Leaderboard
                                 </h3>
-                                <p className="card-subtitle">User accounts exceeding safety limits with highest telemetry violations.</p>
+                                <p className="section-subtext">User accounts exceeding safety limits with highest telemetry violations.</p>
                               </div>
                             </div>
 
@@ -2136,10 +2138,11 @@ function App() {
                           {/* Header & Filter Toolbar */}
                           <div className="incident-toolbar-container">
                             <div className="toolbar-header-text">
-                              <h3 style={{ color: 'var(--text-primary)', display: 'flex', alignItems: 'center', gap: '8px' }}>
+                              <span className="section-eyebrow">REAL-TIME TELEMETRY</span>
+                              <h3 className="section-heading" style={{ color: 'var(--text-primary)', display: 'flex', alignItems: 'center', gap: '8px' }}>
                                 <FileText size={18} color="var(--primary)" /> Incident Telemetry & Audit Stream
                               </h3>
-                              <p>Real-time security logs with instant automated mitigation tools.</p>
+                              <p className="section-subtext">Real-time security logs with instant automated mitigation tools.</p>
                             </div>
 
                             <div className="incident-filter-bar">
@@ -2381,8 +2384,15 @@ function App() {
               {activeTab === 'analytics' && (
                 <div className="dept-analytics-panel animate-fade-in">
                   <div className="view-title-block">
-                    <h3>Department Privacy Analytics</h3>
-                    <p>Aggregated telemetry audit of data accesses, record leaks, and incident risk summaries grouped by department.</p>
+                    <div>
+                      <div className="page-category-badge">
+                        <Building2 size={12} /> Privacy Intelligence Suite
+                      </div>
+                      <h2 className="view-page-title">Department Privacy Analytics</h2>
+                      <p className="view-page-subtitle">
+                        Aggregated telemetry audit of data accesses, record leaks, and incident risk summaries grouped by department.
+                      </p>
+                    </div>
                   </div>
 
                   {/* Summary Ribbon Cards with Units & Tooltips */}
@@ -2552,11 +2562,14 @@ function App() {
                   <div className="app-card incidents-card-log">
                     <div className="incidents-log-header">
                       <div>
-                        <h3 className="card-title">Department Audit Log Matrix</h3>
-                        <p className="card-subtitle">Detailed breakdown of access rates, data leak risks, and compliance levels by department.</p>
+                        <span className="section-eyebrow">AUDIT MATRIX</span>
+                        <h3 className="section-heading" style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
+                          <Building2 size={18} color="var(--primary)" /> Department Audit Log Matrix
+                        </h3>
+                        <p className="section-subtext">Detailed breakdown of access rates, data leak risks, and compliance levels by department.</p>
                       </div>
-                      <button onClick={fetchDeptAnalytics} className="btn-secondary">
-                        Refresh Reporting
+                      <button onClick={fetchDeptAnalytics} className="btn-secondary" style={{ display: 'inline-flex', alignItems: 'center', gap: '5px' }}>
+                        <RefreshCw size={12} /> Refresh Reporting
                       </button>
                     </div>
 
@@ -2619,8 +2632,15 @@ function App() {
               {activeTab === 'rules' && (
                 <div className="rules-config-panel animate-fade-in">
                   <div className="view-title-block">
-                    <h3>Privacy Policy Detection Rules</h3>
-                    <p>Dynamically modify threat limits, active sliding windows, risk weights, and toggle rules on/off to adjust security sensitivity levels.</p>
+                    <div>
+                      <div className="page-category-badge">
+                        <Sliders size={12} /> Threat Policy Engine
+                      </div>
+                      <h2 className="view-page-title">Privacy Policy Detection Rules</h2>
+                      <p className="view-page-subtitle">
+                        Dynamically modify threat limits, active sliding windows, risk weights, and toggle rules on/off to adjust security sensitivity levels.
+                      </p>
+                    </div>
                   </div>
 
                   {isLoadingRules ? (
@@ -2861,10 +2881,15 @@ function App() {
               {activeTab === 'recommendations' && (
                 <div className="dept-analytics-panel animate-fade-in">
                   <div className="view-title-block">
-                    <h3 style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
-                      <Lightbulb size={20} color="var(--primary)" /> Proactive Policy Recommendations
-                    </h3>
-                    <p>AI-driven security enforcement policies automatically generated based on telemetry patterns, anomalous logins, and system configuration rules.</p>
+                    <div>
+                      <div className="page-category-badge">
+                        <Lightbulb size={12} /> AI Security Advisor
+                      </div>
+                      <h2 className="view-page-title">Proactive Policy Recommendations</h2>
+                      <p className="view-page-subtitle">
+                        AI-driven security enforcement policies automatically generated based on telemetry patterns, anomalous logins, and system configuration rules.
+                      </p>
+                    </div>
                   </div>
 
                   {isLoadingRecommendations ? (
@@ -2959,10 +2984,15 @@ function App() {
               {/* ================= VIEW 5: EMPLOYEE DIRECTORY ================= */}
               {activeTab === 'employees' && (
                 <div>
-                  <div className="view-title-block" style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '24px', flexWrap: 'wrap', gap: '16px' }}>
+                  <div className="view-title-block" style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '28px', flexWrap: 'wrap', gap: '16px' }}>
                     <div>
-                      <h3>Employee Directory</h3>
-                      <p>View employee directories. Sensitive salary column fields are dynamically masked under privacy shielding policies.</p>
+                      <div className="page-category-badge">
+                        <Users size={12} /> Human Resources Operations
+                      </div>
+                      <h2 className="view-page-title">Employee Directory</h2>
+                      <p className="view-page-subtitle">
+                        View employee profiles and organizational units. Sensitive salary fields are dynamically masked under privacy shielding policies.
+                      </p>
                     </div>
                     {(user.role === 'HR Manager' || user.role === 'System Administrator') && (
                       <button 
@@ -3109,22 +3139,33 @@ function App() {
               {activeTab === 'leaves' && (
                 <div>
                   <div className="view-title-block">
-                    <h3>
-                      {user.role === 'HR Manager' || user.role === 'System Administrator' 
-                        ? 'Leave Request Management' 
-                        : 'My Leave Requests'}
-                    </h3>
-                    <p>
-                      {user.role === 'HR Manager' || user.role === 'System Administrator'
-                        ? 'Approve or reject leave requests submitted by staff members.'
-                        : 'Submit a new leave request and track its approval status.'}
-                    </p>
+                    <div>
+                      <div className="page-category-badge">
+                        <Calendar size={12} /> Workforce & Compliance
+                      </div>
+                      <h2 className="view-page-title">
+                        {user.role === 'HR Manager' || user.role === 'System Administrator' 
+                          ? 'Leave Request Management' 
+                          : 'My Leave Requests'}
+                      </h2>
+                      <p className="view-page-subtitle">
+                        {user.role === 'HR Manager' || user.role === 'System Administrator'
+                          ? 'Approve or reject leave requests submitted by staff members across organizational units.'
+                          : 'Submit a new leave request and track its real-time approval status.'}
+                      </p>
+                    </div>
                   </div>
 
                   {/* If Employee, show Request Leave Form */}
                   {!(user.role === 'HR Manager' || user.role === 'System Administrator') && (
                     <div className="app-card leave-form-card" style={{ marginBottom: '24px' }}>
-                      <h4 className="card-title" style={{ marginBottom: '16px' }}>Request New Leave</h4>
+                      <div style={{ marginBottom: '16px' }}>
+                        <span className="section-eyebrow">SUBMISSION PORTAL</span>
+                        <h3 className="section-heading" style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
+                          <Calendar size={16} color="var(--primary)" /> Request New Leave
+                        </h3>
+                        <p className="section-subtext">Submit leave schedule for administrative and manager compliance review.</p>
+                      </div>
                       {(() => {
                         const leaveErrors = getLeaveFormErrors();
                         return (
@@ -3366,7 +3407,12 @@ function App() {
         >
           <div className="modal-card animate-scale-up" role="dialog" aria-modal="true" aria-labelledby="modal-add-emp-title">
             <div className="modal-header">
-              <h3 id="modal-add-emp-title">Add New Employee</h3>
+              <div>
+                <span className="section-eyebrow" style={{ marginBottom: '2px' }}>NEW PROFILE</span>
+                <h3 id="modal-add-emp-title" className="section-heading" style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
+                  <Users size={18} color="var(--primary)" /> Add New Employee
+                </h3>
+              </div>
               <button 
                 onClick={() => setShowAddEmployeeForm(false)} 
                 className="btn-close"
