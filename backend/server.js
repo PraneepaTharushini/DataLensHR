@@ -716,7 +716,7 @@ app.put('/api/leaves/:id/status', async (req, res) => {
   const { status } = req.body;
   const leaveId = req.params.id;
 
-  if (status !== 'Approved' && status !== 'Rejected') {
+  if (status !== 'Approved' && status !== 'Rejected' && status !== 'Pending') {
     return res.status(400).json({ message: 'Invalid status update.' });
   }
 
