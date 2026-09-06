@@ -1184,7 +1184,7 @@ function App() {
     }
   };
 
-  // API Call: Approve/Reject Leave Request
+  // API Call: Approve/Reject/Reverse Leave Request
   const handleLeaveDecision = async (leaveId, decision) => {
     setProcessingLeave(prev => ({ ...prev, [leaveId]: decision }));
     try {
@@ -1194,7 +1194,11 @@ function App() {
         body: JSON.stringify({ status: decision })
       });
       if (response.ok) {
-        showToast(`Leave request marked as ${decision}.`, 'success', 'Leave Decision Recorded');
+        const title = decision === 'Pending' ? 'Decision Reversed' : 'Leave Decision Recorded';
+        const msg = decision === 'Pending' 
+          ? 'Leave request status has been reversed to Pending.' 
+          : `Leave request marked as ${decision}.`;
+        showToast(msg, decision === 'Pending' ? 'info' : 'success', title);
         fetchLeaves();
       } else {
         const err = await response.json();
@@ -3867,13 +3871,14 @@ function App() {
                               </td>
                               {(user.role === 'HR Manager' || user.role === 'System Administrator') && (
                                 <td data-label="Actions">
-                                  {l.status === 'Pending' && (
+                                  {l.status === 'Pending' ? (
                                     <div style={{ display: 'flex', gap: '8px' }}>
                                       <button 
                                         onClick={() => handleLeaveDecision(l.id, 'Approved')}
                                         disabled={!!processingLeave[l.id]}
                                         className={`btn-success ${processingLeave[l.id] === 'Approved' ? 'btn-loading' : ''}`}
                                         style={{ display: 'inline-flex', alignItems: 'center', gap: '5px' }}
+                                        title="Approve leave request"
                                       >
                                         {processingLeave[l.id] === 'Approved' && <span className="btn-spinner-sm" />}
                                         {processingLeave[l.id] === 'Approved' ? 'Approving...' : 'Approve'}
@@ -3883,9 +3888,27 @@ function App() {
                                         disabled={!!processingLeave[l.id]}
                                         className={`btn-danger ${processingLeave[l.id] === 'Rejected' ? 'btn-loading' : ''}`}
                                         style={{ display: 'inline-flex', alignItems: 'center', gap: '5px' }}
+                                        title="Reject leave request"
                                       >
                                         {processingLeave[l.id] === 'Rejected' && <span className="btn-spinner-sm" />}
                                         {processingLeave[l.id] === 'Rejected' ? 'Rejecting...' : 'Reject'}
+                                      </button>
+                                    </div>
+                                  ) : (
+                                    <div style={{ display: 'flex', gap: '8px' }}>
+                                      <button 
+                                        onClick={() => handleLeaveDecision(l.id, 'Pending')}
+                                        disabled={!!processingLeave[l.id]}
+                                        className={`btn-secondary ${processingLeave[l.id] === 'Pending' ? 'btn-loading' : ''}`}
+                                        style={{ display: 'inline-flex', alignItems: 'center', gap: '5px', fontSize: '11px', padding: '6px 10px', height: '32px' }}
+                                        title={`Reverse ${l.status.toLowerCase()} status back to Pending`}
+                                      >
+                                        {processingLeave[l.id] === 'Pending' ? (
+                                          <span className="btn-spinner-sm" />
+                                        ) : (
+                                          <RotateCcw size={12} />
+                                        )}
+                                        {processingLeave[l.id] === 'Pending' ? 'Reversing...' : 'Reverse to Pending'}
                                       </button>
                                     </div>
                                   )}
