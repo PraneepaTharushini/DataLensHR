@@ -2841,55 +2841,13 @@ function App() {
                       <table>
                         <thead>
                           <tr>
-                            <th className="has-tooltip tooltip-bottom">
-                              Department
-                              <div className="tooltip-bubble">
-                                <strong className="tooltip-title">Department Name</strong>
-                                <span>Organizational business unit or operational division.</span>
-                              </div>
-                            </th>
-                            <th className="has-tooltip tooltip-bottom">
-                              Active Members (Staff)
-                              <div className="tooltip-bubble">
-                                <strong className="tooltip-title">Active Personnel</strong>
-                                <span>Total headcount of staff members assigned to this department.</span>
-                              </div>
-                            </th>
-                            <th className="has-tooltip tooltip-bottom">
-                              Incident Violations (Events)
-                              <div className="tooltip-bubble">
-                                <strong className="tooltip-title">Policy Violations</strong>
-                                <span>Count of anomalous access breaches triggered by members of this department.</span>
-                              </div>
-                            </th>
-                            <th className="has-tooltip tooltip-bottom">
-                              Average Risk Score (/ 100)
-                              <div className="tooltip-bubble">
-                                <strong className="tooltip-title">Mean Threat Index</strong>
-                                <span>Mean calculated risk score based on telemetry events (0-100 scale).</span>
-                              </div>
-                            </th>
-                            <th className="has-tooltip tooltip-bottom">
-                              Peak Risk Score (/ 100)
-                              <div className="tooltip-bubble">
-                                <strong className="tooltip-title">Peak Incident Severity</strong>
-                                <span>Highest single violation risk score recorded in this department.</span>
-                              </div>
-                            </th>
-                            <th className="has-tooltip tooltip-bottom">
-                              Sensitive Records Read (Records)
-                              <div className="tooltip-bubble">
-                                <strong className="tooltip-title">Data Harvest Volume</strong>
-                                <span>Total sensitive employee records and salary fields queried.</span>
-                              </div>
-                            </th>
-                            <th className="has-tooltip tooltip-bottom">
-                              Audit Transactions (Operations)
-                              <div className="tooltip-bubble">
-                                <strong className="tooltip-title">Total Operations</strong>
-                                <span>Aggregate count of access actions logged in audit telemetry.</span>
-                              </div>
-                            </th>
+                            <th>Department</th>
+                            <th>Active Members</th>
+                            <th>Incident Violations</th>
+                            <th>Average Risk Score</th>
+                            <th>Peak Risk Score</th>
+                            <th>Sensitive Records Read</th>
+                            <th>Audit Transactions</th>
                           </tr>
                         </thead>
                         <tbody>
@@ -3561,48 +3519,12 @@ function App() {
                       <table>
                       <thead>
                         <tr>
-                          <th className="has-tooltip tooltip-bottom">
-                            Name
-                            <div className="tooltip-bubble">
-                              <strong className="tooltip-title">Employee Identity</strong>
-                              <span>Full registered legal name and canary honeypot indicators.</span>
-                            </div>
-                          </th>
-                          <th className="has-tooltip tooltip-bottom">
-                            Department
-                            <div className="tooltip-bubble">
-                              <strong className="tooltip-title">Department Unit</strong>
-                              <span>Assigned organizational division.</span>
-                            </div>
-                          </th>
-                          <th className="has-tooltip tooltip-bottom">
-                            Position
-                            <div className="tooltip-bubble">
-                              <strong className="tooltip-title">Job Title & Scope</strong>
-                              <span>Employee corporate role and permission level.</span>
-                            </div>
-                          </th>
-                          <th className="has-tooltip tooltip-bottom">
-                            Hire Date
-                            <div className="tooltip-bubble">
-                              <strong className="tooltip-title">Employment Start</strong>
-                              <span>Official date of record onboarding.</span>
-                            </div>
-                          </th>
-                          <th className="has-tooltip tooltip-bottom">
-                            Sensitive Salary (Annual USD)
-                            <div className="tooltip-bubble">
-                              <strong className="tooltip-title">Protected Compensation</strong>
-                              <span>Protected salary data encrypted under role-based privacy policies. Querying logs an immutable security event.</span>
-                            </div>
-                          </th>
-                          <th className="has-tooltip tooltip-bottom">
-                            Action
-                            <div className="tooltip-bubble">
-                              <strong className="tooltip-title">Administrative Operations</strong>
-                              <span>Salary inspection, re-masking, and directory management actions.</span>
-                            </div>
-                          </th>
+                          <th>Name</th>
+                          <th>Department</th>
+                          <th>Position</th>
+                          <th>Hire Date</th>
+                          <th>Sensitive Salary (Annual USD)</th>
+                          <th>Action</th>
                         </tr>
                       </thead>
                       <tbody>
@@ -3891,56 +3813,14 @@ function App() {
                       <table>
                       <thead>
                         <tr>
-                          <th className="has-tooltip tooltip-bottom">
-                            Employee
-                            <div className="tooltip-bubble">
-                              <strong className="tooltip-title">Applicant Employee</strong>
-                              <span>Staff member requesting leave schedule.</span>
-                            </div>
-                          </th>
-                          <th className="has-tooltip tooltip-bottom">
-                            Leave Type
-                            <div className="tooltip-bubble">
-                              <strong className="tooltip-title">Leave Classification</strong>
-                              <span>Category of absence under organizational policy.</span>
-                            </div>
-                          </th>
-                          <th className="has-tooltip tooltip-bottom">
-                            Start Date
-                            <div className="tooltip-bubble">
-                              <strong className="tooltip-title">Commencement Date</strong>
-                              <span>First scheduled day of requested absence.</span>
-                            </div>
-                          </th>
-                          <th className="has-tooltip tooltip-bottom">
-                            End Date
-                            <div className="tooltip-bubble">
-                              <strong className="tooltip-title">Conclusion Date</strong>
-                              <span>Final scheduled day of requested absence.</span>
-                            </div>
-                          </th>
-                          <th className="has-tooltip tooltip-bottom">
-                            Reason
-                            <div className="tooltip-bubble">
-                              <strong className="tooltip-title">Leave Justification</strong>
-                              <span>Staff-provided contextual reason for absence.</span>
-                            </div>
-                          </th>
-                          <th className="has-tooltip tooltip-bottom">
-                            Status
-                            <div className="tooltip-bubble">
-                              <strong className="tooltip-title">Approval State</strong>
-                              <span>Current managerial and compliance audit review status.</span>
-                            </div>
-                          </th>
+                          <th>Employee</th>
+                          <th>Leave Type</th>
+                          <th>Start Date</th>
+                          <th>End Date</th>
+                          <th>Reason</th>
+                          <th>Status</th>
                           {(user.role === 'HR Manager' || user.role === 'System Administrator') && (
-                            <th className="has-tooltip tooltip-bottom">
-                              Actions
-                              <div className="tooltip-bubble">
-                                <strong className="tooltip-title">Managerial Actions</strong>
-                                <span>Approve or reject employee leave request.</span>
-                              </div>
-                            </th>
+                            <th>Actions</th>
                           )}
                         </tr>
                       </thead>
