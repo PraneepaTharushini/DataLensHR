@@ -210,10 +210,88 @@ function ToastContainer({ toasts, removeToast }) {
             >
               <X size={15} />
             </button>
-            <div className="toast-progress-bar" />
           </div>
         );
       })}
+    </div>
+  );
+}
+
+// Reusable Collapsible First-Time User Page Guidance Component
+function PageGuidanceCard({ 
+  icon, 
+  badge = "Quick Start Guide", 
+  title, 
+  subtitle, 
+  steps = [], 
+  storageKey 
+}) {
+  const [isCollapsed, setIsCollapsed] = useState(() => {
+    if (storageKey) {
+      return localStorage.getItem(`guidance_${storageKey}`) === 'collapsed';
+    }
+    return false;
+  });
+
+  const toggleCollapsed = () => {
+    const next = !isCollapsed;
+    setIsCollapsed(next);
+    if (storageKey) {
+      localStorage.setItem(`guidance_${storageKey}`, next ? 'collapsed' : 'expanded');
+    }
+  };
+
+  return (
+    <div className={`page-guidance-card ${isCollapsed ? 'collapsed' : ''}`}>
+      <div 
+        className="guidance-header" 
+        onClick={toggleCollapsed} 
+        role="button" 
+        tabIndex={0}
+        aria-expanded={!isCollapsed}
+        onKeyDown={(e) => { if (e.key === 'Enter' || e.key === ' ') { e.preventDefault(); toggleCollapsed(); } }}
+      >
+        <div className="guidance-header-left">
+          <div className="guidance-icon-circle">
+            {icon || <Lightbulb size={17} />}
+          </div>
+          <div className="guidance-header-text">
+            <div className="guidance-title-row">
+              <span className="guidance-badge">{badge}</span>
+              <span className="guidance-title">{title}</span>
+            </div>
+            {!isCollapsed && subtitle && (
+              <p className="guidance-subtitle">{subtitle}</p>
+            )}
+          </div>
+        </div>
+        <button 
+          type="button" 
+          className="btn-guidance-toggle" 
+          aria-label={isCollapsed ? "Expand guidance section" : "Collapse guidance section"}
+        >
+          {isCollapsed ? <><ChevronDown size={13} /> Show Guide</> : <><ChevronUp size={13} /> Hide Guide</>}
+        </button>
+      </div>
+
+      {!isCollapsed && (
+        <div className="guidance-steps-grid animate-fade-in">
+          {steps.map((step, idx) => (
+            <div key={idx} className="guidance-step-item">
+              <div className="step-badge-circle">
+                {step.icon || (idx + 1)}
+              </div>
+              <div className="step-body">
+                <h5 className="step-title">{step.title}</h5>
+                <p className="step-desc">{step.desc}</p>
+                {step.tag && (
+                  <span className="step-pill-tag">{step.tag}</span>
+                )}
+              </div>
+            </div>
+          ))}
+        </div>
+      )}
     </div>
   );
 }
@@ -2615,6 +2693,32 @@ function App() {
                     </div>
                   </div>
 
+                  {/* First-Time User Guidance Primer */}
+                  <PageGuidanceCard
+                    icon={<Building2 size={18} />}
+                    badge="Analytics Primer"
+                    title="Understanding Department Risk & Access Telemetry"
+                    subtitle="Continuous telemetry aggregates access logs, data unmasking operations, and incident alerts across all organizational departments."
+                    storageKey="dept_analytics"
+                    steps={[
+                      {
+                        title: "Risk Scoring Matrix (0–100)",
+                        desc: "Each department is scored dynamically based on member threat frequencies, peak violations, and anomalous query patterns.",
+                        tag: "Composite Risk Scoring"
+                      },
+                      {
+                        title: "Data Harvest Auditing",
+                        desc: "Monitors the total count of unmasked employee profiles and sensitive salary queries to detect potential bulk scraping.",
+                        tag: "Volume & Leak Telemetry"
+                      },
+                      {
+                        title: "Targeted Remediation",
+                        desc: "Filter by Critical Risk to prioritize divisions requiring credential rotation, policy limit tightening, or deeper forensic audits.",
+                        tag: "Operational SecOps"
+                      }
+                    ]}
+                  />
+
                   {/* Summary Ribbon Cards with Units & Tooltips */}
                   <div className="analytics-ribbon">
                     <div className="app-card ribbon-card has-tooltip">
@@ -2937,6 +3041,32 @@ function App() {
                       </p>
                     </div>
                   </div>
+
+                  {/* First-Time User Policy Guidance */}
+                  <PageGuidanceCard
+                    icon={<Sliders size={18} />}
+                    badge="Policy Engine Guide"
+                    title="Configuring Threat Detection Heuristics & Rules"
+                    subtitle="The privacy engine monitors live database requests against 5 configurable heuristic detection algorithms with instant enforcement."
+                    storageKey="detection_rules"
+                    steps={[
+                      {
+                        title: "5 Core Detection Engines",
+                        desc: "Covers Honeypot Decoys (R-01), After-Hours Access (R-02), Impossible Travel (R-03), Salary Decryption (R-04), and Volumetric Scrapes (R-05).",
+                        tag: "Zero-Trust Policies"
+                      },
+                      {
+                        title: "Real-Time Threshold Tuning",
+                        desc: "Click 'Edit Policy Configurations' to customize timeframes, sliding windows (ms), record limits, or temporarily disable rules.",
+                        tag: "Live Dynamic Config"
+                      },
+                      {
+                        title: "Risk Weight Multipliers",
+                        desc: "Points (1–100) dictate how severely a rule breach elevates the System Threat Index and triggers automated account lockouts.",
+                        tag: "Automated Incident Scoring"
+                      }
+                    ]}
+                  />
 
                   {/* Search & Status Filter Toolbar */}
                   <div className="table-toolbar-bar" style={{ marginBottom: '20px' }}>
@@ -3313,6 +3443,32 @@ function App() {
                     </div>
                   </div>
 
+                  {/* First-Time User Advisor Guidance */}
+                  <PageGuidanceCard
+                    icon={<Lightbulb size={18} />}
+                    badge="Advisor Workflow"
+                    title="AI-Driven Security Hardening & Policy Optimization"
+                    subtitle="Algorithmic security intelligence analyzes audit telemetry trends to recommend targeted rule parameter modifications."
+                    storageKey="policy_advisor"
+                    steps={[
+                      {
+                        title: "Continuous Telemetry Analysis",
+                        desc: "The advisor constantly scans access ledgers for recurring threat patterns, failed login bursts, and localized data anomalies.",
+                        tag: "Automated Inspection"
+                      },
+                      {
+                        title: "Prioritized Security Advice",
+                        desc: "Proposes hardened thresholds (e.g. tighter volumetric windows after scraping) categorized by Critical, High, or Medium severity.",
+                        tag: "Adaptive Intelligence"
+                      },
+                      {
+                        title: "One-Click Policy Enforcement",
+                        desc: "System Administrators can click 'Apply Policy Recommendation' to update backend rule parameters instantly with zero downtime.",
+                        tag: "Instant Remediation"
+                      }
+                    ]}
+                  />
+
                   {/* Search & Priority Filter Toolbar */}
                   <div className="table-toolbar-bar" style={{ marginBottom: '20px' }}>
                     <div className="search-box-wrapper">
@@ -3498,6 +3654,32 @@ function App() {
                     )}
                   </div>
 
+                  {/* First-Time User Directory Guidance */}
+                  <PageGuidanceCard
+                    icon={<Users size={18} />}
+                    badge="Directory Guide"
+                    title="Privacy-Preserving Employee Directory & Decoy Traps"
+                    subtitle="Staff records are protected with default field masking, role-based salary unmasking, and honeypot canary accounts."
+                    storageKey="employee_directory"
+                    steps={[
+                      {
+                        title: "Masked Compensation Data",
+                        desc: "Salaries remain encrypted and masked (••••••••) by default. Clicking 'Query Salary' decrypts the figure and records an audit log.",
+                        tag: "Privacy By Default"
+                      },
+                      {
+                        title: "Honeypot Canary Accounts",
+                        desc: "Profiles marked with the Honeypot Decoy badge are synthetic tripwires. Any access to them immediately flags a critical security breach.",
+                        tag: "Insider Threat Trap"
+                      },
+                      {
+                        title: "Workforce Administration",
+                        desc: "HR Managers and System Administrators can register new personnel or safely remove records with full RBAC access controls.",
+                        tag: "RBAC Controls"
+                      }
+                    ]}
+                  />
+
                   <div className="app-card" style={{ padding: '20px' }}>
                     {/* Search & Department Filter Toolbar */}
                     <div className="table-toolbar-bar">
@@ -3668,6 +3850,32 @@ function App() {
                       </p>
                     </div>
                   </div>
+
+                  {/* First-Time User Leave Guidance */}
+                  <PageGuidanceCard
+                    icon={<Calendar size={18} />}
+                    badge="Workflow Guide"
+                    title="Leave Request Management & Immutable Audit Ledger"
+                    subtitle="Compliant workforce scheduling portal featuring instant management reviews, status updates, and immutable ledger logging."
+                    storageKey="leave_management"
+                    steps={[
+                      {
+                        title: "Request Submission",
+                        desc: "Employees can request Annual, Sick, Casual, or Maternity leave with validated date ranges and compliance justification notes.",
+                        tag: "Employee Portal"
+                      },
+                      {
+                        title: "Manager Review & Approval",
+                        desc: "HR Managers and Admins review pending requests with immediate one-click Approve or Reject actions.",
+                        tag: "Manager Lifecycle"
+                      },
+                      {
+                        title: "Reversible Decision Trail",
+                        desc: "All status changes are permanently recorded. Approved or rejected requests can be reversed to Pending whenever needed.",
+                        tag: "Audit Integrity"
+                      }
+                    ]}
+                  />
 
                   {/* If Employee, show Request Leave Form */}
                   {!(user.role === 'HR Manager' || user.role === 'System Administrator') && (
