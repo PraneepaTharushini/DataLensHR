@@ -291,16 +291,15 @@
   box-shadow: 0 0 0 1px #ef4444, 0 4px 20px rgba(239, 68, 68, 0.25) !important;
 }
 
-/* ================= STRICT 3-TIER BUTTON SYSTEM ================= */
+/* ================= STRICT 3-TIER BUTTON & HIERARCHY SYSTEM ================= */
 
-/* Tier 1: Primary Action Button (Enterprise Blue #2563EB) */
+/* Tier 1: Primary Action Buttons (Solid Fill + Elevation) */
 .btn-primary,
 .btn-primary-action,
 .btn-modal-submit,
-.btn-login-submit {
-  background: var(--primary);
-  color: #ffffff !important;
-  border: 1px solid transparent;
+.btn-login-submit,
+.btn-action-query,
+.btn-action-approve {
   font-family: inherit;
   font-size: 12px;
   font-weight: 700;
@@ -312,34 +311,72 @@
   align-items: center;
   justify-content: center;
   gap: 8px;
-  box-shadow: 0 4px 12px var(--primary-glow);
   text-decoration: none;
   line-height: 1.2;
+}
+
+.btn-primary,
+.btn-primary-action,
+.btn-modal-submit,
+.btn-login-submit,
+.btn-action-query {
+  background: var(--primary);
+  color: #ffffff !important;
+  border: 1px solid transparent;
+  box-shadow: 0 4px 12px var(--primary-glow);
 }
 
 .btn-primary:hover:not(:disabled),
 .btn-primary-action:hover:not(:disabled),
 .btn-modal-submit:hover:not(:disabled),
-.btn-login-submit:hover:not(:disabled) {
+.btn-login-submit:hover:not(:disabled),
+.btn-action-query:hover:not(:disabled) {
   background: var(--primary-hover);
   box-shadow: 0 6px 18px rgba(37, 99, 235, 0.35);
   transform: translateY(-1px);
 }
 
+/* Primary Positive Workflow Action: Solid Emerald Green */
+.btn-action-approve {
+  background: #10b981;
+  color: #ffffff !important;
+  border: 1px solid transparent;
+  box-shadow: 0 2px 8px rgba(16, 185, 129, 0.35);
+  font-size: 12px;
+  border-radius: 8px;
+}
+
+.light-theme .btn-action-approve {
+  background: #059669;
+}
+
+.btn-action-approve:hover:not(:disabled) {
+  background: #059669;
+  box-shadow: 0 4px 14px rgba(16, 185, 129, 0.45);
+  transform: translateY(-1px);
+}
+
+.light-theme .btn-action-approve:hover:not(:disabled) {
+  background: #047857;
+}
+
 .btn-primary:active,
 .btn-primary-action:active,
 .btn-modal-submit:active,
-.btn-login-submit:active {
+.btn-login-submit:active,
+.btn-action-query:active,
+.btn-action-approve:active {
   transform: translateY(0);
 }
 
-/* Tier 2: Secondary / Outlined Button (Neutral with border) */
+/* Tier 2: Secondary / Outlined Neutral Buttons */
 .btn-secondary,
 .btn-actions-refresh,
 .btn-salary-unlock,
 .btn-modal-cancel,
 .btn-toggle-evidence,
 .btn-clear-filters,
+.btn-action-reverse,
 .filter-pill-btn {
   background-color: var(--bg-card);
   border: 1px solid var(--border-glow);
@@ -365,6 +402,7 @@
 .light-theme .btn-modal-cancel,
 .light-theme .btn-toggle-evidence,
 .light-theme .btn-clear-filters,
+.light-theme .btn-action-reverse,
 .light-theme .filter-pill-btn {
   background-color: #ffffff;
   border-color: #cbd5e1;
@@ -378,6 +416,7 @@
 .btn-modal-cancel:hover,
 .btn-toggle-evidence:hover,
 .btn-clear-filters:hover,
+.btn-action-reverse:hover,
 .filter-pill-btn:hover {
   background-color: var(--primary-glow);
   border-color: var(--primary);
@@ -389,15 +428,53 @@
 .dark-theme .btn-actions-refresh:hover,
 .dark-theme .btn-modal-cancel:hover,
 .dark-theme .btn-toggle-evidence:hover,
-.dark-theme .btn-clear-filters:hover {
+.dark-theme .btn-clear-filters:hover,
+.dark-theme .btn-action-reverse:hover {
   color: #93c5fd;
 }
 
-/* Tier 3: Destructive Action Button (Enterprise Red #DC2626) */
+/* Secondary Ghost Action (Low-Contrast Transparent / Cancel) */
+.btn-secondary-ghost {
+  background: transparent;
+  border: 1px solid var(--border-glow);
+  color: var(--text-secondary);
+  font-family: inherit;
+  font-size: 12px;
+  font-weight: 600;
+  padding: 8px 16px;
+  border-radius: 10px;
+  cursor: pointer;
+  transition: all 0.2s cubic-bezier(0.16, 1, 0.3, 1);
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 6px;
+  line-height: 1.2;
+}
+
+.light-theme .btn-secondary-ghost {
+  background-color: #f8fafc;
+  border-color: #cbd5e1;
+  color: #475569;
+}
+
+.btn-secondary-ghost:hover {
+  background-color: rgba(255, 255, 255, 0.06);
+  border-color: var(--text-secondary);
+  color: var(--text-primary);
+  transform: translateY(-1px);
+}
+
+.light-theme .btn-secondary-ghost:hover {
+  background-color: #f1f5f9;
+  border-color: #94a3b8;
+  color: #0f172a;
+}
+
+/* Tier 3: Destructive & Outlined Reject Actions */
 .btn-danger,
 .btn-destructive,
-.btn-action-danger,
-.btn-mitigation-lock-sm {
+.btn-action-danger {
   background-color: rgba(220, 38, 38, 0.1);
   border: 1px solid rgba(220, 38, 38, 0.3);
   color: #f87171;
@@ -417,8 +494,7 @@
 
 .light-theme .btn-danger,
 .light-theme .btn-destructive,
-.light-theme .btn-action-danger,
-.light-theme .btn-mitigation-lock-sm {
+.light-theme .btn-action-danger {
   color: #dc2626;
   border-color: rgba(220, 38, 38, 0.35);
   background-color: rgba(220, 38, 38, 0.06);
@@ -426,8 +502,7 @@
 
 .btn-danger:hover:not(:disabled),
 .btn-destructive:hover:not(:disabled),
-.btn-action-danger:hover:not(:disabled),
-.btn-mitigation-lock-sm:hover:not(:disabled) {
+.btn-action-danger:hover:not(:disabled) {
   background-color: var(--danger);
   color: #ffffff !important;
   border-color: transparent;
@@ -435,11 +510,84 @@
   transform: translateY(-1px);
 }
 
+/* Secondary Outlined Reject (Paired with Primary Solid Approve) */
+.btn-action-reject {
+  background: transparent;
+  border: 1px solid rgba(239, 68, 68, 0.35);
+  color: #f87171;
+  font-family: inherit;
+  font-size: 12px;
+  font-weight: 600;
+  padding: 6px 12px;
+  border-radius: 8px;
+  cursor: pointer;
+  transition: all 0.2s cubic-bezier(0.16, 1, 0.3, 1);
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 5px;
+  line-height: 1.2;
+}
+
+.light-theme .btn-action-reject {
+  color: #dc2626;
+  border-color: rgba(220, 38, 38, 0.35);
+  background: rgba(220, 38, 38, 0.03);
+}
+
+.btn-action-reject:hover:not(:disabled) {
+  background: rgba(239, 68, 68, 0.15);
+  border-color: var(--danger);
+  color: #ef4444;
+  transform: translateY(-1px);
+}
+
+.light-theme .btn-action-reject:hover:not(:disabled) {
+  background: rgba(220, 38, 38, 0.1);
+  border-color: #dc2626;
+  color: #b91c1c;
+}
+
+/* Secondary Destructive Ghost (Employee Directory Remove action) */
+.btn-action-remove-ghost {
+  background: transparent;
+  border: 1px solid var(--border-glow);
+  color: #94a3b8;
+  font-family: inherit;
+  font-size: 11px;
+  font-weight: 600;
+  padding: 6px 12px;
+  border-radius: 8px;
+  cursor: pointer;
+  transition: all 0.2s cubic-bezier(0.16, 1, 0.3, 1);
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 5px;
+  line-height: 1.2;
+}
+
+.light-theme .btn-action-remove-ghost {
+  color: #64748b;
+  border-color: #cbd5e1;
+}
+
+.btn-action-remove-ghost:hover:not(:disabled) {
+  background: rgba(220, 38, 38, 0.1);
+  border-color: rgba(220, 38, 38, 0.4);
+  color: #ef4444;
+  transform: translateY(-1px);
+}
+
+.light-theme .btn-action-remove-ghost:hover:not(:disabled) {
+  background: rgba(220, 38, 38, 0.08);
+  border-color: #dc2626;
+  color: #dc2626;
+}
+
 /* Secondary Actions like Reopen or Safe Verification */
 .btn-success,
-.btn-action-success,
-.btn-mitigation-unlock-sm,
-.btn-mitigation-reopen-sm {
+.btn-action-success {
   background-color: rgba(16, 185, 129, 0.1);
   border: 1px solid rgba(16, 185, 129, 0.3);
   color: #34d399;
@@ -458,18 +606,14 @@
 }
 
 .light-theme .btn-success,
-.light-theme .btn-action-success,
-.light-theme .btn-mitigation-unlock-sm,
-.light-theme .btn-mitigation-reopen-sm {
+.light-theme .btn-action-success {
   color: #059669;
   border-color: rgba(16, 185, 129, 0.35);
   background-color: rgba(16, 185, 129, 0.07);
 }
 
 .btn-success:hover:not(:disabled),
-.btn-action-success:hover:not(:disabled),
-.btn-mitigation-unlock-sm:hover:not(:disabled),
-.btn-mitigation-reopen-sm:hover:not(:disabled) {
+.btn-action-success:hover:not(:disabled) {
   background-color: var(--success);
   color: #ffffff !important;
   border-color: transparent;
@@ -2926,57 +3070,117 @@ html, body {
 .btn-mitigation-dismiss-sm {
   background-color: transparent;
   border: 1px solid var(--border-glow);
-  color: var(--text-primary);
+  color: var(--text-secondary);
   padding: 6px 12px;
-  border-radius: 6px;
+  border-radius: 8px;
+  font-family: inherit;
   font-size: 11px;
-  font-weight: 700;
+  font-weight: 600;
   cursor: pointer;
-  transition: all 0.2s ease;
+  transition: all 0.2s cubic-bezier(0.16, 1, 0.3, 1);
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+}
+
+.light-theme .btn-mitigation-dismiss-sm {
+  background-color: #f8fafc;
+  border-color: #cbd5e1;
+  color: #475569;
 }
 
 .btn-mitigation-dismiss-sm:hover {
-  background-color: rgba(255, 255, 255, 0.05);
+  background-color: rgba(255, 255, 255, 0.08);
   border-color: var(--text-secondary);
+  color: var(--text-primary);
+  transform: translateY(-1px);
+}
+
+.light-theme .btn-mitigation-dismiss-sm:hover {
+  background-color: #f1f5f9;
+  border-color: #94a3b8;
+  color: #0f172a;
 }
 
 .btn-mitigation-lock-sm {
   background-color: var(--danger);
-  color: white;
-  border: none;
+  color: #ffffff !important;
+  border: 1px solid transparent;
   padding: 6px 14px;
-  border-radius: 6px;
+  border-radius: 8px;
+  font-family: inherit;
   font-size: 11px;
   font-weight: 700;
   cursor: pointer;
-  transition: all 0.2s ease;
-  box-shadow: 0 2px 8px rgba(239, 68, 68, 0.3);
+  transition: all 0.2s cubic-bezier(0.16, 1, 0.3, 1);
+  box-shadow: 0 2px 8px rgba(220, 38, 38, 0.35);
+  display: inline-flex;
+  align-items: center;
+  gap: 5px;
 }
 
-.btn-mitigation-lock-sm:hover {
-  background-color: #dc2626;
+.btn-mitigation-lock-sm:hover:not(:disabled) {
+  background-color: #b91c1c;
+  box-shadow: 0 4px 12px rgba(220, 38, 38, 0.45);
+  transform: translateY(-1px);
 }
 
 .btn-mitigation-unlock-sm {
   background-color: var(--primary);
-  color: white;
-  border: none;
-  padding: 6px 12px;
-  border-radius: 6px;
+  color: #ffffff !important;
+  border: 1px solid transparent;
+  padding: 6px 14px;
+  border-radius: 8px;
+  font-family: inherit;
   font-size: 11px;
   font-weight: 700;
   cursor: pointer;
+  transition: all 0.2s cubic-bezier(0.16, 1, 0.3, 1);
+  box-shadow: 0 2px 8px rgba(37, 99, 235, 0.3);
+  display: inline-flex;
+  align-items: center;
+  gap: 5px;
+}
+
+.btn-mitigation-unlock-sm:hover:not(:disabled) {
+  background-color: var(--primary-hover);
+  box-shadow: 0 4px 12px rgba(37, 99, 235, 0.4);
+  transform: translateY(-1px);
 }
 
 .btn-mitigation-reopen-sm {
   background-color: transparent;
   border: 1px solid var(--border-glow);
-  color: var(--text-primary);
+  color: var(--text-secondary);
   padding: 6px 12px;
-  border-radius: 6px;
+  border-radius: 8px;
+  font-family: inherit;
   font-size: 11px;
-  font-weight: 700;
+  font-weight: 600;
   cursor: pointer;
+  transition: all 0.2s cubic-bezier(0.16, 1, 0.3, 1);
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+}
+
+.light-theme .btn-mitigation-reopen-sm {
+  background-color: #f8fafc;
+  border-color: #cbd5e1;
+  color: #475569;
+}
+
+.btn-mitigation-reopen-sm:hover {
+  background-color: rgba(255, 255, 255, 0.08);
+  border-color: var(--text-secondary);
+  color: var(--text-primary);
+  transform: translateY(-1px);
+}
+
+.light-theme .btn-mitigation-reopen-sm:hover {
+  background-color: #f1f5f9;
+  border-color: #94a3b8;
+  color: #0f172a;
 }
 
 .ticket-resolved-pill {

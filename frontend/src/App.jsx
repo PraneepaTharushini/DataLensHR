@@ -2541,6 +2541,26 @@ function App() {
 
                                         {!isResolved ? (
                                           <div className="ticket-action-btns">
+                                            {inc.risk_level === 'High' && (
+                                              <div className="has-tooltip-inline">
+                                                <button
+                                                  onClick={() => executeMitigation(inc.id, 'LOCK_USER', inc.user_id)}
+                                                  disabled={!!mitigatingIncident[inc.id]}
+                                                  className={`btn-mitigation-lock-sm ${mitigatingIncident[inc.id] === 'LOCK_USER' ? 'btn-loading' : ''}`}
+                                                  style={{ display: 'inline-flex', alignItems: 'center', gap: '5px' }}
+                                                >
+                                                  {mitigatingIncident[inc.id] === 'LOCK_USER' ? (
+                                                    <><span className="btn-spinner btn-spinner-sm" /> Locking...</>
+                                                  ) : (
+                                                    <><Lock size={12} /> Lock Account</>
+                                                  )}
+                                                </button>
+                                                <div className="tooltip-bubble tooltip-right">
+                                                  <strong className="tooltip-title">Automated Lockout Response</strong>
+                                                  <span>Instantly locks user account and blocks sensitive data access until reviewed.</span>
+                                                </div>
+                                              </div>
+                                            )}
                                             <div className="has-tooltip-inline">
                                               <button
                                                 onClick={() => executeMitigation(inc.id, 'DISMISS', null)}
@@ -2551,7 +2571,7 @@ function App() {
                                                 {mitigatingIncident[inc.id] === 'DISMISS' ? (
                                                   <><span className="btn-spinner btn-spinner-sm" /> Dismissing...</>
                                                 ) : (
-                                                  'Dismiss'
+                                                  <><X size={12} /> Dismiss</>
                                                 )}
                                               </button>
                                               <div className="tooltip-bubble tooltip-right">
@@ -2559,26 +2579,6 @@ function App() {
                                                 <span>Acknowledge and mark this security event as Dismissed.</span>
                                               </div>
                                             </div>
-                                            {inc.risk_level === 'High' && (
-                                              <div className="has-tooltip-inline">
-                                                <button
-                                                  onClick={() => executeMitigation(inc.id, 'LOCK_USER', inc.user_id)}
-                                                  disabled={!!mitigatingIncident[inc.id]}
-                                                  className={`btn-mitigation-lock-sm ${mitigatingIncident[inc.id] === 'LOCK_USER' ? 'btn-loading' : ''}`}
-                                                  style={{ display: 'inline-flex', alignItems: 'center', gap: '4px' }}
-                                                >
-                                                  {mitigatingIncident[inc.id] === 'LOCK_USER' ? (
-                                                    <><span className="btn-spinner btn-spinner-sm" /> Locking...</>
-                                                  ) : (
-                                                    'Lock Account'
-                                                  )}
-                                                </button>
-                                                <div className="tooltip-bubble tooltip-right">
-                                                  <strong className="tooltip-title">Automated Lockout Response</strong>
-                                                  <span>Instantly locks user account and blocks sensitive data access until reviewed.</span>
-                                                </div>
-                                              </div>
-                                            )}
                                           </div>
                                         ) : (
                                           <div className="ticket-action-btns">
@@ -2595,12 +2595,12 @@ function App() {
                                                   onClick={() => executeMitigation(inc.id, 'UNLOCK_USER', inc.user_id)}
                                                   disabled={!!mitigatingIncident[inc.id]}
                                                   className={`btn-mitigation-unlock-sm ${mitigatingIncident[inc.id] === 'UNLOCK_USER' ? 'btn-loading' : ''}`}
-                                                  style={{ display: 'inline-flex', alignItems: 'center', gap: '4px' }}
+                                                  style={{ display: 'inline-flex', alignItems: 'center', gap: '5px' }}
                                                 >
                                                   {mitigatingIncident[inc.id] === 'UNLOCK_USER' ? (
                                                     <><span className="btn-spinner btn-spinner-sm" /> Unlocking...</>
                                                   ) : (
-                                                    'Unlock'
+                                                    <><Unlock size={12} /> Unlock</>
                                                   )}
                                                 </button>
                                                 <div className="tooltip-bubble tooltip-right">
@@ -2619,7 +2619,7 @@ function App() {
                                                 {mitigatingIncident[inc.id] === 'REOPEN' ? (
                                                   <><span className="btn-spinner btn-spinner-sm" /> Reopening...</>
                                                 ) : (
-                                                  'Reopen'
+                                                  <><RotateCcw size={12} /> Reopen</>
                                                 )}
                                               </button>
                                               <div className="tooltip-bubble tooltip-right">
@@ -3317,17 +3317,24 @@ function App() {
                                     </div>
                                   )}
 
-                                  <div className="edit-form-actions" style={{ display: 'flex', gap: '10px', marginTop: '16px' }}>
-                                    <button 
-                                      type="submit" 
-                                      disabled={isSavingRule}
-                                      className={`btn-primary ${isSavingRule ? 'btn-loading' : ''}`}
-                                      style={{ display: 'inline-flex', alignItems: 'center', gap: '6px' }}
-                                    >
-                                      {isSavingRule ? <><span className="btn-spinner" /> Saving Configuration...</> : 'Save Changes'}
-                                    </button>
-                                    <button type="button" onClick={() => { setEditingRule(null); setRuleTouched({}); }} className="btn-secondary">Cancel</button>
-                                  </div>
+                                   <div className="edit-form-actions" style={{ display: 'flex', gap: '10px', marginTop: '16px' }}>
+                                     <button 
+                                       type="submit" 
+                                       disabled={isSavingRule}
+                                       className={`btn-primary ${isSavingRule ? 'btn-loading' : ''}`}
+                                       style={{ display: 'inline-flex', alignItems: 'center', gap: '6px' }}
+                                     >
+                                       {isSavingRule ? <><span className="btn-spinner" /> Saving Configuration...</> : <><Check size={14} /> Save Changes</>}
+                                     </button>
+                                     <button 
+                                       type="button" 
+                                       onClick={() => { setEditingRule(null); setRuleTouched({}); }} 
+                                       className="btn-secondary-ghost"
+                                       style={{ display: 'inline-flex', alignItems: 'center', gap: '5px' }}
+                                     >
+                                       <X size={13} /> Cancel
+                                     </button>
+                                   </div>
                                 </form>
                               );
                             })() : (
@@ -3786,15 +3793,15 @@ function App() {
                                     <button 
                                       onClick={() => fetchSensitiveSalary(emp.id)}
                                       disabled={loadingSalary[emp.id]}
-                                      className={`btn-secondary ${loadingSalary[emp.id] ? 'btn-loading' : ''}`}
-                                      style={{ padding: '6px 12px', fontSize: '11px', whiteSpace: 'nowrap', display: 'inline-flex', alignItems: 'center', gap: '4px' }}
+                                      className={`btn-action-query ${loadingSalary[emp.id] ? 'btn-loading' : ''}`}
+                                      style={{ padding: '6px 12px', fontSize: '11px', whiteSpace: 'nowrap', display: 'inline-flex', alignItems: 'center', gap: '5px' }}
                                     >
                                       {loadingSalary[emp.id] ? (
                                         <><span className="btn-spinner btn-spinner-sm" /> Unmasking...</>
                                       ) : salaryMap[emp.id] ? (
-                                        'Hide Salary'
+                                        <><EyeOff size={12} /> Hide Salary</>
                                       ) : (
-                                        'Query Salary'
+                                        <><Eye size={12} /> Query Salary</>
                                       )}
                                     </button>
                                     <div className="tooltip-bubble tooltip-right">
@@ -3807,10 +3814,10 @@ function App() {
                                       <button 
                                         onClick={() => handleRemoveEmployee(emp.id, `${emp.first_name} ${emp.last_name}`)}
                                         disabled={deletingEmployee[emp.id]}
-                                        className={`btn-danger ${deletingEmployee[emp.id] ? 'btn-loading' : ''}`}
-                                        style={{ padding: '6px 12px', fontSize: '11px', whiteSpace: 'nowrap', display: 'inline-flex', alignItems: 'center', gap: '4px' }}
+                                        className={`btn-action-remove-ghost ${deletingEmployee[emp.id] ? 'btn-loading' : ''}`}
+                                        style={{ padding: '6px 12px', fontSize: '11px', whiteSpace: 'nowrap', display: 'inline-flex', alignItems: 'center', gap: '5px' }}
                                       >
-                                        {deletingEmployee[emp.id] ? <><span className="btn-spinner btn-spinner-sm" /> Removing...</> : 'Remove'}
+                                        {deletingEmployee[emp.id] ? <><span className="btn-spinner btn-spinner-sm" /> Removing...</> : <><X size={12} /> Remove</>}
                                       </button>
                                       <div className="tooltip-bubble tooltip-right">
                                         <strong className="tooltip-title">Delete Employee Record</strong>
@@ -4096,21 +4103,21 @@ function App() {
                                       <button 
                                         onClick={() => handleLeaveDecision(l.id, 'Approved')}
                                         disabled={!!processingLeave[l.id]}
-                                        className={`btn-success ${processingLeave[l.id] === 'Approved' ? 'btn-loading' : ''}`}
-                                        style={{ display: 'inline-flex', alignItems: 'center', gap: '5px', whiteSpace: 'nowrap', padding: '6px 12px', height: '34px', fontSize: '12px' }}
+                                        className={`btn-action-approve ${processingLeave[l.id] === 'Approved' ? 'btn-loading' : ''}`}
+                                        style={{ display: 'inline-flex', alignItems: 'center', gap: '5px', whiteSpace: 'nowrap', padding: '6px 14px', height: '34px', fontSize: '12px' }}
                                         title="Approve leave request"
                                       >
-                                        {processingLeave[l.id] === 'Approved' && <span className="btn-spinner-sm" />}
+                                        {processingLeave[l.id] === 'Approved' ? <span className="btn-spinner-sm" /> : <Check size={13} />}
                                         {processingLeave[l.id] === 'Approved' ? 'Approving...' : 'Approve'}
                                       </button>
                                       <button 
                                         onClick={() => handleLeaveDecision(l.id, 'Rejected')}
                                         disabled={!!processingLeave[l.id]}
-                                        className={`btn-danger ${processingLeave[l.id] === 'Rejected' ? 'btn-loading' : ''}`}
+                                        className={`btn-action-reject ${processingLeave[l.id] === 'Rejected' ? 'btn-loading' : ''}`}
                                         style={{ display: 'inline-flex', alignItems: 'center', gap: '5px', whiteSpace: 'nowrap', padding: '6px 12px', height: '34px', fontSize: '12px' }}
                                         title="Reject leave request"
                                       >
-                                        {processingLeave[l.id] === 'Rejected' && <span className="btn-spinner-sm" />}
+                                        {processingLeave[l.id] === 'Rejected' ? <span className="btn-spinner-sm" /> : <X size={13} />}
                                         {processingLeave[l.id] === 'Rejected' ? 'Rejecting...' : 'Reject'}
                                       </button>
                                     </div>
@@ -4119,7 +4126,7 @@ function App() {
                                       <button 
                                         onClick={() => handleLeaveDecision(l.id, 'Pending')}
                                         disabled={!!processingLeave[l.id]}
-                                        className={`btn-secondary ${processingLeave[l.id] === 'Pending' ? 'btn-loading' : ''}`}
+                                        className={`btn-action-reverse ${processingLeave[l.id] === 'Pending' ? 'btn-loading' : ''}`}
                                         style={{ display: 'inline-flex', alignItems: 'center', gap: '6px', fontSize: '12px', padding: '6px 12px', height: '34px', whiteSpace: 'nowrap', minWidth: '145px' }}
                                         title={`Reverse ${l.status.toLowerCase()} status back to Pending`}
                                       >
@@ -4363,8 +4370,9 @@ function App() {
                       type="button" 
                       onClick={() => setShowAddEmployeeForm(false)} 
                       className="btn-modal-cancel"
+                      style={{ display: 'inline-flex', alignItems: 'center', gap: '5px' }}
                     >
-                      Cancel
+                      <X size={13} /> Cancel
                     </button>
                     <button 
                       type="submit" 
@@ -4372,7 +4380,7 @@ function App() {
                       className={`btn-modal-submit ${isSubmittingEmployee ? 'btn-loading' : ''}`}
                       style={{ display: 'inline-flex', alignItems: 'center', gap: '6px' }}
                     >
-                      {isSubmittingEmployee && <span className="btn-spinner" />}
+                      {isSubmittingEmployee ? <span className="btn-spinner" /> : <Plus size={14} />}
                       {isSubmittingEmployee ? 'Adding Employee...' : 'Add Employee'}
                     </button>
                   </div>
