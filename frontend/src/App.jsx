@@ -2060,7 +2060,7 @@ function App() {
                               <div className="threat-dial-and-bars">
                                 {/* Mini Circular Gauge Dial with Tooltip */}
                                 <div className="gauge-panel-compact has-tooltip" style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center' }}>
-                                  <span style={{ fontSize: '11px', fontWeight: '800', color: 'var(--text-secondary)', textTransform: 'uppercase', letterSpacing: '0.6px', marginBottom: '6px' }}>
+                                  <span style={{ fontSize: '12px', fontWeight: '800', color: 'var(--text-primary)', textTransform: 'uppercase', letterSpacing: '0.6px', marginBottom: '6px' }}>
                                     System Risk Score
                                   </span>
                                   <div className={`gauge-ring-outer gauge-ring-compact ${isHigh ? 'high-risk' : isMed ? 'med-risk' : ''}`}>
@@ -2080,12 +2080,12 @@ function App() {
                                       />
                                     </svg>
                                     <div style={{ position: 'relative', zIndex: 2, textAlign: 'center' }}>
-                                      <span className="gauge-value-number" style={{ fontSize: '26px', color: 'var(--text-primary)' }}>{maxRisk}</span>
-                                      <span className="gauge-value-lbl" style={{ fontSize: '9px' }}>/ 100 Risk Index</span>
+                                      <span className="gauge-value-number" style={{ fontSize: '26px', color: 'var(--text-primary)', fontWeight: '800' }}>{maxRisk}</span>
+                                      <span className="gauge-value-lbl" style={{ fontSize: '11px', fontWeight: '700', color: 'var(--text-secondary)' }}>/ 100 Risk Index</span>
                                     </div>
                                   </div>
-                                  <span style={{ fontSize: '10px', color: 'var(--text-muted)', fontWeight: '700', textTransform: 'uppercase', letterSpacing: '0.4px', display: 'inline-flex', alignItems: 'center', gap: '4px', marginTop: '4px' }}>
-                                    {maxRisk === 0 ? <><Check size={11} color="var(--success)" /> Baseline Clean</> : isHigh ? <><AlertTriangle size={11} color="var(--danger)" /> Critical State</> : <><Zap size={11} color="var(--warning)" /> Warning State</>}
+                                  <span style={{ fontSize: '11.5px', color: 'var(--text-primary)', fontWeight: '700', textTransform: 'uppercase', letterSpacing: '0.4px', display: 'inline-flex', alignItems: 'center', gap: '4px', marginTop: '6px' }}>
+                                    {maxRisk === 0 ? <><Check size={12} color="var(--success)" /> Baseline Clean</> : isHigh ? <><AlertTriangle size={12} color="var(--danger)" /> Critical State</> : <><Zap size={12} color="var(--warning)" /> Warning State</>}
                                   </span>
                                   <div className="tooltip-bubble">
                                     <strong className="tooltip-title">Composite Privacy Threat Index</strong>
@@ -2095,15 +2095,15 @@ function App() {
 
                                 {/* Trigger Frequency Progress Bars with Axis & Tooltips */}
                                 <div className="rule-frequencies-compact">
-                                  <div className="chart-axis-header" style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '8px' }}>
-                                    <span className="has-tooltip-inline" style={{ fontSize: '11px', fontWeight: '800', color: 'var(--text-secondary)', textTransform: 'uppercase', letterSpacing: '0.5px' }}>
+                                  <div className="chart-axis-header" style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '10px' }}>
+                                    <span className="has-tooltip-inline" style={{ fontSize: '12px', fontWeight: '800', color: 'var(--text-primary)', textTransform: 'uppercase', letterSpacing: '0.6px' }}>
                                       Security Rule
                                       <div className="tooltip-bubble">
                                         <strong className="tooltip-title">Heuristic Detection Rules</strong>
                                         <span>Active privacy algorithms inspecting access logs for anomalous behavior.</span>
                                       </div>
                                     </span>
-                                    <span className="has-tooltip-inline" style={{ fontSize: '11px', fontWeight: '800', color: 'var(--text-secondary)', textTransform: 'uppercase', letterSpacing: '0.5px' }}>
+                                    <span className="has-tooltip-inline" style={{ fontSize: '12px', fontWeight: '800', color: 'var(--text-primary)', textTransform: 'uppercase', letterSpacing: '0.6px' }}>
                                       Triggered Violations ({totalTriggers} Total)
                                       <div className="tooltip-bubble tooltip-right">
                                         <strong className="tooltip-title">Trigger Frequency</strong>
@@ -2134,17 +2134,17 @@ function App() {
                                           : 'Low';
 
                                     return (
-                                      <div key={idx} className="rule-frequency-row has-tooltip" style={{ width: '100%', display: 'flex', flexDirection: 'column', gap: '3px' }}>
+                                      <div key={idx} className="rule-frequency-row has-tooltip" style={{ width: '100%', display: 'flex', flexDirection: 'column', gap: '4px' }}>
                                         <div className="rule-frequency-labels" style={{ width: '100%', display: 'flex', justifyContent: 'space-between' }}>
-                                          <span className="rule-name-lbl" style={{ color: 'var(--text-primary)', fontSize: '11px', display: 'flex', alignItems: 'center', gap: '6px' }}>
-                                            <span className="rule-card-id" style={{ fontSize: '9px', padding: '1px 5px' }}>{meta.code}</span>
+                                          <span className="rule-name-lbl" style={{ color: 'var(--text-primary)', fontSize: '12.5px', fontWeight: '600', display: 'flex', alignItems: 'center', gap: '6px' }}>
+                                            <span className="rule-card-id" style={{ fontSize: '10px', fontWeight: '800', padding: '2px 6px' }}>{meta.code}</span>
                                             {meta.shortName || meta.label}
                                           </span>
-                                          <span className="rule-count-lbl" style={{ fontSize: '11px', fontWeight: '700', color: count > 0 ? (rule === 'CANARY_ACCESS' || rule === 'IMPOSSIBLE_TRAVEL' ? 'var(--danger)' : 'var(--warning)') : 'var(--text-muted)' }}>
+                                          <span className="rule-count-lbl" style={{ fontSize: '12px', fontWeight: '700', color: count > 0 ? (rule === 'CANARY_ACCESS' || rule === 'IMPOSSIBLE_TRAVEL' ? 'var(--danger)' : 'var(--warning)') : 'var(--text-secondary)' }}>
                                             {count} {count === 1 ? 'violation' : 'violations'} ({totalTriggers > 0 ? Math.round((count / totalTriggers) * 100) : 0}% of all breaches)
                                           </span>
                                         </div>
-                                        <div className="rule-frequency-bar-bg" style={{ height: '7px', background: 'var(--bg-input)', borderRadius: '4px', overflow: 'hidden', border: '1px solid var(--border-glow)' }}>
+                                        <div className="rule-frequency-bar-bg" style={{ height: '8px', background: 'var(--bg-input)', borderRadius: '4px', overflow: 'hidden', border: '1px solid var(--border-glow)' }}>
                                           <div 
                                             className="rule-frequency-bar-fill" 
                                             style={{ 
@@ -2187,24 +2187,24 @@ function App() {
                                   })}
                                   
                                   {/* Graphical Scale & Axis Ticks with Tooltip */}
-                                  <div className="chart-axis-container has-tooltip" style={{ marginTop: '10px', paddingTop: '8px', borderTop: '1px dashed var(--border-glow)' }}>
-                                    <div style={{ display: 'flex', justifyContent: 'space-between', fontSize: '10px', color: 'var(--text-muted)', fontFamily: 'var(--font-mono)', fontWeight: '700' }}>
+                                  <div className="chart-axis-container has-tooltip" style={{ marginTop: '12px', paddingTop: '10px', borderTop: '1px dashed var(--border-glow)' }}>
+                                    <div style={{ display: 'flex', justifyContent: 'space-between', fontSize: '12px', color: 'var(--text-primary)', fontFamily: 'var(--font-mono)', fontWeight: '800' }}>
                                       <span>0</span>
                                       <span>{Math.max(1, Math.round(maxCount * 0.25))}</span>
                                       <span>{Math.max(2, Math.round(maxCount * 0.5))}</span>
                                       <span>{Math.max(3, Math.round(maxCount * 0.75))}</span>
                                       <span>{maxCount} Violations</span>
                                     </div>
-                                    <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', height: '6px', margin: '3px 0 5px 0', borderBottom: '1px solid var(--border-glow)' }}>
-                                      <span style={{ width: '1px', height: '6px', background: 'var(--text-muted)' }} />
-                                      <span style={{ width: '1px', height: '4px', background: 'var(--border-glow)' }} />
-                                      <span style={{ width: '1px', height: '4px', background: 'var(--border-glow)' }} />
-                                      <span style={{ width: '1px', height: '4px', background: 'var(--border-glow)' }} />
-                                      <span style={{ width: '1px', height: '6px', background: 'var(--text-muted)' }} />
+                                    <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', height: '8px', margin: '4px 0 6px 0', borderBottom: '1.5px solid var(--border-glow)' }}>
+                                      <span style={{ width: '2px', height: '8px', background: 'var(--primary)' }} />
+                                      <span style={{ width: '1.5px', height: '5px', background: 'var(--text-secondary)' }} />
+                                      <span style={{ width: '1.5px', height: '5px', background: 'var(--text-secondary)' }} />
+                                      <span style={{ width: '1.5px', height: '5px', background: 'var(--text-secondary)' }} />
+                                      <span style={{ width: '2px', height: '8px', background: 'var(--primary)' }} />
                                     </div>
-                                    <div style={{ display: 'flex', justifyContent: 'space-between', fontSize: '10px', color: 'var(--text-secondary)' }}>
-                                      <span><strong>Scale:</strong> 0 to {maxCount} Recorded Violations</span>
-                                      <span><strong>Total Recorded Breaches:</strong> {totalTriggers} incidents</span>
+                                    <div style={{ display: 'flex', justifyContent: 'space-between', fontSize: '11.5px', color: 'var(--text-secondary)', fontWeight: '600' }}>
+                                      <span><strong style={{ color: 'var(--text-primary)' }}>Scale:</strong> 0 to {maxCount} Recorded Violations</span>
+                                      <span><strong style={{ color: 'var(--text-primary)' }}>Total Breaches:</strong> {totalTriggers} incidents</span>
                                     </div>
                                     <div className="tooltip-bubble tooltip-wide">
                                       <strong className="tooltip-title">Heuristic Threat Velocity Scale</strong>
@@ -2755,11 +2755,11 @@ function App() {
                             <div className="rule-card-metrics" style={{ marginTop: '12px' }}>
                               {/* Horizontal Risk Bar with Axis Scale Ticks & Tooltip */}
                               <div className="has-tooltip" style={{ marginBottom: '14px', width: '100%', display: 'flex', flexDirection: 'column' }}>
-                                <div style={{ display: 'flex', justifyContent: 'space-between', fontSize: '11px', marginBottom: '4px' }}>
-                                  <span style={{ color: 'var(--text-secondary)' }}>Average Privacy Risk Score:</span>
-                                  <span style={{ fontWeight: 'bold', color: 'var(--text-primary)' }}>{Math.round(avgRisk)} / 100 Risk Score</span>
+                                <div style={{ display: 'flex', justifyContent: 'space-between', fontSize: '12.5px', marginBottom: '6px' }}>
+                                  <span style={{ color: 'var(--text-secondary)', fontWeight: '600' }}>Average Privacy Risk Score:</span>
+                                  <span style={{ fontWeight: '800', color: 'var(--text-primary)' }}>{Math.round(avgRisk)} / 100 Risk Score</span>
                                 </div>
-                                <div style={{ height: '7px', background: 'var(--bg-input)', borderRadius: '4px', overflow: 'hidden', border: '1px solid var(--border-glow)' }}>
+                                <div style={{ height: '8px', background: 'var(--bg-input)', borderRadius: '4px', overflow: 'hidden', border: '1px solid var(--border-glow)' }}>
                                   <div style={{
                                     height: '100%',
                                     width: `${Math.max(avgRisk, 3)}%`,
@@ -2769,9 +2769,9 @@ function App() {
                                   }} />
                                 </div>
                                 <div className="risk-scale-axis-ticks">
-                                  <span>0 Low</span>
-                                  <span>50 Elevated</span>
-                                  <span>100 Critical</span>
+                                  <span style={{ color: 'var(--success)' }}>0 Safe</span>
+                                  <span style={{ color: 'var(--warning)' }}>50 Elevated</span>
+                                  <span style={{ color: 'var(--danger)' }}>100 Critical</span>
                                 </div>
                                 <div className="tooltip-bubble tooltip-wide">
                                   <strong className="tooltip-title">{dept.department || 'General'} Privacy Score</strong>

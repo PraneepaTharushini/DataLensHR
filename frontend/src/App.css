@@ -1976,22 +1976,23 @@ html, body {
   display: flex;
   justify-content: space-between;
   align-items: center;
-  font-size: 11px;
-  font-weight: 700;
-  color: var(--text-secondary);
+  font-size: 12px;
+  font-weight: 800;
+  color: var(--text-primary);
   text-transform: uppercase;
-  letter-spacing: 0.5px;
-  margin-bottom: 8px;
-  padding-bottom: 4px;
+  letter-spacing: 0.6px;
+  margin-bottom: 10px;
+  padding-bottom: 5px;
   border-bottom: 1px dashed var(--border-glow);
 }
 
 .chart-axis-scale {
   display: flex;
   justify-content: space-between;
-  font-size: 10px;
-  color: var(--text-muted);
+  font-size: 11.5px;
+  color: var(--text-primary);
   font-family: var(--font-mono);
+  font-weight: 700;
   margin-top: 4px;
 }
 
@@ -2002,7 +2003,8 @@ html, body {
   margin-top: 12px;
   padding-top: 10px;
   border-top: 1px solid var(--border-glow);
-  font-size: 11px;
+  font-size: 12px;
+  font-weight: 600;
   color: var(--text-secondary);
 }
 
@@ -2013,8 +2015,8 @@ html, body {
 }
 
 .legend-swatch {
-  width: 8px;
-  height: 8px;
+  width: 9px;
+  height: 9px;
   border-radius: 50%;
 }
 
@@ -2026,12 +2028,12 @@ html, body {
 .risk-scale-axis-ticks {
   display: flex;
   justify-content: space-between;
-  font-size: 9px;
-  color: var(--text-muted);
+  font-size: 11.5px;
+  color: var(--text-secondary);
+  font-family: var(--font-mono);
   font-weight: 700;
-  text-transform: uppercase;
-  letter-spacing: 0.4px;
-  margin-top: 4px;
+  letter-spacing: 0.3px;
+  margin-top: 5px;
 }
 
 /* Info Tooltip Icon */
@@ -4055,22 +4057,22 @@ html, body {
 .chart-axis-badge {
   display: inline-flex;
   align-items: center;
-  gap: 4px;
-  font-size: 10px;
-  font-weight: 700;
+  gap: 5px;
+  font-size: 11.5px;
+  font-weight: 800;
   text-transform: uppercase;
-  letter-spacing: 0.4px;
-  color: var(--text-secondary);
+  letter-spacing: 0.5px;
+  color: var(--text-primary);
   background: var(--primary-glow);
-  padding: 2px 8px;
+  padding: 3px 9px;
   border-radius: 6px;
   border: 1px solid var(--border-glow);
 }
 
 .axis-unit-tag {
-  font-size: 10px;
-  font-weight: 600;
-  color: var(--text-muted);
+  font-size: 11.5px;
+  font-weight: 700;
+  color: var(--text-secondary);
 }
 
 /* 2. Empty States */
@@ -4950,11 +4952,11 @@ textarea:focus:not(:focus-visible),
   }
 
   .chart-axis-header {
-    font-size: 10px;
+    font-size: 11.5px;
   }
 
   .chart-axis-container {
-    font-size: 9px;
+    font-size: 11px;
   }
 
   .login-hero h2 {
@@ -5256,30 +5258,31 @@ textarea:focus:not(:focus-visible),
 .chart-axis-badge {
   display: inline-flex;
   align-items: center;
-  gap: 4px;
-  font-size: 10px;
-  font-weight: 700;
+  gap: 5px;
+  font-size: 11.5px;
+  font-weight: 800;
   text-transform: uppercase;
   letter-spacing: 0.5px;
-  color: var(--text-muted);
+  color: var(--text-primary);
   background: var(--bg-input);
-  padding: 3px 8px;
+  padding: 3px 9px;
   border-radius: 6px;
   border: 1px solid var(--border-glow);
 }
 
 .chart-axis-container {
-  margin-top: 10px;
-  padding-top: 8px;
+  margin-top: 12px;
+  padding-top: 10px;
   border-top: 1px dashed var(--border-glow);
 }
 
 .risk-scale-axis-ticks {
   display: flex;
   justify-content: space-between;
-  font-size: 9.5px;
-  color: var(--text-muted);
+  font-size: 11.5px;
+  color: var(--text-secondary);
   font-family: var(--font-mono);
-  margin-top: 3px;
-  font-weight: 600;
+  margin-top: 5px;
+  font-weight: 700;
+  letter-spacing: 0.3px;
 }
