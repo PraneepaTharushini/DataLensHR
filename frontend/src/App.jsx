@@ -3872,12 +3872,12 @@ function App() {
                               {(user.role === 'HR Manager' || user.role === 'System Administrator') && (
                                 <td data-label="Actions">
                                   {l.status === 'Pending' ? (
-                                    <div style={{ display: 'flex', gap: '8px' }}>
+                                    <div style={{ display: 'flex', gap: '8px', flexWrap: 'nowrap' }}>
                                       <button 
                                         onClick={() => handleLeaveDecision(l.id, 'Approved')}
                                         disabled={!!processingLeave[l.id]}
                                         className={`btn-success ${processingLeave[l.id] === 'Approved' ? 'btn-loading' : ''}`}
-                                        style={{ display: 'inline-flex', alignItems: 'center', gap: '5px' }}
+                                        style={{ display: 'inline-flex', alignItems: 'center', gap: '5px', whiteSpace: 'nowrap', padding: '6px 12px', height: '34px', fontSize: '12px' }}
                                         title="Approve leave request"
                                       >
                                         {processingLeave[l.id] === 'Approved' && <span className="btn-spinner-sm" />}
@@ -3887,7 +3887,7 @@ function App() {
                                         onClick={() => handleLeaveDecision(l.id, 'Rejected')}
                                         disabled={!!processingLeave[l.id]}
                                         className={`btn-danger ${processingLeave[l.id] === 'Rejected' ? 'btn-loading' : ''}`}
-                                        style={{ display: 'inline-flex', alignItems: 'center', gap: '5px' }}
+                                        style={{ display: 'inline-flex', alignItems: 'center', gap: '5px', whiteSpace: 'nowrap', padding: '6px 12px', height: '34px', fontSize: '12px' }}
                                         title="Reject leave request"
                                       >
                                         {processingLeave[l.id] === 'Rejected' && <span className="btn-spinner-sm" />}
@@ -3895,18 +3895,18 @@ function App() {
                                       </button>
                                     </div>
                                   ) : (
-                                    <div style={{ display: 'flex', gap: '8px' }}>
+                                    <div style={{ display: 'flex', gap: '8px', flexWrap: 'nowrap' }}>
                                       <button 
                                         onClick={() => handleLeaveDecision(l.id, 'Pending')}
                                         disabled={!!processingLeave[l.id]}
                                         className={`btn-secondary ${processingLeave[l.id] === 'Pending' ? 'btn-loading' : ''}`}
-                                        style={{ display: 'inline-flex', alignItems: 'center', gap: '5px', fontSize: '11px', padding: '6px 10px', height: '32px' }}
+                                        style={{ display: 'inline-flex', alignItems: 'center', gap: '6px', fontSize: '12px', padding: '6px 12px', height: '34px', whiteSpace: 'nowrap', minWidth: '145px' }}
                                         title={`Reverse ${l.status.toLowerCase()} status back to Pending`}
                                       >
                                         {processingLeave[l.id] === 'Pending' ? (
                                           <span className="btn-spinner-sm" />
                                         ) : (
-                                          <RotateCcw size={12} />
+                                          <RotateCcw size={13} />
                                         )}
                                         {processingLeave[l.id] === 'Pending' ? 'Reversing...' : 'Reverse to Pending'}
                                       </button>

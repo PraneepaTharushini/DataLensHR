@@ -4608,10 +4608,10 @@ textarea:focus:not(:focus-visible),
     top: 0;
     left: 0;
     bottom: 0;
-    width: 290px;
-    max-width: 85vw;
+    width: 300px;
+    max-width: 86vw;
     height: 100vh;
-    z-index: 1000;
+    z-index: 10000;
     transform: translateX(-100%);
     box-shadow: none;
     transition: transform 0.3s cubic-bezier(0.16, 1, 0.3, 1), box-shadow 0.3s ease;
@@ -4625,19 +4625,20 @@ textarea:focus:not(:focus-visible),
   .sidebar-mobile-backdrop {
     position: fixed;
     inset: 0;
-    background: rgba(0, 0, 0, 0.65);
-    backdrop-filter: blur(4px);
-    z-index: 999;
+    background: rgba(0, 0, 0, 0.7);
+    backdrop-filter: blur(6px);
+    -webkit-backdrop-filter: blur(6px);
+    z-index: 9999;
     animation: fadeIn 0.2s ease-out;
   }
 
   .workspace-top-bar {
-    padding: 0 20px;
-    height: 60px;
+    padding: 0 16px;
+    height: 58px;
   }
 
   .view-frame {
-    padding: 24px 20px;
+    padding: 20px 16px;
   }
 
   .login-view {
@@ -4671,7 +4672,7 @@ textarea:focus:not(:focus-visible),
 
   .dashboard-kpi-grid {
     grid-template-columns: repeat(2, 1fr);
-    gap: 16px;
+    gap: 14px;
   }
 
   .dashboard-analytics-row {
@@ -4682,58 +4683,200 @@ textarea:focus:not(:focus-visible),
 
 /* ------------------ PHABLETS & MOBILE SCREENS (<= 768px) ------------------ */
 @media (max-width: 768px) {
+  /* Navigation & Touch Header */
   .workspace-top-bar {
-    padding: 0 14px;
-    height: 56px;
+    padding: 0 12px;
+    height: 54px;
+    width: 100%;
+    max-width: 100vw;
+    box-sizing: border-box;
+    overflow: hidden;
   }
 
   .top-bar-left {
     gap: 10px;
+    flex: 1;
+    min-width: 0;
+    overflow: hidden;
   }
 
   .top-bar-right {
     gap: 8px;
+    flex-shrink: 0;
   }
 
   .breadcrumb-box {
-    font-size: 12px;
-    gap: 5px;
+    font-size: 13px;
+    gap: 6px;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+  }
+
+  .breadcrumb-cat,
+  .breadcrumb-separator {
+    display: none !important;
+  }
+
+  .breadcrumb-page {
+    font-size: 13px;
+    font-weight: 700;
   }
 
   .breadcrumb-icon {
-    font-size: 14px;
+    font-size: 15px;
   }
 
+  .sim-location-pill {
+    display: none !important;
+  }
+
+  .live-status-pill {
+    font-size: 11px;
+    padding: 4px 8px;
+    gap: 5px;
+    white-space: nowrap;
+  }
+
+  /* View Frame */
   .view-frame {
-    padding: 18px 14px;
+    padding: 16px 12px;
+    width: 100%;
+    box-sizing: border-box;
   }
 
   .view-title-block {
-    margin-bottom: 20px;
+    margin-bottom: 16px;
   }
 
+  .view-page-title,
+  .view-title-block h2,
   .view-title-block h3 {
-    font-size: 20px;
+    font-size: 19px;
   }
 
+  .view-page-subtitle,
   .view-title-block p {
-    font-size: 12.5px;
+    font-size: 12px;
     line-height: 1.45;
   }
 
-  /* Tables Mobile Smooth Scrolling */
+  /* Navigation Sidebar Items on Mobile (Comfortable Tap Targets) */
+  .menu-item-btn {
+    padding: 12px 14px;
+    min-height: 48px;
+    gap: 14px;
+  }
+
+  .menu-label {
+    font-size: 13.5px;
+  }
+
+  .menu-sublabel {
+    font-size: 11px;
+  }
+
+  /* Dashboard 1-Column Stacking for Proper Breathing Room */
+  .dashboard-kpi-grid {
+    grid-template-columns: 1fr;
+    gap: 12px;
+  }
+
+  .kpi-metric-card {
+    padding: 14px 16px;
+  }
+
+  .kpi-value-row {
+    flex-wrap: wrap;
+    gap: 6px;
+    align-items: baseline;
+  }
+
+  .kpi-scale {
+    font-size: 12px;
+  }
+
+  /* Threat Velocity Chart: Clean Vertical Stacking */
+  .threat-dial-and-bars {
+    flex-direction: column;
+    align-items: center;
+    gap: 18px;
+    width: 100%;
+  }
+
+  .gauge-panel-compact {
+    width: 100%;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    padding: 10px 0 4px 0;
+  }
+
+  .rule-frequencies-compact {
+    width: 100%;
+    min-width: 100%;
+  }
+
+  .chart-axis-header {
+    font-size: 11.5px;
+    margin-top: 6px;
+    margin-bottom: 8px;
+  }
+
+  .rule-frequency-labels {
+    flex-wrap: wrap;
+    gap: 4px;
+  }
+
+  .chart-axis-container {
+    margin-top: 10px;
+    padding-top: 8px;
+  }
+
+  .chart-axis-container > div:last-child {
+    flex-direction: column;
+    gap: 4px;
+    font-size: 11px;
+  }
+
+  /* Flagged Accounts Leaderboard */
+  .flagged-accounts-card {
+    width: 100%;
+  }
+
+  .risk-account-row {
+    padding: 10px 12px;
+    flex-wrap: wrap;
+    gap: 8px;
+  }
+
+  .risk-account-details {
+    min-width: 0;
+    flex: 1;
+  }
+
+  .risk-account-email {
+    font-size: 12.5px;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+  }
+
+  /* Tables Mobile Smooth Horizontal Scroll */
   .table-wrapper {
-    border-radius: 14px;
+    border-radius: 12px;
     overflow-x: auto;
     -webkit-overflow-scrolling: touch;
     border: 1px solid var(--border-glow);
     background: var(--bg-card);
     width: 100%;
-    margin-top: 14px;
+    margin-top: 12px;
+    padding: 0 !important;
   }
 
   .table-wrapper table {
-    min-width: 620px;
+    min-width: 600px;
     width: 100%;
     border-collapse: collapse;
   }
@@ -4741,7 +4884,8 @@ textarea:focus:not(:focus-visible),
   .table-wrapper th,
   .table-wrapper td {
     padding: 12px 14px;
-    font-size: 12px;
+    font-size: 12.5px;
+    white-space: nowrap;
   }
 
   /* Table Toolbars Stacking */
@@ -4749,7 +4893,7 @@ textarea:focus:not(:focus-visible),
     display: flex;
     flex-direction: column;
     align-items: stretch;
-    gap: 12px;
+    gap: 10px;
     width: 100%;
   }
 
@@ -4757,6 +4901,7 @@ textarea:focus:not(:focus-visible),
     width: 100%;
     min-width: 100%;
     max-width: 100%;
+    height: 40px;
   }
 
   .table-filter-pills {
@@ -4765,7 +4910,7 @@ textarea:focus:not(:focus-visible),
     gap: 8px;
     overflow-x: auto;
     flex-wrap: nowrap;
-    padding-bottom: 2px;
+    padding-bottom: 4px;
     width: 100%;
     -webkit-overflow-scrolling: touch;
     scrollbar-width: none;
@@ -4779,13 +4924,16 @@ textarea:focus:not(:focus-visible),
   .table-filter-pills .filter-pill-btn {
     flex-shrink: 0;
     white-space: nowrap;
+    height: 36px;
+    padding: 6px 14px;
+    font-size: 12px;
   }
 
   /* Incident Stream Mobile Layout */
   .incident-toolbar-container {
     flex-direction: column;
     align-items: stretch;
-    gap: 14px;
+    gap: 12px;
   }
 
   .incident-filter-bar {
@@ -4806,7 +4954,7 @@ textarea:focus:not(:focus-visible),
     gap: 8px;
     overflow-x: auto;
     flex-wrap: nowrap;
-    padding-bottom: 2px;
+    padding-bottom: 4px;
     width: 100%;
     -webkit-overflow-scrolling: touch;
     scrollbar-width: none;
@@ -4820,6 +4968,9 @@ textarea:focus:not(:focus-visible),
   .filter-pill-group .filter-pill-btn {
     flex-shrink: 0;
     white-space: nowrap;
+    height: 36px;
+    padding: 6px 14px;
+    font-size: 12px;
   }
 
   .ticket-summary-row {
@@ -4830,13 +4981,15 @@ textarea:focus:not(:focus-visible),
 
   .ticket-summary-left {
     width: 100%;
+    flex-wrap: wrap;
     gap: 6px;
   }
 
   .ticket-summary-right {
     width: 100%;
     display: flex;
-    justify-content: flex-end;
+    justify-content: flex-start;
+    flex-wrap: wrap;
     gap: 8px;
   }
 
@@ -4847,6 +5000,7 @@ textarea:focus:not(:focus-visible),
 
   /* Department Analytics Mobile */
   .analytics-ribbon {
+    display: flex;
     flex-direction: column;
     gap: 12px;
     margin-bottom: 16px;
@@ -4854,11 +5008,22 @@ textarea:focus:not(:focus-visible),
 
   .ribbon-card {
     min-width: 100%;
+    width: 100%;
+    padding: 16px;
   }
 
   .rules-grid {
     grid-template-columns: 1fr;
     gap: 14px;
+  }
+
+  .rule-config-card {
+    padding: 18px 16px;
+  }
+
+  .rule-card-header {
+    flex-wrap: wrap;
+    gap: 8px;
   }
 
   /* Modals Mobile Adaptation */
@@ -4908,57 +5073,6 @@ textarea:focus:not(:focus-visible),
 
 /* ------------------ SMARTPHONES (<= 540px) ------------------ */
 @media (max-width: 540px) {
-  .breadcrumb-cat,
-  .breadcrumb-separator {
-    display: none;
-  }
-
-  .breadcrumb-page {
-    font-size: 12px;
-  }
-
-  .sim-location-pill {
-    display: none !important;
-  }
-
-  .live-status-pill {
-    font-size: 10px;
-    padding: 5px 9px;
-    gap: 5px;
-  }
-
-  .dashboard-kpi-grid {
-    grid-template-columns: 1fr;
-    gap: 12px;
-  }
-
-  /* Threat Velocity Chart: Stack Risk Dial and Bars Vertically */
-  .threat-dial-and-bars {
-    flex-direction: column;
-    align-items: center;
-    gap: 20px;
-  }
-
-  .gauge-panel-compact {
-    width: 100%;
-    display: flex;
-    flex-direction: column;
-    align-items: center;
-  }
-
-  .rule-frequencies-compact {
-    width: 100%;
-    min-width: 0;
-  }
-
-  .chart-axis-header {
-    font-size: 11.5px;
-  }
-
-  .chart-axis-container {
-    font-size: 11px;
-  }
-
   .login-hero h2 {
     font-size: 24px;
   }
