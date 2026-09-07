@@ -502,6 +502,18 @@ function App() {
     return () => window.removeEventListener('keydown', handleKeyDown);
   }, [showAddEmployeeForm, editingRule, isMobileMenuOpen]);
 
+  // Lock body scroll when mobile navigation drawer is open
+  useEffect(() => {
+    if (isMobileMenuOpen) {
+      document.body.style.overflow = 'hidden';
+    } else {
+      document.body.style.overflow = '';
+    }
+    return () => {
+      document.body.style.overflow = '';
+    };
+  }, [isMobileMenuOpen]);
+
   // Establish WebSockets Connection for security updates
   useEffect(() => {
     const backendUrl = import.meta.env.VITE_API_URL ? import.meta.env.VITE_API_URL.replace('/api', '') : 'http://localhost:5000';
@@ -1627,7 +1639,7 @@ function App() {
         </>
       ) : (
         /* ================= AUTHENTICATED PERSISTENT WORKSPACE ================= */
-        <div className="workspace-container animate-fade-in">
+        <div className="workspace-container">
           {/* Mobile Overlay Backdrop */}
           {isMobileMenuOpen && (
             <div 

@@ -4604,31 +4604,67 @@ textarea:focus:not(:focus-visible),
   }
 
   .nav-sidebar {
-    position: fixed;
-    top: 0;
-    left: 0;
-    bottom: 0;
-    width: 300px;
-    max-width: 86vw;
-    height: 100vh;
-    z-index: 10000;
-    transform: translateX(-100%);
-    box-shadow: none;
-    transition: transform 0.3s cubic-bezier(0.16, 1, 0.3, 1), box-shadow 0.3s ease;
+    position: fixed !important;
+    top: 0 !important;
+    left: 0 !important;
+    bottom: 0 !important;
+    width: 300px !important;
+    max-width: 86vw !important;
+    height: 100vh !important;
+    height: 100dvh !important;
+    max-height: 100dvh !important;
+    z-index: 10000 !important;
+    transform: translateX(-100%) !important;
+    box-shadow: none !important;
+    display: flex !important;
+    flex-direction: column !important;
+    justify-content: space-between !important;
+    overflow: hidden !important;
+    background-color: var(--bg-sidebar) !important;
+    transition: transform 0.3s cubic-bezier(0.16, 1, 0.3, 1), box-shadow 0.3s ease !important;
   }
 
   .nav-sidebar.mobile-open {
-    transform: translateX(0);
-    box-shadow: 0 0 60px rgba(0, 0, 0, 0.7);
+    transform: translateX(0) !important;
+    box-shadow: 0 0 60px rgba(0, 0, 0, 0.7) !important;
+  }
+
+  .sidebar-brand {
+    flex-shrink: 0 !important;
+    padding: 20px 18px !important;
+  }
+
+  .nav-menu-scroll {
+    flex: 1 1 auto !important;
+    min-height: 0 !important;
+    overflow-y: auto !important;
+    overflow-x: hidden !important;
+    padding: 16px 14px !important;
+    display: flex !important;
+    flex-direction: column !important;
+    gap: 18px !important;
+    -webkit-overflow-scrolling: touch !important;
+  }
+
+  .sidebar-footer {
+    flex-shrink: 0 !important;
+    margin-top: auto !important;
+    padding: 14px 16px !important;
   }
 
   .sidebar-mobile-backdrop {
-    position: fixed;
-    inset: 0;
-    background: rgba(0, 0, 0, 0.7);
-    backdrop-filter: blur(6px);
-    -webkit-backdrop-filter: blur(6px);
-    z-index: 9999;
+    position: fixed !important;
+    top: 0 !important;
+    left: 0 !important;
+    right: 0 !important;
+    bottom: 0 !important;
+    width: 100vw !important;
+    height: 100vh !important;
+    height: 100dvh !important;
+    background: rgba(0, 0, 0, 0.7) !important;
+    backdrop-filter: blur(6px) !important;
+    -webkit-backdrop-filter: blur(6px) !important;
+    z-index: 9999 !important;
     animation: fadeIn 0.2s ease-out;
   }
 
