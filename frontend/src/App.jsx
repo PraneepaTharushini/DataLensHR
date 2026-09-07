@@ -210,10 +210,88 @@ function ToastContainer({ toasts, removeToast }) {
             >
               <X size={15} />
             </button>
-            <div className="toast-progress-bar" />
           </div>
         );
       })}
+    </div>
+  );
+}
+
+// Reusable Collapsible First-Time User Page Guidance Component
+function PageGuidanceCard({ 
+  icon, 
+  badge = "Quick Start Guide", 
+  title, 
+  subtitle, 
+  steps = [], 
+  storageKey 
+}) {
+  const [isCollapsed, setIsCollapsed] = useState(() => {
+    if (storageKey) {
+      return localStorage.getItem(`guidance_${storageKey}`) === 'collapsed';
+    }
+    return false;
+  });
+
+  const toggleCollapsed = () => {
+    const next = !isCollapsed;
+    setIsCollapsed(next);
+    if (storageKey) {
+      localStorage.setItem(`guidance_${storageKey}`, next ? 'collapsed' : 'expanded');
+    }
+  };
+
+  return (
+    <div className={`page-guidance-card ${isCollapsed ? 'collapsed' : ''}`}>
+      <div 
+        className="guidance-header" 
+        onClick={toggleCollapsed} 
+        role="button" 
+        tabIndex={0}
+        aria-expanded={!isCollapsed}
+        onKeyDown={(e) => { if (e.key === 'Enter' || e.key === ' ') { e.preventDefault(); toggleCollapsed(); } }}
+      >
+        <div className="guidance-header-left">
+          <div className="guidance-icon-circle">
+            {icon || <Lightbulb size={17} />}
+          </div>
+          <div className="guidance-header-text">
+            <div className="guidance-title-row">
+              <span className="guidance-badge">{badge}</span>
+              <span className="guidance-title">{title}</span>
+            </div>
+            {!isCollapsed && subtitle && (
+              <p className="guidance-subtitle">{subtitle}</p>
+            )}
+          </div>
+        </div>
+        <button 
+          type="button" 
+          className="btn-guidance-toggle" 
+          aria-label={isCollapsed ? "Expand guidance section" : "Collapse guidance section"}
+        >
+          {isCollapsed ? <><ChevronDown size={13} /> Show Guide</> : <><ChevronUp size={13} /> Hide Guide</>}
+        </button>
+      </div>
+
+      {!isCollapsed && (
+        <div className="guidance-steps-grid animate-fade-in">
+          {steps.map((step, idx) => (
+            <div key={idx} className="guidance-step-item">
+              <div className="step-badge-circle">
+                {step.icon || (idx + 1)}
+              </div>
+              <div className="step-body">
+                <h5 className="step-title">{step.title}</h5>
+                <p className="step-desc">{step.desc}</p>
+                {step.tag && (
+                  <span className="step-pill-tag">{step.tag}</span>
+                )}
+              </div>
+            </div>
+          ))}
+        </div>
+      )}
     </div>
   );
 }
@@ -501,6 +579,18 @@ function App() {
     window.addEventListener('keydown', handleKeyDown);
     return () => window.removeEventListener('keydown', handleKeyDown);
   }, [showAddEmployeeForm, editingRule, isMobileMenuOpen]);
+
+  // Lock body scroll when mobile navigation drawer is open
+  useEffect(() => {
+    if (isMobileMenuOpen) {
+      document.body.style.overflow = 'hidden';
+    } else {
+      document.body.style.overflow = '';
+    }
+    return () => {
+      document.body.style.overflow = '';
+    };
+  }, [isMobileMenuOpen]);
 
   // Establish WebSockets Connection for security updates
   useEffect(() => {
@@ -1627,7 +1717,7 @@ function App() {
         </>
       ) : (
         /* ================= AUTHENTICATED PERSISTENT WORKSPACE ================= */
-        <div className="workspace-container animate-fade-in">
+        <div className="workspace-container">
           {/* Mobile Overlay Backdrop */}
           {isMobileMenuOpen && (
             <div 
@@ -2060,7 +2150,7 @@ function App() {
                               <div className="threat-dial-and-bars">
                                 {/* Mini Circular Gauge Dial with Tooltip */}
                                 <div className="gauge-panel-compact has-tooltip" style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center' }}>
-                                  <span style={{ fontSize: '11px', fontWeight: '800', color: 'var(--text-secondary)', textTransform: 'uppercase', letterSpacing: '0.6px', marginBottom: '6px' }}>
+                                  <span style={{ fontSize: '12px', fontWeight: '800', color: 'var(--text-primary)', textTransform: 'uppercase', letterSpacing: '0.6px', marginBottom: '6px' }}>
                                     System Risk Score
                                   </span>
                                   <div className={`gauge-ring-outer gauge-ring-compact ${isHigh ? 'high-risk' : isMed ? 'med-risk' : ''}`}>
@@ -2080,12 +2170,12 @@ function App() {
                                       />
                                     </svg>
                                     <div style={{ position: 'relative', zIndex: 2, textAlign: 'center' }}>
-                                      <span className="gauge-value-number" style={{ fontSize: '26px', color: 'var(--text-primary)' }}>{maxRisk}</span>
-                                      <span className="gauge-value-lbl" style={{ fontSize: '9px' }}>/ 100 Risk Index</span>
+                                      <span className="gauge-value-number" style={{ fontSize: '26px', color: 'var(--text-primary)', fontWeight: '800' }}>{maxRisk}</span>
+                                      <span className="gauge-value-lbl" style={{ fontSize: '11px', fontWeight: '700', color: 'var(--text-secondary)' }}>/ 100 Risk Index</span>
                                     </div>
                                   </div>
-                                  <span style={{ fontSize: '10px', color: 'var(--text-muted)', fontWeight: '700', textTransform: 'uppercase', letterSpacing: '0.4px', display: 'inline-flex', alignItems: 'center', gap: '4px', marginTop: '4px' }}>
-                                    {maxRisk === 0 ? <><Check size={11} color="var(--success)" /> Baseline Clean</> : isHigh ? <><AlertTriangle size={11} color="var(--danger)" /> Critical State</> : <><Zap size={11} color="var(--warning)" /> Warning State</>}
+                                  <span style={{ fontSize: '11.5px', color: 'var(--text-primary)', fontWeight: '700', textTransform: 'uppercase', letterSpacing: '0.4px', display: 'inline-flex', alignItems: 'center', gap: '4px', marginTop: '6px' }}>
+                                    {maxRisk === 0 ? <><Check size={12} color="var(--success)" /> Baseline Clean</> : isHigh ? <><AlertTriangle size={12} color="var(--danger)" /> Critical State</> : <><Zap size={12} color="var(--warning)" /> Warning State</>}
                                   </span>
                                   <div className="tooltip-bubble">
                                     <strong className="tooltip-title">Composite Privacy Threat Index</strong>
@@ -2095,15 +2185,15 @@ function App() {
 
                                 {/* Trigger Frequency Progress Bars with Axis & Tooltips */}
                                 <div className="rule-frequencies-compact">
-                                  <div className="chart-axis-header" style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '8px' }}>
-                                    <span className="has-tooltip-inline" style={{ fontSize: '11px', fontWeight: '800', color: 'var(--text-secondary)', textTransform: 'uppercase', letterSpacing: '0.5px' }}>
+                                  <div className="chart-axis-header" style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '10px' }}>
+                                    <span className="has-tooltip-inline" style={{ fontSize: '12px', fontWeight: '800', color: 'var(--text-primary)', textTransform: 'uppercase', letterSpacing: '0.6px' }}>
                                       Security Rule
                                       <div className="tooltip-bubble">
                                         <strong className="tooltip-title">Heuristic Detection Rules</strong>
                                         <span>Active privacy algorithms inspecting access logs for anomalous behavior.</span>
                                       </div>
                                     </span>
-                                    <span className="has-tooltip-inline" style={{ fontSize: '11px', fontWeight: '800', color: 'var(--text-secondary)', textTransform: 'uppercase', letterSpacing: '0.5px' }}>
+                                    <span className="has-tooltip-inline" style={{ fontSize: '12px', fontWeight: '800', color: 'var(--text-primary)', textTransform: 'uppercase', letterSpacing: '0.6px' }}>
                                       Triggered Violations ({totalTriggers} Total)
                                       <div className="tooltip-bubble tooltip-right">
                                         <strong className="tooltip-title">Trigger Frequency</strong>
@@ -2134,17 +2224,17 @@ function App() {
                                           : 'Low';
 
                                     return (
-                                      <div key={idx} className="rule-frequency-row has-tooltip" style={{ width: '100%', display: 'flex', flexDirection: 'column', gap: '3px' }}>
+                                      <div key={idx} className="rule-frequency-row has-tooltip" style={{ width: '100%', display: 'flex', flexDirection: 'column', gap: '4px' }}>
                                         <div className="rule-frequency-labels" style={{ width: '100%', display: 'flex', justifyContent: 'space-between' }}>
-                                          <span className="rule-name-lbl" style={{ color: 'var(--text-primary)', fontSize: '11px', display: 'flex', alignItems: 'center', gap: '6px' }}>
-                                            <span className="rule-card-id" style={{ fontSize: '9px', padding: '1px 5px' }}>{meta.code}</span>
+                                          <span className="rule-name-lbl" style={{ color: 'var(--text-primary)', fontSize: '12.5px', fontWeight: '600', display: 'flex', alignItems: 'center', gap: '6px' }}>
+                                            <span className="rule-card-id" style={{ fontSize: '10px', fontWeight: '800', padding: '2px 6px' }}>{meta.code}</span>
                                             {meta.shortName || meta.label}
                                           </span>
-                                          <span className="rule-count-lbl" style={{ fontSize: '11px', fontWeight: '700', color: count > 0 ? (rule === 'CANARY_ACCESS' || rule === 'IMPOSSIBLE_TRAVEL' ? 'var(--danger)' : 'var(--warning)') : 'var(--text-muted)' }}>
+                                          <span className="rule-count-lbl" style={{ fontSize: '12px', fontWeight: '700', color: count > 0 ? (rule === 'CANARY_ACCESS' || rule === 'IMPOSSIBLE_TRAVEL' ? 'var(--danger)' : 'var(--warning)') : 'var(--text-secondary)' }}>
                                             {count} {count === 1 ? 'violation' : 'violations'} ({totalTriggers > 0 ? Math.round((count / totalTriggers) * 100) : 0}% of all breaches)
                                           </span>
                                         </div>
-                                        <div className="rule-frequency-bar-bg" style={{ height: '7px', background: 'var(--bg-input)', borderRadius: '4px', overflow: 'hidden', border: '1px solid var(--border-glow)' }}>
+                                        <div className="rule-frequency-bar-bg" style={{ height: '8px', background: 'var(--bg-input)', borderRadius: '4px', overflow: 'hidden', border: '1px solid var(--border-glow)' }}>
                                           <div 
                                             className="rule-frequency-bar-fill" 
                                             style={{ 
@@ -2187,24 +2277,24 @@ function App() {
                                   })}
                                   
                                   {/* Graphical Scale & Axis Ticks with Tooltip */}
-                                  <div className="chart-axis-container has-tooltip" style={{ marginTop: '10px', paddingTop: '8px', borderTop: '1px dashed var(--border-glow)' }}>
-                                    <div style={{ display: 'flex', justifyContent: 'space-between', fontSize: '10px', color: 'var(--text-muted)', fontFamily: 'var(--font-mono)', fontWeight: '700' }}>
+                                  <div className="chart-axis-container has-tooltip" style={{ marginTop: '12px', paddingTop: '10px', borderTop: '1px dashed var(--border-glow)' }}>
+                                    <div style={{ display: 'flex', justifyContent: 'space-between', fontSize: '12px', color: 'var(--text-primary)', fontFamily: 'var(--font-mono)', fontWeight: '800' }}>
                                       <span>0</span>
                                       <span>{Math.max(1, Math.round(maxCount * 0.25))}</span>
                                       <span>{Math.max(2, Math.round(maxCount * 0.5))}</span>
                                       <span>{Math.max(3, Math.round(maxCount * 0.75))}</span>
                                       <span>{maxCount} Violations</span>
                                     </div>
-                                    <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', height: '6px', margin: '3px 0 5px 0', borderBottom: '1px solid var(--border-glow)' }}>
-                                      <span style={{ width: '1px', height: '6px', background: 'var(--text-muted)' }} />
-                                      <span style={{ width: '1px', height: '4px', background: 'var(--border-glow)' }} />
-                                      <span style={{ width: '1px', height: '4px', background: 'var(--border-glow)' }} />
-                                      <span style={{ width: '1px', height: '4px', background: 'var(--border-glow)' }} />
-                                      <span style={{ width: '1px', height: '6px', background: 'var(--text-muted)' }} />
+                                    <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', height: '8px', margin: '4px 0 6px 0', borderBottom: '1.5px solid var(--border-glow)' }}>
+                                      <span style={{ width: '2px', height: '8px', background: 'var(--primary)' }} />
+                                      <span style={{ width: '1.5px', height: '5px', background: 'var(--text-secondary)' }} />
+                                      <span style={{ width: '1.5px', height: '5px', background: 'var(--text-secondary)' }} />
+                                      <span style={{ width: '1.5px', height: '5px', background: 'var(--text-secondary)' }} />
+                                      <span style={{ width: '2px', height: '8px', background: 'var(--primary)' }} />
                                     </div>
-                                    <div style={{ display: 'flex', justifyContent: 'space-between', fontSize: '10px', color: 'var(--text-secondary)' }}>
-                                      <span><strong>Scale:</strong> 0 to {maxCount} Recorded Violations</span>
-                                      <span><strong>Total Recorded Breaches:</strong> {totalTriggers} incidents</span>
+                                    <div style={{ display: 'flex', justifyContent: 'space-between', fontSize: '11.5px', color: 'var(--text-secondary)', fontWeight: '600' }}>
+                                      <span><strong style={{ color: 'var(--text-primary)' }}>Scale:</strong> 0 to {maxCount} Recorded Violations</span>
+                                      <span><strong style={{ color: 'var(--text-primary)' }}>Total Breaches:</strong> {totalTriggers} incidents</span>
                                     </div>
                                     <div className="tooltip-bubble tooltip-wide">
                                       <strong className="tooltip-title">Heuristic Threat Velocity Scale</strong>
@@ -2451,6 +2541,26 @@ function App() {
 
                                         {!isResolved ? (
                                           <div className="ticket-action-btns">
+                                            {inc.risk_level === 'High' && (
+                                              <div className="has-tooltip-inline">
+                                                <button
+                                                  onClick={() => executeMitigation(inc.id, 'LOCK_USER', inc.user_id)}
+                                                  disabled={!!mitigatingIncident[inc.id]}
+                                                  className={`btn-mitigation-lock-sm ${mitigatingIncident[inc.id] === 'LOCK_USER' ? 'btn-loading' : ''}`}
+                                                  style={{ display: 'inline-flex', alignItems: 'center', gap: '5px' }}
+                                                >
+                                                  {mitigatingIncident[inc.id] === 'LOCK_USER' ? (
+                                                    <><span className="btn-spinner btn-spinner-sm" /> Locking...</>
+                                                  ) : (
+                                                    <><Lock size={12} /> Lock Account</>
+                                                  )}
+                                                </button>
+                                                <div className="tooltip-bubble tooltip-right">
+                                                  <strong className="tooltip-title">Automated Lockout Response</strong>
+                                                  <span>Instantly locks user account and blocks sensitive data access until reviewed.</span>
+                                                </div>
+                                              </div>
+                                            )}
                                             <div className="has-tooltip-inline">
                                               <button
                                                 onClick={() => executeMitigation(inc.id, 'DISMISS', null)}
@@ -2461,7 +2571,7 @@ function App() {
                                                 {mitigatingIncident[inc.id] === 'DISMISS' ? (
                                                   <><span className="btn-spinner btn-spinner-sm" /> Dismissing...</>
                                                 ) : (
-                                                  'Dismiss'
+                                                  <><X size={12} /> Dismiss</>
                                                 )}
                                               </button>
                                               <div className="tooltip-bubble tooltip-right">
@@ -2469,26 +2579,6 @@ function App() {
                                                 <span>Acknowledge and mark this security event as Dismissed.</span>
                                               </div>
                                             </div>
-                                            {inc.risk_level === 'High' && (
-                                              <div className="has-tooltip-inline">
-                                                <button
-                                                  onClick={() => executeMitigation(inc.id, 'LOCK_USER', inc.user_id)}
-                                                  disabled={!!mitigatingIncident[inc.id]}
-                                                  className={`btn-mitigation-lock-sm ${mitigatingIncident[inc.id] === 'LOCK_USER' ? 'btn-loading' : ''}`}
-                                                  style={{ display: 'inline-flex', alignItems: 'center', gap: '4px' }}
-                                                >
-                                                  {mitigatingIncident[inc.id] === 'LOCK_USER' ? (
-                                                    <><span className="btn-spinner btn-spinner-sm" /> Locking...</>
-                                                  ) : (
-                                                    'Lock Account'
-                                                  )}
-                                                </button>
-                                                <div className="tooltip-bubble tooltip-right">
-                                                  <strong className="tooltip-title">Automated Lockout Response</strong>
-                                                  <span>Instantly locks user account and blocks sensitive data access until reviewed.</span>
-                                                </div>
-                                              </div>
-                                            )}
                                           </div>
                                         ) : (
                                           <div className="ticket-action-btns">
@@ -2505,12 +2595,12 @@ function App() {
                                                   onClick={() => executeMitigation(inc.id, 'UNLOCK_USER', inc.user_id)}
                                                   disabled={!!mitigatingIncident[inc.id]}
                                                   className={`btn-mitigation-unlock-sm ${mitigatingIncident[inc.id] === 'UNLOCK_USER' ? 'btn-loading' : ''}`}
-                                                  style={{ display: 'inline-flex', alignItems: 'center', gap: '4px' }}
+                                                  style={{ display: 'inline-flex', alignItems: 'center', gap: '5px' }}
                                                 >
                                                   {mitigatingIncident[inc.id] === 'UNLOCK_USER' ? (
                                                     <><span className="btn-spinner btn-spinner-sm" /> Unlocking...</>
                                                   ) : (
-                                                    'Unlock'
+                                                    <><Unlock size={12} /> Unlock</>
                                                   )}
                                                 </button>
                                                 <div className="tooltip-bubble tooltip-right">
@@ -2529,7 +2619,7 @@ function App() {
                                                 {mitigatingIncident[inc.id] === 'REOPEN' ? (
                                                   <><span className="btn-spinner btn-spinner-sm" /> Reopening...</>
                                                 ) : (
-                                                  'Reopen'
+                                                  <><RotateCcw size={12} /> Reopen</>
                                                 )}
                                               </button>
                                               <div className="tooltip-bubble tooltip-right">
@@ -2602,6 +2692,32 @@ function App() {
                       </p>
                     </div>
                   </div>
+
+                  {/* First-Time User Guidance Primer */}
+                  <PageGuidanceCard
+                    icon={<Building2 size={18} />}
+                    badge="Analytics Primer"
+                    title="Understanding Department Risk & Access Telemetry"
+                    subtitle="Continuous telemetry aggregates access logs, data unmasking operations, and incident alerts across all organizational departments."
+                    storageKey="dept_analytics"
+                    steps={[
+                      {
+                        title: "Risk Scoring Matrix (0–100)",
+                        desc: "Each department is scored dynamically based on member threat frequencies, peak violations, and anomalous query patterns.",
+                        tag: "Composite Risk Scoring"
+                      },
+                      {
+                        title: "Data Harvest Auditing",
+                        desc: "Monitors the total count of unmasked employee profiles and sensitive salary queries to detect potential bulk scraping.",
+                        tag: "Volume & Leak Telemetry"
+                      },
+                      {
+                        title: "Targeted Remediation",
+                        desc: "Filter by Critical Risk to prioritize divisions requiring credential rotation, policy limit tightening, or deeper forensic audits.",
+                        tag: "Operational SecOps"
+                      }
+                    ]}
+                  />
 
                   {/* Summary Ribbon Cards with Units & Tooltips */}
                   <div className="analytics-ribbon">
@@ -2755,11 +2871,11 @@ function App() {
                             <div className="rule-card-metrics" style={{ marginTop: '12px' }}>
                               {/* Horizontal Risk Bar with Axis Scale Ticks & Tooltip */}
                               <div className="has-tooltip" style={{ marginBottom: '14px', width: '100%', display: 'flex', flexDirection: 'column' }}>
-                                <div style={{ display: 'flex', justifyContent: 'space-between', fontSize: '11px', marginBottom: '4px' }}>
-                                  <span style={{ color: 'var(--text-secondary)' }}>Average Privacy Risk Score:</span>
-                                  <span style={{ fontWeight: 'bold', color: 'var(--text-primary)' }}>{Math.round(avgRisk)} / 100 Risk Score</span>
+                                <div style={{ display: 'flex', justifyContent: 'space-between', fontSize: '12.5px', marginBottom: '6px' }}>
+                                  <span style={{ color: 'var(--text-secondary)', fontWeight: '600' }}>Average Privacy Risk Score:</span>
+                                  <span style={{ fontWeight: '800', color: 'var(--text-primary)' }}>{Math.round(avgRisk)} / 100 Risk Score</span>
                                 </div>
-                                <div style={{ height: '7px', background: 'var(--bg-input)', borderRadius: '4px', overflow: 'hidden', border: '1px solid var(--border-glow)' }}>
+                                <div style={{ height: '8px', background: 'var(--bg-input)', borderRadius: '4px', overflow: 'hidden', border: '1px solid var(--border-glow)' }}>
                                   <div style={{
                                     height: '100%',
                                     width: `${Math.max(avgRisk, 3)}%`,
@@ -2769,9 +2885,9 @@ function App() {
                                   }} />
                                 </div>
                                 <div className="risk-scale-axis-ticks">
-                                  <span>0 Low</span>
-                                  <span>50 Elevated</span>
-                                  <span>100 Critical</span>
+                                  <span style={{ color: 'var(--success)' }}>0 Safe</span>
+                                  <span style={{ color: 'var(--warning)' }}>50 Elevated</span>
+                                  <span style={{ color: 'var(--danger)' }}>100 Critical</span>
                                 </div>
                                 <div className="tooltip-bubble tooltip-wide">
                                   <strong className="tooltip-title">{dept.department || 'General'} Privacy Score</strong>
@@ -2925,6 +3041,32 @@ function App() {
                       </p>
                     </div>
                   </div>
+
+                  {/* First-Time User Policy Guidance */}
+                  <PageGuidanceCard
+                    icon={<Sliders size={18} />}
+                    badge="Policy Engine Guide"
+                    title="Configuring Threat Detection Heuristics & Rules"
+                    subtitle="The privacy engine monitors live database requests against 5 configurable heuristic detection algorithms with instant enforcement."
+                    storageKey="detection_rules"
+                    steps={[
+                      {
+                        title: "5 Core Detection Engines",
+                        desc: "Covers Honeypot Decoys (R-01), After-Hours Access (R-02), Impossible Travel (R-03), Salary Decryption (R-04), and Volumetric Scrapes (R-05).",
+                        tag: "Zero-Trust Policies"
+                      },
+                      {
+                        title: "Real-Time Threshold Tuning",
+                        desc: "Click 'Edit Policy Configurations' to customize timeframes, sliding windows (ms), record limits, or temporarily disable rules.",
+                        tag: "Live Dynamic Config"
+                      },
+                      {
+                        title: "Risk Weight Multipliers",
+                        desc: "Points (1–100) dictate how severely a rule breach elevates the System Threat Index and triggers automated account lockouts.",
+                        tag: "Automated Incident Scoring"
+                      }
+                    ]}
+                  />
 
                   {/* Search & Status Filter Toolbar */}
                   <div className="table-toolbar-bar" style={{ marginBottom: '20px' }}>
@@ -3175,17 +3317,24 @@ function App() {
                                     </div>
                                   )}
 
-                                  <div className="edit-form-actions" style={{ display: 'flex', gap: '10px', marginTop: '16px' }}>
-                                    <button 
-                                      type="submit" 
-                                      disabled={isSavingRule}
-                                      className={`btn-primary ${isSavingRule ? 'btn-loading' : ''}`}
-                                      style={{ display: 'inline-flex', alignItems: 'center', gap: '6px' }}
-                                    >
-                                      {isSavingRule ? <><span className="btn-spinner" /> Saving Configuration...</> : 'Save Changes'}
-                                    </button>
-                                    <button type="button" onClick={() => { setEditingRule(null); setRuleTouched({}); }} className="btn-secondary">Cancel</button>
-                                  </div>
+                                   <div className="edit-form-actions" style={{ display: 'flex', gap: '10px', marginTop: '16px' }}>
+                                     <button 
+                                       type="submit" 
+                                       disabled={isSavingRule}
+                                       className={`btn-primary ${isSavingRule ? 'btn-loading' : ''}`}
+                                       style={{ display: 'inline-flex', alignItems: 'center', gap: '6px' }}
+                                     >
+                                       {isSavingRule ? <><span className="btn-spinner" /> Saving Configuration...</> : <><Check size={14} /> Save Changes</>}
+                                     </button>
+                                     <button 
+                                       type="button" 
+                                       onClick={() => { setEditingRule(null); setRuleTouched({}); }} 
+                                       className="btn-secondary-ghost"
+                                       style={{ display: 'inline-flex', alignItems: 'center', gap: '5px' }}
+                                     >
+                                       <X size={13} /> Cancel
+                                     </button>
+                                   </div>
                                 </form>
                               );
                             })() : (
@@ -3300,6 +3449,32 @@ function App() {
                       </p>
                     </div>
                   </div>
+
+                  {/* First-Time User Advisor Guidance */}
+                  <PageGuidanceCard
+                    icon={<Lightbulb size={18} />}
+                    badge="Advisor Workflow"
+                    title="AI-Driven Security Hardening & Policy Optimization"
+                    subtitle="Algorithmic security intelligence analyzes audit telemetry trends to recommend targeted rule parameter modifications."
+                    storageKey="policy_advisor"
+                    steps={[
+                      {
+                        title: "Continuous Telemetry Analysis",
+                        desc: "The advisor constantly scans access ledgers for recurring threat patterns, failed login bursts, and localized data anomalies.",
+                        tag: "Automated Inspection"
+                      },
+                      {
+                        title: "Prioritized Security Advice",
+                        desc: "Proposes hardened thresholds (e.g. tighter volumetric windows after scraping) categorized by Critical, High, or Medium severity.",
+                        tag: "Adaptive Intelligence"
+                      },
+                      {
+                        title: "One-Click Policy Enforcement",
+                        desc: "System Administrators can click 'Apply Policy Recommendation' to update backend rule parameters instantly with zero downtime.",
+                        tag: "Instant Remediation"
+                      }
+                    ]}
+                  />
 
                   {/* Search & Priority Filter Toolbar */}
                   <div className="table-toolbar-bar" style={{ marginBottom: '20px' }}>
@@ -3486,6 +3661,32 @@ function App() {
                     )}
                   </div>
 
+                  {/* First-Time User Directory Guidance */}
+                  <PageGuidanceCard
+                    icon={<Users size={18} />}
+                    badge="Directory Guide"
+                    title="Privacy-Preserving Employee Directory & Decoy Traps"
+                    subtitle="Staff records are protected with default field masking, role-based salary unmasking, and honeypot canary accounts."
+                    storageKey="employee_directory"
+                    steps={[
+                      {
+                        title: "Masked Compensation Data",
+                        desc: "Salaries remain encrypted and masked (••••••••) by default. Clicking 'Query Salary' decrypts the figure and records an audit log.",
+                        tag: "Privacy By Default"
+                      },
+                      {
+                        title: "Honeypot Canary Accounts",
+                        desc: "Profiles marked with the Honeypot Decoy badge are synthetic tripwires. Any access to them immediately flags a critical security breach.",
+                        tag: "Insider Threat Trap"
+                      },
+                      {
+                        title: "Workforce Administration",
+                        desc: "HR Managers and System Administrators can register new personnel or safely remove records with full RBAC access controls.",
+                        tag: "RBAC Controls"
+                      }
+                    ]}
+                  />
+
                   <div className="app-card" style={{ padding: '20px' }}>
                     {/* Search & Department Filter Toolbar */}
                     <div className="table-toolbar-bar">
@@ -3592,15 +3793,15 @@ function App() {
                                     <button 
                                       onClick={() => fetchSensitiveSalary(emp.id)}
                                       disabled={loadingSalary[emp.id]}
-                                      className={`btn-secondary ${loadingSalary[emp.id] ? 'btn-loading' : ''}`}
-                                      style={{ padding: '6px 12px', fontSize: '11px', whiteSpace: 'nowrap', display: 'inline-flex', alignItems: 'center', gap: '4px' }}
+                                      className={`btn-action-query ${loadingSalary[emp.id] ? 'btn-loading' : ''}`}
+                                      style={{ padding: '6px 12px', fontSize: '11px', whiteSpace: 'nowrap', display: 'inline-flex', alignItems: 'center', gap: '5px' }}
                                     >
                                       {loadingSalary[emp.id] ? (
                                         <><span className="btn-spinner btn-spinner-sm" /> Unmasking...</>
                                       ) : salaryMap[emp.id] ? (
-                                        'Hide Salary'
+                                        <><EyeOff size={12} /> Hide Salary</>
                                       ) : (
-                                        'Query Salary'
+                                        <><Eye size={12} /> Query Salary</>
                                       )}
                                     </button>
                                     <div className="tooltip-bubble tooltip-right">
@@ -3613,10 +3814,10 @@ function App() {
                                       <button 
                                         onClick={() => handleRemoveEmployee(emp.id, `${emp.first_name} ${emp.last_name}`)}
                                         disabled={deletingEmployee[emp.id]}
-                                        className={`btn-danger ${deletingEmployee[emp.id] ? 'btn-loading' : ''}`}
-                                        style={{ padding: '6px 12px', fontSize: '11px', whiteSpace: 'nowrap', display: 'inline-flex', alignItems: 'center', gap: '4px' }}
+                                        className={`btn-action-remove-ghost ${deletingEmployee[emp.id] ? 'btn-loading' : ''}`}
+                                        style={{ padding: '6px 12px', fontSize: '11px', whiteSpace: 'nowrap', display: 'inline-flex', alignItems: 'center', gap: '5px' }}
                                       >
-                                        {deletingEmployee[emp.id] ? <><span className="btn-spinner btn-spinner-sm" /> Removing...</> : 'Remove'}
+                                        {deletingEmployee[emp.id] ? <><span className="btn-spinner btn-spinner-sm" /> Removing...</> : <><X size={12} /> Remove</>}
                                       </button>
                                       <div className="tooltip-bubble tooltip-right">
                                         <strong className="tooltip-title">Delete Employee Record</strong>
@@ -3656,6 +3857,32 @@ function App() {
                       </p>
                     </div>
                   </div>
+
+                  {/* First-Time User Leave Guidance */}
+                  <PageGuidanceCard
+                    icon={<Calendar size={18} />}
+                    badge="Workflow Guide"
+                    title="Leave Request Management & Immutable Audit Ledger"
+                    subtitle="Compliant workforce scheduling portal featuring instant management reviews, status updates, and immutable ledger logging."
+                    storageKey="leave_management"
+                    steps={[
+                      {
+                        title: "Request Submission",
+                        desc: "Employees can request Annual, Sick, Casual, or Maternity leave with validated date ranges and compliance justification notes.",
+                        tag: "Employee Portal"
+                      },
+                      {
+                        title: "Manager Review & Approval",
+                        desc: "HR Managers and Admins review pending requests with immediate one-click Approve or Reject actions.",
+                        tag: "Manager Lifecycle"
+                      },
+                      {
+                        title: "Reversible Decision Trail",
+                        desc: "All status changes are permanently recorded. Approved or rejected requests can be reversed to Pending whenever needed.",
+                        tag: "Audit Integrity"
+                      }
+                    ]}
+                  />
 
                   {/* If Employee, show Request Leave Form */}
                   {!(user.role === 'HR Manager' || user.role === 'System Administrator') && (
@@ -3872,41 +4099,41 @@ function App() {
                               {(user.role === 'HR Manager' || user.role === 'System Administrator') && (
                                 <td data-label="Actions">
                                   {l.status === 'Pending' ? (
-                                    <div style={{ display: 'flex', gap: '8px' }}>
+                                    <div style={{ display: 'flex', gap: '8px', flexWrap: 'nowrap' }}>
                                       <button 
                                         onClick={() => handleLeaveDecision(l.id, 'Approved')}
                                         disabled={!!processingLeave[l.id]}
-                                        className={`btn-success ${processingLeave[l.id] === 'Approved' ? 'btn-loading' : ''}`}
-                                        style={{ display: 'inline-flex', alignItems: 'center', gap: '5px' }}
+                                        className={`btn-action-approve ${processingLeave[l.id] === 'Approved' ? 'btn-loading' : ''}`}
+                                        style={{ display: 'inline-flex', alignItems: 'center', gap: '5px', whiteSpace: 'nowrap', padding: '6px 14px', height: '34px', fontSize: '12px' }}
                                         title="Approve leave request"
                                       >
-                                        {processingLeave[l.id] === 'Approved' && <span className="btn-spinner-sm" />}
+                                        {processingLeave[l.id] === 'Approved' ? <span className="btn-spinner-sm" /> : <Check size={13} />}
                                         {processingLeave[l.id] === 'Approved' ? 'Approving...' : 'Approve'}
                                       </button>
                                       <button 
                                         onClick={() => handleLeaveDecision(l.id, 'Rejected')}
                                         disabled={!!processingLeave[l.id]}
-                                        className={`btn-danger ${processingLeave[l.id] === 'Rejected' ? 'btn-loading' : ''}`}
-                                        style={{ display: 'inline-flex', alignItems: 'center', gap: '5px' }}
+                                        className={`btn-action-reject ${processingLeave[l.id] === 'Rejected' ? 'btn-loading' : ''}`}
+                                        style={{ display: 'inline-flex', alignItems: 'center', gap: '5px', whiteSpace: 'nowrap', padding: '6px 12px', height: '34px', fontSize: '12px' }}
                                         title="Reject leave request"
                                       >
-                                        {processingLeave[l.id] === 'Rejected' && <span className="btn-spinner-sm" />}
+                                        {processingLeave[l.id] === 'Rejected' ? <span className="btn-spinner-sm" /> : <X size={13} />}
                                         {processingLeave[l.id] === 'Rejected' ? 'Rejecting...' : 'Reject'}
                                       </button>
                                     </div>
                                   ) : (
-                                    <div style={{ display: 'flex', gap: '8px' }}>
+                                    <div style={{ display: 'flex', gap: '8px', flexWrap: 'nowrap' }}>
                                       <button 
                                         onClick={() => handleLeaveDecision(l.id, 'Pending')}
                                         disabled={!!processingLeave[l.id]}
-                                        className={`btn-secondary ${processingLeave[l.id] === 'Pending' ? 'btn-loading' : ''}`}
-                                        style={{ display: 'inline-flex', alignItems: 'center', gap: '5px', fontSize: '11px', padding: '6px 10px', height: '32px' }}
+                                        className={`btn-action-reverse ${processingLeave[l.id] === 'Pending' ? 'btn-loading' : ''}`}
+                                        style={{ display: 'inline-flex', alignItems: 'center', gap: '6px', fontSize: '12px', padding: '6px 12px', height: '34px', whiteSpace: 'nowrap', minWidth: '145px' }}
                                         title={`Reverse ${l.status.toLowerCase()} status back to Pending`}
                                       >
                                         {processingLeave[l.id] === 'Pending' ? (
                                           <span className="btn-spinner-sm" />
                                         ) : (
-                                          <RotateCcw size={12} />
+                                          <RotateCcw size={13} />
                                         )}
                                         {processingLeave[l.id] === 'Pending' ? 'Reversing...' : 'Reverse to Pending'}
                                       </button>
@@ -4143,8 +4370,9 @@ function App() {
                       type="button" 
                       onClick={() => setShowAddEmployeeForm(false)} 
                       className="btn-modal-cancel"
+                      style={{ display: 'inline-flex', alignItems: 'center', gap: '5px' }}
                     >
-                      Cancel
+                      <X size={13} /> Cancel
                     </button>
                     <button 
                       type="submit" 
@@ -4152,7 +4380,7 @@ function App() {
                       className={`btn-modal-submit ${isSubmittingEmployee ? 'btn-loading' : ''}`}
                       style={{ display: 'inline-flex', alignItems: 'center', gap: '6px' }}
                     >
-                      {isSubmittingEmployee && <span className="btn-spinner" />}
+                      {isSubmittingEmployee ? <span className="btn-spinner" /> : <Plus size={14} />}
                       {isSubmittingEmployee ? 'Adding Employee...' : 'Add Employee'}
                     </button>
                   </div>
