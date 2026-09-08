@@ -36,11 +36,13 @@ import {
   RotateCcw,
   Check,
   Info,
-  ArrowRight
+  ArrowRight,
+  Sparkles
 } from 'lucide-react';
 import './App.css';
 
 const API_BASE = import.meta.env.VITE_API_URL || 'http://localhost:5000/api';
+const CHART_COLORS = ['#6366f1', '#8b5cf6', '#38bdf8', '#10b981', '#f59e0b', '#ef4444'];
 
 // ================= REUSABLE EMPTY & LOADING COMPONENTS =================
 
@@ -58,20 +60,311 @@ function LoadingState({ message = 'Loading employee analytics...', subtitle, com
   );
 }
 
-// Reusable Empty State Component
-function EmptyState({ icon, title = 'No data available yet', description = 'No employee activity has been recorded for this period.', actionText, onAction }) {
+// Security Sentinel Animated Vector Illustration
+function WelcomeSecurityIllustration() {
+  return (
+    <div className="welcome-illustration-container">
+      <svg width="220" height="175" viewBox="0 0 220 175" fill="none" xmlns="http://www.w3.org/2000/svg" className="welcome-hero-svg">
+        <defs>
+          <linearGradient id="shieldGrad" x1="60" y1="20" x2="160" y2="150" gradientUnits="userSpaceOnUse">
+            <stop offset="0%" stopColor="var(--primary, #6366f1)" />
+            <stop offset="100%" stopColor="#8b5cf6" />
+          </linearGradient>
+          <linearGradient id="shieldInnerGrad" x1="75" y1="40" x2="145" y2="135" gradientUnits="userSpaceOnUse">
+            <stop offset="0%" stopColor="#312e81" stopOpacity="0.85" />
+            <stop offset="100%" stopColor="#0f172a" stopOpacity="0.95" />
+          </linearGradient>
+          <filter id="heroShieldGlow" x="-20%" y="-20%" width="140%" height="140%">
+            <feGaussianBlur stdDeviation="8" result="blur" />
+            <feComposite in="SourceGraphic" in2="blur" operator="over" />
+          </filter>
+        </defs>
+
+        {/* Ambient Orbit and Radar Rings */}
+        <circle cx="110" cy="88" r="76" stroke="var(--primary)" strokeOpacity="0.14" strokeWidth="1.2" strokeDasharray="5 5" className="svg-orbit-ring" />
+        <circle cx="110" cy="88" r="54" stroke="var(--primary)" strokeOpacity="0.22" strokeWidth="1.5" className="svg-pulse-ring" />
+        <circle cx="110" cy="88" r="36" stroke="var(--primary)" strokeOpacity="0.2" strokeWidth="1" strokeDasharray="3 3" />
+
+        {/* Floating Data Security Nodes */}
+        <g className="svg-floating-node-1">
+          <circle cx="38" cy="52" r="14" fill="var(--bg-card, #1e293b)" stroke="var(--primary)" strokeWidth="1.5" />
+          <path d="M34 52L37 55L43 49" stroke="var(--success, #10b981)" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round" />
+        </g>
+        <g className="svg-floating-node-2">
+          <circle cx="182" cy="58" r="13" fill="var(--bg-card, #1e293b)" stroke="var(--primary)" strokeWidth="1.5" />
+          <circle cx="182" cy="58" r="4" fill="#38bdf8" />
+        </g>
+        <g className="svg-floating-node-3">
+          <circle cx="168" cy="128" r="11" fill="var(--bg-card, #1e293b)" stroke="var(--primary)" strokeWidth="1.2" />
+          <path d="M165 128H171M168 125V131" stroke="var(--primary)" strokeWidth="1.5" strokeLinecap="round" />
+        </g>
+        <g className="svg-floating-node-4">
+          <circle cx="52" cy="124" r="10" fill="var(--bg-card, #1e293b)" stroke="var(--primary)" strokeWidth="1.2" />
+          <circle cx="52" cy="124" r="3" fill="var(--warning, #f59e0b)" />
+        </g>
+
+        {/* Dynamic Telemetry Lines */}
+        <line x1="52" y1="52" x2="80" y2="68" stroke="var(--primary)" strokeOpacity="0.2" strokeWidth="1" strokeDasharray="2 2" />
+        <line x1="169" y1="58" x2="140" y2="68" stroke="var(--primary)" strokeOpacity="0.2" strokeWidth="1" strokeDasharray="2 2" />
+
+        {/* Background Shield Glow */}
+        <path d="M110 30L148 47C148 83 133 113 110 132C87 113 72 83 72 47L110 30Z" fill="url(#shieldGrad)" opacity="0.18" filter="url(#heroShieldGlow)" />
+
+        {/* Central 3D Sentinel Shield */}
+        <g className="svg-shield-float">
+          <path d="M110 32L146 48C146 82 132 110 110 128C88 110 74 82 74 48L110 32Z" fill="url(#shieldGrad)" />
+          <path d="M110 37L141 51C141 80 129 104 110 121C91 104 79 80 79 51L110 37Z" fill="url(#shieldInnerGrad)" />
+          
+          {/* Lock & Core Emblem */}
+          <path d="M102 76V69C102 64.58 105.58 61 110 61C114.42 61 118 64.58 118 69V76" stroke="#ffffff" strokeWidth="2.5" strokeLinecap="round" />
+          <rect x="98" y="76" width="24" height="17" rx="4" fill="#ffffff" />
+          <circle cx="110" cy="83.5" r="2.5" fill="var(--primary, #6366f1)" />
+          <path d="M110 86V89.5" stroke="var(--primary, #6366f1)" strokeWidth="1.8" strokeLinecap="round" />
+
+          {/* Sparkle Verification Badge */}
+          <g transform="translate(134, 40)">
+            <circle cx="0" cy="0" r="9.5" fill="var(--success, #10b981)" stroke="var(--bg-card, #0f172a)" strokeWidth="2" />
+            <path d="M-3.5 0L-1 2.5L3.5 -2" stroke="#ffffff" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round" />
+          </g>
+        </g>
+      </svg>
+    </div>
+  );
+}
+
+// Clean Stream Vector Illustration for Zero Threats State
+function CleanFeedIllustration() {
+  return (
+    <div className="clean-illustration-box">
+      <svg width="120" height="100" viewBox="0 0 120 100" fill="none" xmlns="http://www.w3.org/2000/svg" className="clean-feed-svg">
+        <defs>
+          <linearGradient id="cleanShieldGrad" x1="35" y1="15" x2="85" y2="85" gradientUnits="userSpaceOnUse">
+            <stop offset="0%" stopColor="#10b981" />
+            <stop offset="100%" stopColor="#059669" />
+          </linearGradient>
+        </defs>
+        {/* Soft circle backdrop */}
+        <circle cx="60" cy="50" r="42" fill="var(--primary-glow)" opacity="0.5" />
+        <circle cx="60" cy="50" r="34" stroke="var(--success)" strokeOpacity="0.25" strokeWidth="1.2" strokeDasharray="3 3" className="svg-pulse-ring" />
+        
+        {/* Shield with check */}
+        <g className="svg-shield-float">
+          <path d="M60 22L80 31C80 52 71 69 60 79C49 69 40 52 40 31L60 22Z" fill="url(#cleanShieldGrad)" />
+          <path d="M53 49L57.5 53.5L67 44" stroke="#ffffff" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round" />
+        </g>
+
+        {/* Small floating sparkles */}
+        <circle cx="28" cy="30" r="2.5" fill="var(--primary)" opacity="0.8" />
+        <circle cx="92" cy="34" r="2" fill="var(--success)" opacity="0.9" />
+        <circle cx="90" cy="72" r="3" fill="var(--warning)" opacity="0.8" />
+        <circle cx="30" cy="68" r="2" fill="#38bdf8" opacity="0.8" />
+      </svg>
+    </div>
+  );
+}
+
+// Reusable Empty State Component with Illustration and Multi-Action Support
+function EmptyState({ 
+  icon, 
+  title = 'No data available yet', 
+  description = 'No employee activity has been recorded for this period.', 
+  actionText, 
+  onAction,
+  secondaryActionText,
+  onSecondaryAction,
+  illustration
+}) {
   return (
     <div className="empty-state-wrapper">
-      <div className="empty-icon-circle">
-        {icon || <BarChart3 size={32} color="var(--primary)" />}
-      </div>
+      {illustration ? (
+        <div className="empty-state-illustration-box">
+          {illustration}
+        </div>
+      ) : (
+        <div className="empty-icon-circle">
+          {icon || <BarChart3 size={32} color="var(--primary)" />}
+        </div>
+      )}
       <h4 className="empty-state-title">{title}</h4>
       <p className="empty-state-desc">{description}</p>
-      {actionText && onAction && (
-        <button onClick={onAction} className="btn-empty-action">
-          {actionText}
-        </button>
+      {(actionText || secondaryActionText) && (
+        <div className="empty-state-actions-group">
+          {actionText && onAction && (
+            <button onClick={onAction} className="btn-empty-action">
+              {actionText}
+            </button>
+          )}
+          {secondaryActionText && onSecondaryAction && (
+            <button onClick={onSecondaryAction} className="btn-empty-action-secondary">
+              {secondaryActionText}
+            </button>
+          )}
+        </div>
       )}
+    </div>
+  );
+}
+
+// Helper to format friendly greeting and user name
+function getGreeting() {
+  const hour = new Date().getHours();
+  if (hour < 12) return 'Good morning';
+  if (hour < 18) return 'Good afternoon';
+  return 'Good evening';
+}
+
+function getUserDisplayName(user) {
+  if (!user) return 'Security Lead';
+  if (user.name) return user.name;
+  if (user.email) {
+    const raw = user.email.split('@')[0];
+    return raw
+      .split(/[._-]/)
+      .map(s => s.charAt(0).toUpperCase() + s.slice(1))
+      .join(' ');
+  }
+  return user.role || 'Security Lead';
+}
+
+// Friendly Dashboard Welcome Hero Component
+function DashboardWelcomeHero({ 
+  user, 
+  onSimulateThreat, 
+  onNavigateTab, 
+  incidentsCount = 0,
+  openAlertsCount = 0 
+}) {
+  const [isDismissed, setIsDismissed] = useState(() => {
+    return localStorage.getItem('datalens_welcome_hero_collapsed') === 'true';
+  });
+
+  const toggleDismiss = () => {
+    const next = !isDismissed;
+    setIsDismissed(next);
+    localStorage.setItem('datalens_welcome_hero_collapsed', String(next));
+  };
+
+  const displayName = getUserDisplayName(user);
+  const greeting = getGreeting();
+
+  if (isDismissed) {
+    return (
+      <div className="dashboard-welcome-collapsed-banner animate-fade-in">
+        <div className="collapsed-left">
+          <span className="live-pulse-dot" />
+          <span className="collapsed-title">
+            <strong>Privacy Sentinel:</strong> All zero-trust heuristic guardrails active
+          </span>
+          <span className="collapsed-badge">
+            {openAlertsCount === 0 ? '🟢 All Systems Secure' : `⚠️ ${openAlertsCount} Open Alert(s)`}
+          </span>
+        </div>
+        <div className="collapsed-actions">
+          <button 
+            onClick={() => onNavigateTab('employees')} 
+            className="btn-collapsed-link"
+          >
+            <Users size={12} /> Directory
+          </button>
+          <button 
+            onClick={onSimulateThreat} 
+            className="btn-collapsed-link"
+          >
+            <Zap size={12} /> Test Simulation
+          </button>
+          <button 
+            onClick={toggleDismiss} 
+            className="btn-collapsed-toggle" 
+            title="Expand Welcome Guide"
+          >
+            <ChevronDown size={14} /> Expand Guide
+          </button>
+        </div>
+      </div>
+    );
+  }
+
+  return (
+    <div className="dashboard-welcome-hero animate-fade-in">
+      <div className="welcome-hero-content">
+        <div className="welcome-hero-badge-row">
+          <span className="hero-status-pill">
+            <span className="live-pulse-dot" />
+            Zero-Trust Privacy Sentinel
+          </span>
+          <span className="hero-role-pill">
+            <UserCheck size={12} /> {user?.role || 'Security Administrator'}
+          </span>
+          <span className="hero-threat-status-pill">
+            {openAlertsCount === 0 ? '✓ 0 Active Threats' : `⚠️ ${openAlertsCount} Active Incidents`}
+          </span>
+        </div>
+
+        <h3 className="welcome-hero-title">
+          {greeting}, {displayName}! <span className="wave-emoji">👋</span>
+        </h3>
+
+        <p className="welcome-hero-desc">
+          DataLens HR is actively safeguarding employee records. Real-time telemetry evaluates honeypot decoys, anomalous travel velocities, volumetric scraping, and off-hours access patterns across your organization.
+        </p>
+
+        {/* Quick-Start Action Launchpad */}
+        <div className="welcome-hero-actions">
+          <button 
+            onClick={() => onNavigateTab('employees')} 
+            className="btn-welcome-action primary"
+          >
+            <Users size={14} /> Audit Employee Directory
+          </button>
+          <button 
+            onClick={onSimulateThreat} 
+            className="btn-welcome-action secondary"
+          >
+            <Zap size={14} color="#f59e0b" /> Simulate Test Threat
+          </button>
+          <button 
+            onClick={() => onNavigateTab('rules')} 
+            className="btn-welcome-action tertiary"
+          >
+            <Sliders size={14} /> Heuristic Rules
+          </button>
+          <button 
+            onClick={() => onNavigateTab('logs')} 
+            className="btn-welcome-action tertiary"
+          >
+            <FileText size={14} /> Live Audit Logs
+          </button>
+        </div>
+
+        {/* System Highlights Strip */}
+        <div className="welcome-hero-highlights">
+          <div className="highlight-item">
+            <ShieldCheck size={13} color="var(--success)" />
+            <span><strong>4 Detection Heuristics</strong> armed</span>
+          </div>
+          <div className="highlight-divider" />
+          <div className="highlight-item">
+            <Radio size={13} color="var(--primary)" />
+            <span><strong>Real-Time WebSockets</strong> connected</span>
+          </div>
+          <div className="highlight-divider" />
+          <div className="highlight-item">
+            <Lock size={13} color="#38bdf8" />
+            <span><strong>Automated Lockout</strong> ready</span>
+          </div>
+        </div>
+      </div>
+
+      <div className="welcome-hero-visual">
+        <WelcomeSecurityIllustration />
+        <button 
+          onClick={toggleDismiss} 
+          className="btn-hero-minimize" 
+          title="Minimize Welcome Guide"
+        >
+          <ChevronUp size={14} /> Minimize
+        </button>
+      </div>
     </div>
   );
 }
@@ -1056,13 +1349,13 @@ function App() {
   };
 
   // API Call: Resolve / Mitigate Incident
-  const executeMitigation = async (incidentId, action, userId) => {
+  const executeMitigation = async (incidentId, action, userId, email) => {
     setMitigatingIncident(prev => ({ ...prev, [incidentId]: action }));
     try {
       const response = await fetch(`${API_BASE}/incidents/${incidentId}/mitigate`, {
         method: 'POST',
         headers: getHeaders(),
-        body: JSON.stringify({ action, userId })
+        body: JSON.stringify({ action, userId, email })
       });
       if (response.ok) {
         const data = await response.json().catch(() => ({}));
@@ -1628,35 +1921,9 @@ function App() {
                 <p className="login-subtitle">Authenticate credentials to initiate secure workspace audit log tracking.</p>
                 
                 {errorMessage && (
-                  <div className="error-banner" role="alert" style={{ display: 'flex', flexDirection: 'column', alignItems: 'flex-start', gap: '8px', padding: '14px' }}>
-                    <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
-                      <AlertTriangle size={16} color="var(--danger)" style={{ flexShrink: 0 }} />
-                      <span style={{ textAlign: 'left' }}>{errorMessage}</span>
-                    </div>
-                    {(errorMessage.includes('locked') || errorMessage.includes('suspended')) && (
-                      <button
-                        type="button"
-                        onClick={async () => {
-                          try {
-                            const res = await fetch(`${API_BASE}/auth/bypass-lockout`, {
-                              method: 'POST',
-                              headers: { 'Content-Type': 'application/json' },
-                              body: JSON.stringify({ email: loginEmail })
-                            });
-                            if (res.ok) {
-                              showToast('Account unlocked successfully! You can now sign in.', 'success', 'Account Unlocked');
-                              setErrorMessage('');
-                            }
-                          } catch (e) {
-                            console.error(e);
-                          }
-                        }}
-                        className="btn-mitigation-unlock"
-                        style={{ padding: '6px 12px', fontSize: '11px', marginTop: '4px', width: 'auto', alignSelf: 'stretch', textAlign: 'center' }}
-                      >
-                        Instant Unlock Account (Demo Helper)
-                      </button>
-                    )}
+                  <div className="error-banner" role="alert">
+                    <AlertTriangle size={16} color="var(--danger)" style={{ flexShrink: 0 }} />
+                    <span>{errorMessage}</span>
                   </div>
                 )}
                 
@@ -2046,6 +2313,15 @@ function App() {
               {/* ================= VIEW 1: SECURITY DASHBOARD ================= */}
               {activeTab === 'dashboard' && (
                 <div className="dashboard-view-panel animate-fade-in">
+                  {/* Friendly Dashboard Welcome Hero & System Status Banner */}
+                  <DashboardWelcomeHero 
+                    user={user}
+                    onSimulateThreat={simulateImpossibleTravel}
+                    onNavigateTab={setActiveTab}
+                    incidentsCount={incidents.length}
+                    openAlertsCount={incidents.filter(i => i.status === 'Open').length}
+                  />
+
                   {/* Dashboard Executive Header Block */}
                   <div className="view-title-block dashboard-header-block">
                     <div>
@@ -2201,11 +2477,13 @@ function App() {
                               />
                             ) : (incidents.length === 0 || totalTriggers === 0) ? (
                               <EmptyState 
-                                icon={<ShieldCheck size={32} color="var(--success)" />} 
+                                illustration={<CleanFeedIllustration />}
                                 title="Zero Rule Violations Detected" 
-                                description="No security rule breaches or anomalous access triggers recorded during this audit cycle. System operating at baseline clean state (0 Risk)." 
-                                actionText="Trigger Threat Simulation"
-                                onAction={simulateScraping}
+                                description="No security rule breaches or anomalous access triggers recorded during this audit cycle. All heuristic inspection engines are active and standing by." 
+                                actionText="Simulate Test Threat"
+                                onAction={simulateImpossibleTravel}
+                                secondaryActionText="Audit Employee Directory"
+                                onSecondaryAction={() => setActiveTab('employees')}
                               />
                             ) : (
                               <div className="threat-dial-and-bars">
@@ -2246,22 +2524,6 @@ function App() {
 
                                 {/* Trigger Frequency Progress Bars with Axis & Tooltips */}
                                 <div className="rule-frequencies-compact">
-                                  <div className="chart-axis-header" style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '10px' }}>
-                                    <span className="has-tooltip-inline" style={{ fontSize: '12px', fontWeight: '800', color: 'var(--text-primary)', textTransform: 'uppercase', letterSpacing: '0.6px' }}>
-                                      Security Rule
-                                      <div className="tooltip-bubble">
-                                        <strong className="tooltip-title">Heuristic Detection Rules</strong>
-                                        <span>Active privacy algorithms inspecting access logs for anomalous behavior.</span>
-                                      </div>
-                                    </span>
-                                    <span className="has-tooltip-inline" style={{ fontSize: '12px', fontWeight: '800', color: 'var(--text-primary)', textTransform: 'uppercase', letterSpacing: '0.6px' }}>
-                                      Triggered Violations ({totalTriggers} Total)
-                                      <div className="tooltip-bubble tooltip-right">
-                                        <strong className="tooltip-title">Trigger Frequency</strong>
-                                        <span>Total volume of access requests flagged by privacy detection rules during this audit cycle.</span>
-                                      </div>
-                                    </span>
-                                  </div>
                                   {Object.entries(frequencies).map(([rule, count], idx) => {
                                     const percentage = (count / maxCount) * 100;
                                     const meta = RULE_METADATA[rule] || { label: rule.replace(/_/g, ' '), shortName: rule.replace(/_/g, ' '), code: 'RULE', description: 'Monitors specific access telemetry patterns.' };
@@ -2274,104 +2536,51 @@ function App() {
                                       return tr.includes(rule);
                                     });
                                     const lastDetected = matchingIncident?.created_at 
-                                      ? new Date(matchingIncident.created_at).toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' })
-                                      : 'None recorded';
-                                    const riskLevel = (rule === 'CANARY_ACCESS' || rule === 'IMPOSSIBLE_TRAVEL') 
-                                      ? 'Critical' 
-                                      : count > 10 
-                                        ? 'High' 
-                                        : count > 0 
-                                          ? 'Medium' 
-                                          : 'Low';
+                                      ? new Date(matchingIncident.created_at).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })
+                                      : 'No events';
 
                                     return (
-                                      <div key={idx} className="rule-frequency-row has-tooltip" style={{ width: '100%', display: 'flex', flexDirection: 'column', gap: '4px' }}>
-                                        <div className="rule-frequency-labels" style={{ width: '100%', display: 'flex', justifyContent: 'space-between' }}>
-                                          <span className="rule-name-lbl" style={{ color: 'var(--text-primary)', fontSize: '12.5px', fontWeight: '600', display: 'flex', alignItems: 'center', gap: '6px' }}>
-                                            <span className="rule-card-id" style={{ fontSize: '10px', fontWeight: '800', padding: '2px 6px' }}>{meta.code}</span>
-                                            {meta.shortName || meta.label}
-                                          </span>
-                                          <span className="rule-count-lbl" style={{ fontSize: '12px', fontWeight: '700', color: count > 0 ? (rule === 'CANARY_ACCESS' || rule === 'IMPOSSIBLE_TRAVEL' ? 'var(--danger)' : 'var(--warning)') : 'var(--text-secondary)' }}>
-                                            {count} {count === 1 ? 'violation' : 'violations'} ({totalTriggers > 0 ? Math.round((count / totalTriggers) * 100) : 0}% of all breaches)
+                                      <div key={rule} className="frequency-row-compact has-tooltip">
+                                        <div className="freq-rule-meta">
+                                          <div className="freq-rule-top">
+                                            <span className="freq-rule-name">{meta.label}</span>
+                                            <span className="freq-badge-count">{count} trigger{count !== 1 ? 's' : ''}</span>
+                                          </div>
+                                          <span className="freq-rule-sub">
+                                            {count > 0 ? `Latest: ${lastDetected} • Weight: ${rule === 'CANARY_HONEYPOT_ACCESSED' ? 'Critical (40 pts)' : rule === 'IMPOSSIBLE_TRAVEL' ? 'High (35 pts)' : 'Medium (20-25 pts)'}` : '0 breaches recorded'}
                                           </span>
                                         </div>
-                                        <div className="rule-frequency-bar-bg" style={{ height: '8px', background: 'var(--bg-input)', borderRadius: '4px', overflow: 'hidden', border: '1px solid var(--border-glow)' }}>
+                                        <div className="freq-bar-track-compact">
                                           <div 
-                                            className="rule-frequency-bar-fill" 
+                                            className="freq-bar-fill-compact" 
                                             style={{ 
-                                              width: `${Math.max(percentage, count > 0 ? 8 : 0)}%`,
-                                              backgroundColor: rule === 'CANARY_ACCESS' || rule === 'IMPOSSIBLE_TRAVEL' ? 'var(--danger)' : 'var(--warning)',
-                                              height: '100%',
-                                              borderRadius: '4px',
-                                              transition: 'width 0.4s ease'
+                                              width: `${percentage}%`,
+                                              background: `linear-gradient(90deg, ${CHART_COLORS[idx % CHART_COLORS.length]} 0%, var(--primary-hover) 100%)`
                                             }}
                                           />
                                         </div>
+                                        {/* Rich Tooltip Bubble with Details */}
                                         <div className="tooltip-bubble tooltip-wide">
-                                          <strong className="tooltip-title">{meta.shortName || meta.label}</strong>
-                                          <div style={{ display: 'flex', flexDirection: 'column', gap: '4px', margin: '6px 0', fontSize: '11px' }}>
-                                            <div style={{ display: 'flex', justifyContent: 'space-between' }}>
-                                              <span style={{ color: '#94a3b8' }}>Violations Recorded:</span>
-                                              <strong style={{ color: '#f8fafc' }}>{count} {count === 1 ? 'violation' : 'violations'}</strong>
-                                            </div>
-                                            <div style={{ display: 'flex', justifyContent: 'space-between' }}>
-                                              <span style={{ color: '#94a3b8' }}>Share of Breaches:</span>
-                                              <strong style={{ color: '#f8fafc' }}>{totalTriggers > 0 ? ((count / totalTriggers) * 100).toFixed(1) : 0}% of all security incidents</strong>
-                                            </div>
-                                            <div style={{ display: 'flex', justifyContent: 'space-between' }}>
-                                              <span style={{ color: '#94a3b8' }}>Rule Risk Level:</span>
-                                              <strong style={{ color: riskLevel === 'Critical' ? 'var(--danger)' : riskLevel === 'High' ? 'var(--warning)' : 'var(--success)' }}>
-                                                {riskLevel}
-                                              </strong>
-                                            </div>
-                                            <div style={{ display: 'flex', justifyContent: 'space-between' }}>
-                                              <span style={{ color: '#94a3b8' }}>Last detected:</span>
-                                              <strong style={{ color: '#cbd5e1' }}>{lastDetected}</strong>
-                                            </div>
+                                          <strong className="tooltip-title">{meta.label} ({meta.code})</strong>
+                                          <p style={{ margin: '4px 0 6px 0', fontSize: '11px', lineHeight: '1.4' }}>{meta.description}</p>
+                                          <div style={{ display: 'flex', justifyContent: 'space-between', fontSize: '10.5px', color: 'var(--text-muted)', borderTop: '1px solid var(--border-glow)', paddingTop: '4px' }}>
+                                            <span>Violation Volume: <strong>{count} hits</strong></span>
+                                            <span>Cycle Share: <strong>{totalTriggers > 0 ? ((count / totalTriggers) * 100).toFixed(0) : 0}%</strong></span>
                                           </div>
-                                          <span style={{ fontSize: '10.5px', color: '#94a3b8', borderTop: '1px solid rgba(255,255,255,0.1)', paddingTop: '4px', display: 'block', lineHeight: '1.3' }}>
-                                            {meta.description}
-                                          </span>
                                         </div>
                                       </div>
                                     );
                                   })}
-                                  
-                                  {/* Graphical Scale & Axis Ticks with Tooltip */}
-                                  <div className="chart-axis-container has-tooltip" style={{ marginTop: '12px', paddingTop: '10px', borderTop: '1px dashed var(--border-glow)' }}>
-                                    <div style={{ display: 'flex', justifyContent: 'space-between', fontSize: '12px', color: 'var(--text-primary)', fontFamily: 'var(--font-mono)', fontWeight: '800' }}>
-                                      <span>0</span>
-                                      <span>{Math.max(1, Math.round(maxCount * 0.25))}</span>
-                                      <span>{Math.max(2, Math.round(maxCount * 0.5))}</span>
-                                      <span>{Math.max(3, Math.round(maxCount * 0.75))}</span>
-                                      <span>{maxCount} Violations</span>
-                                    </div>
-                                    <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', height: '8px', margin: '4px 0 6px 0', borderBottom: '1.5px solid var(--border-glow)' }}>
-                                      <span style={{ width: '2px', height: '8px', background: 'var(--primary)' }} />
-                                      <span style={{ width: '1.5px', height: '5px', background: 'var(--text-secondary)' }} />
-                                      <span style={{ width: '1.5px', height: '5px', background: 'var(--text-secondary)' }} />
-                                      <span style={{ width: '1.5px', height: '5px', background: 'var(--text-secondary)' }} />
-                                      <span style={{ width: '2px', height: '8px', background: 'var(--primary)' }} />
-                                    </div>
-                                    <div style={{ display: 'flex', justifyContent: 'space-between', fontSize: '11.5px', color: 'var(--text-secondary)', fontWeight: '600' }}>
-                                      <span><strong style={{ color: 'var(--text-primary)' }}>Scale:</strong> 0 to {maxCount} Recorded Violations</span>
-                                      <span><strong style={{ color: 'var(--text-primary)' }}>Total Breaches:</strong> {totalTriggers} incidents</span>
-                                    </div>
-                                    <div className="tooltip-bubble tooltip-wide">
-                                      <strong className="tooltip-title">Heuristic Threat Velocity Scale</strong>
-                                      <span>Linear scale measuring violation frequency from 0 to {maxCount} events per heuristic rule across {totalTriggers} total detected incidents.</span>
-                                    </div>
-                                  </div>
                                 </div>
                               </div>
                             )}
                           </div>
 
                           {/* Right Column: Flagged Accounts Leaderboard */}
-                          <div className="app-card flagged-accounts-card">
+                          <div className="app-card risk-accounts-card">
                             <div className="analytics-card-header">
                               <div>
-                                <span className="section-eyebrow">ANOMALY LEADERBOARD</span>
+                                <span className="section-eyebrow">ACCESS WATCHLIST</span>
                                 <h3 className="section-heading" style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
                                   <AlertTriangle size={18} color="var(--danger)" /> Flagged Accounts Leaderboard
                                 </h3>
@@ -2397,8 +2606,8 @@ function App() {
                               ) : getTopRiskAccounts().length === 0 ? (
                                 <EmptyState 
                                   icon={<ShieldCheck size={32} color="var(--success)" />} 
-                                  title="No flagged accounts" 
-                                  description="No employee accounts currently exceed the configured risk threshold." 
+                                  title="All Accounts In Good Standing" 
+                                  description="No employee accounts currently exceed configured risk thresholds. 100% compliance across active sessions." 
                                 />
                               ) : (
                                 <div className="risk-accounts-list">
@@ -2529,11 +2738,13 @@ function App() {
                               </div>
                             ) : incidents.length === 0 ? (
                               <EmptyState 
-                                icon={<BarChart3 size={32} color="var(--primary)" />} 
-                                title="No data available yet" 
-                                description="No employee activity has been recorded for this period." 
-                                actionText="Trigger Threat Simulation"
-                                onAction={simulateScraping}
+                                illustration={<CleanFeedIllustration />}
+                                title="🎉 All Clear! Incident Stream Is Empty" 
+                                description="No security violations, honeypot hits, or anomalous access events recorded yet. When telemetry anomalies occur, actionable incident tickets will appear here." 
+                                actionText="Simulate Test Threat"
+                                onAction={simulateImpossibleTravel}
+                                secondaryActionText="Audit Employee Directory"
+                                onSecondaryAction={() => setActiveTab('employees')}
                               />
                             ) : filteredIncidents.length === 0 ? (
                               <NoResultsState 
@@ -2599,97 +2810,118 @@ function App() {
                                         >
                                           {isExpanded ? <>Hide Audit Details <ChevronUp size={13} /></> : <>View Audit Details <ChevronDown size={13} /></>}
                                         </button>
+                                        {(() => {
+                                           const isLocked = (inc.user_locked_until && new Date(inc.user_locked_until) > new Date()) ||
+                                                            inc.user_is_active === false ||
+                                                            inc.user_is_active === 0 ||
+                                                            (inc.notes && inc.notes.toLowerCase().includes('locked account') && !inc.notes.toLowerCase().includes('unlocked'));
+                                           const isMitigating = !!mitigatingIncident[inc.id];
+                                           const currentMitigation = mitigatingIncident[inc.id];
 
-                                        {!isResolved ? (
-                                          <div className="ticket-action-btns">
-                                            {inc.risk_level === 'High' && (
-                                              <div className="has-tooltip-inline">
-                                                <button
-                                                  onClick={() => executeMitigation(inc.id, 'LOCK_USER', inc.user_id)}
-                                                  disabled={!!mitigatingIncident[inc.id]}
-                                                  className={`btn-mitigation-lock-sm ${mitigatingIncident[inc.id] === 'LOCK_USER' ? 'btn-loading' : ''}`}
-                                                  style={{ display: 'inline-flex', alignItems: 'center', gap: '5px' }}
-                                                >
-                                                  {mitigatingIncident[inc.id] === 'LOCK_USER' ? (
-                                                    <><span className="btn-spinner btn-spinner-sm" /> Locking...</>
-                                                  ) : (
-                                                    <><Lock size={12} /> Lock Account</>
-                                                  )}
-                                                </button>
-                                                <div className="tooltip-bubble tooltip-right">
-                                                  <strong className="tooltip-title">Automated Lockout Response</strong>
-                                                  <span>Instantly locks user account and blocks sensitive data access until reviewed.</span>
-                                                </div>
-                                              </div>
-                                            )}
-                                            <div className="has-tooltip-inline">
-                                              <button
-                                                onClick={() => executeMitigation(inc.id, 'DISMISS', null)}
-                                                disabled={!!mitigatingIncident[inc.id]}
-                                                className={`btn-mitigation-dismiss-sm ${mitigatingIncident[inc.id] === 'DISMISS' ? 'btn-loading' : ''}`}
-                                                style={{ display: 'inline-flex', alignItems: 'center', gap: '4px' }}
-                                              >
-                                                {mitigatingIncident[inc.id] === 'DISMISS' ? (
-                                                  <><span className="btn-spinner btn-spinner-sm" /> Dismissing...</>
-                                                ) : (
-                                                  <><X size={12} /> Dismiss</>
-                                                )}
-                                              </button>
-                                              <div className="tooltip-bubble tooltip-right">
-                                                <strong className="tooltip-title">Dismiss Alert</strong>
-                                                <span>Acknowledge and mark this security event as Dismissed.</span>
-                                              </div>
-                                            </div>
-                                          </div>
-                                        ) : (
-                                          <div className="ticket-action-btns">
-                                            <span className="ticket-resolved-pill has-tooltip" style={{ display: 'inline-flex', alignItems: 'center', gap: '4px' }}>
-                                              <Check size={12} /> {inc.status === 'Resolved' ? 'Mitigated' : 'Dismissed'}
-                                              <div className="tooltip-bubble tooltip-right">
-                                                <strong className="tooltip-title">Mitigation Complete</strong>
-                                                <span>This incident has been audited and resolved by security protocols.</span>
-                                              </div>
-                                            </span>
-                                            {inc.risk_level === 'High' && inc.status === 'Resolved' && (
-                                              <div className="has-tooltip-inline">
-                                                <button
-                                                  onClick={() => executeMitigation(inc.id, 'UNLOCK_USER', inc.user_id)}
-                                                  disabled={!!mitigatingIncident[inc.id]}
-                                                  className={`btn-mitigation-unlock-sm ${mitigatingIncident[inc.id] === 'UNLOCK_USER' ? 'btn-loading' : ''}`}
-                                                  style={{ display: 'inline-flex', alignItems: 'center', gap: '5px' }}
-                                                >
-                                                  {mitigatingIncident[inc.id] === 'UNLOCK_USER' ? (
-                                                    <><span className="btn-spinner btn-spinner-sm" /> Unlocking...</>
-                                                  ) : (
-                                                    <><Unlock size={12} /> Unlock</>
-                                                  )}
-                                                </button>
-                                                <div className="tooltip-bubble tooltip-right">
-                                                  <strong className="tooltip-title">Restore Account</strong>
-                                                  <span>Restores user account credentials and operational access permissions.</span>
-                                                </div>
-                                              </div>
-                                            )}
-                                            <div className="has-tooltip-inline">
-                                              <button
-                                                onClick={() => executeMitigation(inc.id, 'REOPEN', null)}
-                                                disabled={!!mitigatingIncident[inc.id]}
-                                                className={`btn-mitigation-reopen-sm ${mitigatingIncident[inc.id] === 'REOPEN' ? 'btn-loading' : ''}`}
-                                                style={{ display: 'inline-flex', alignItems: 'center', gap: '4px' }}
-                                              >
-                                                {mitigatingIncident[inc.id] === 'REOPEN' ? (
-                                                  <><span className="btn-spinner btn-spinner-sm" /> Reopening...</>
-                                                ) : (
-                                                  <><RotateCcw size={12} /> Reopen</>
-                                                )}
-                                              </button>
-                                              <div className="tooltip-bubble tooltip-right">
-                                                <strong className="tooltip-title">Reopen Incident</strong>
-                                                <span>Re-activates alert back to Open status for further forensic audit.</span>
-                                              </div>
-                                            </div>
-                                          </div>
-                                        )}
+                                           if (!isResolved) {
+                                             return (
+                                               <div className="ticket-action-btns">
+                                                 {user.role === 'System Administrator' ? (
+                                                   <>
+                                                     {inc.risk_level === 'High' && (
+                                                       isLocked ? (
+                                                         <button
+                                                           onClick={() => executeMitigation(inc.id, 'UNLOCK_USER', inc.user_id, inc.user_email)}
+                                                           disabled={isMitigating}
+                                                           className={`btn-mitigation-unlock-sm ${currentMitigation === 'UNLOCK_USER' ? 'btn-loading' : ''}`}
+                                                           style={{ display: 'inline-flex', alignItems: 'center', gap: '5px' }}
+                                                           title="Restore user account access"
+                                                         >
+                                                           {currentMitigation === 'UNLOCK_USER' ? (
+                                                             <><span className="btn-spinner btn-spinner-sm" /> Unlocking...</>
+                                                           ) : (
+                                                             <><Unlock size={12} /> Unlock Account</>
+                                                           )}
+                                                         </button>
+                                                       ) : (
+                                                         <button
+                                                           onClick={() => executeMitigation(inc.id, 'LOCK_USER', inc.user_id, inc.user_email)}
+                                                           disabled={isMitigating}
+                                                           className={`btn-mitigation-lock-sm ${currentMitigation === 'LOCK_USER' ? 'btn-loading' : ''}`}
+                                                           style={{ display: 'inline-flex', alignItems: 'center', gap: '5px' }}
+                                                           title="Instantly lock account"
+                                                         >
+                                                           {currentMitigation === 'LOCK_USER' ? (
+                                                             <><span className="btn-spinner btn-spinner-sm" /> Locking...</>
+                                                           ) : (
+                                                             <><Lock size={12} /> Lock Account</>
+                                                           )}
+                                                         </button>
+                                                       )
+                                                     )}
+                                                     <button
+                                                       onClick={() => executeMitigation(inc.id, 'DISMISS', null, null)}
+                                                       disabled={isMitigating}
+                                                       className={`btn-mitigation-dismiss-sm ${currentMitigation === 'DISMISS' ? 'btn-loading' : ''}`}
+                                                       style={{ display: 'inline-flex', alignItems: 'center', gap: '4px' }}
+                                                       title="Dismiss alert as false positive"
+                                                     >
+                                                       {currentMitigation === 'DISMISS' ? (
+                                                         <><span className="btn-spinner btn-spinner-sm" /> Dismissing...</>
+                                                       ) : (
+                                                         <><X size={12} /> Dismiss</>
+                                                       )}
+                                                     </button>
+                                                   </>
+                                                 ) : (
+                                                   <span className="ticket-resolved-pill" style={{ display: 'inline-flex', alignItems: 'center', gap: '4px', opacity: 0.8 }}>
+                                                     Active Telemetry Audit
+                                                   </span>
+                                                 )}
+                                               </div>
+                                             );
+                                           }
+
+                                           return (
+                                             <div className="ticket-action-btns">
+                                               <span className="ticket-resolved-pill" style={{ display: 'inline-flex', alignItems: 'center', gap: '4px' }}>
+                                                 <Check size={12} /> {inc.status === 'Resolved' ? 'Mitigated' : 'Dismissed'}
+                                               </span>
+                                               {user.role === 'System Administrator' && (
+                                                 <>
+                                                   {inc.risk_level === 'High' && isLocked && (
+                                                     <button
+                                                       onClick={() => executeMitigation(inc.id, 'UNLOCK_USER', inc.user_id, inc.user_email)}
+                                                       disabled={isMitigating}
+                                                       className={`btn-mitigation-unlock-sm ${currentMitigation === 'UNLOCK_USER' ? 'btn-loading' : ''}`}
+                                                       style={{ display: 'inline-flex', alignItems: 'center', gap: '5px' }}
+                                                       title="Restore user account access"
+                                                     >
+                                                       {currentMitigation === 'UNLOCK_USER' ? (
+                                                         <><span className="btn-spinner btn-spinner-sm" /> Unlocking...</>
+                                                       ) : (
+                                                         <><Unlock size={12} /> Unlock Account</>
+                                                       )}
+                                                     </button>
+                                                   )}
+                                                   {inc.risk_level === 'High' && !isLocked && inc.status === 'Resolved' && (
+                                                     <span className="ticket-resolved-pill" style={{ display: 'inline-flex', alignItems: 'center', gap: '4px', background: 'rgba(16, 185, 129, 0.1)', color: 'var(--success)' }}>
+                                                       <Unlock size={12} /> Account Active
+                                                     </span>
+                                                   )}
+                                                   <button
+                                                     onClick={() => executeMitigation(inc.id, 'REOPEN', null, null)}
+                                                     disabled={isMitigating}
+                                                     className={`btn-mitigation-reopen-sm ${currentMitigation === 'REOPEN' ? 'btn-loading' : ''}`}
+                                                     style={{ display: 'inline-flex', alignItems: 'center', gap: '4px' }}
+                                                     title="Reopen incident for audit"
+                                                   >
+                                                     {currentMitigation === 'REOPEN' ? (
+                                                       <><span className="btn-spinner btn-spinner-sm" /> Reopening...</>
+                                                     ) : (
+                                                       <><RotateCcw size={12} /> Reopen</>
+                                                     )}
+                                                   </button>
+                                                 </>
+                                               )}
+                                             </div>
+                                           );
+                                         })()}
                                       </div>
                                     </div>
 
@@ -3064,15 +3296,11 @@ function App() {
                                   {dept.incident_count} {dept.incident_count === 1 ? 'event' : 'events'}
                                 </td>
                                 <td data-label="Average Risk">
-                                  <span className="risk-score-pill has-tooltip" style={{
+                                  <span className="risk-score-pill" title={`${dept.department || 'General'} Mean Threat Score: ${Math.round(dept.avg_risk_score)} / 100 across ${dept.incident_count} recorded incident(s)`} style={{
                                     backgroundColor: parseFloat(dept.avg_risk_score) >= 60 ? 'rgba(239, 68, 68, 0.15)' : parseFloat(dept.avg_risk_score) >= 30 ? 'rgba(245, 158, 11, 0.15)' : 'rgba(16, 185, 129, 0.15)',
                                     color: parseFloat(dept.avg_risk_score) >= 60 ? '#fca5a5' : parseFloat(dept.avg_risk_score) >= 30 ? '#fcd34d' : '#a7f3d0'
                                   }}>
                                     {Math.round(dept.avg_risk_score)} / 100
-                                    <div className="tooltip-bubble">
-                                      <strong className="tooltip-title">{dept.department || 'General'} Mean Threat Score</strong>
-                                      <span>Average risk: <strong>{Math.round(dept.avg_risk_score)} / 100</strong> across {dept.incident_count} recorded incident(s).</span>
-                                    </div>
                                   </span>
                                 </td>
                                 <td data-label="Peak Risk" style={{ color: 'var(--text-primary)' }}>{dept.max_risk_score} / 100</td>
@@ -3658,24 +3886,18 @@ function App() {
 
                             <div style={{ marginTop: 'auto' }}>
                               {user.role === 'System Administrator' ? (
-                                <div className="has-tooltip" style={{ width: '100%' }}>
-                                  <button
-                                    onClick={() => handleApplyRecommendation(rec)}
-                                    disabled={applyingRec[rec.id]}
-                                    className={`btn-primary ${applyingRec[rec.id] ? 'btn-loading' : ''}`}
-                                    style={{ width: '100%', display: 'inline-flex', alignItems: 'center', justifyContent: 'center', gap: '6px' }}
-                                  >
-                                    {applyingRec[rec.id] ? (
-                                      <><span className="btn-spinner" /> Applying Policy Recommendation...</>
-                                    ) : (
-                                      <><Zap size={14} /> Apply Policy Recommendation</>
-                                    )}
-                                  </button>
-                                  <div className="tooltip-bubble tooltip-bottom">
-                                    <strong className="tooltip-title">Enforce Security Policy</strong>
-                                    <span>Directly applies configuration modifications to active privacy engine heuristics.</span>
-                                  </div>
-                                </div>
+                                <button
+                                  onClick={() => handleApplyRecommendation(rec)}
+                                  disabled={applyingRec[rec.id]}
+                                  className={`btn-primary ${applyingRec[rec.id] ? 'btn-loading' : ''}`}
+                                  style={{ width: '100%', display: 'inline-flex', alignItems: 'center', justifyContent: 'center', gap: '6px' }}
+                                >
+                                  {applyingRec[rec.id] ? (
+                                    <><span className="btn-spinner" /> Applying Policy Recommendation...</>
+                                  ) : (
+                                    <><Zap size={14} /> Apply Policy Recommendation</>
+                                  )}
+                                </button>
                               ) : (
                                 <div style={{ 
                                   textAlign: 'center', 
@@ -3825,66 +4047,48 @@ function App() {
                               <td data-label="Name" style={{ fontWeight: '700', color: 'var(--text-primary)' }}>
                                 {emp.first_name} {emp.last_name}
                                 {emp.is_canary && (
-                                  <span className="honeypot-badge has-tooltip" style={{ display: 'inline-flex', alignItems: 'center', gap: '4px' }}>
+                                  <span className="honeypot-badge" title="Canary Decoy Trap: Decoy profile. Access attempts trigger immediate high-severity security alerts." style={{ display: 'inline-flex', alignItems: 'center', gap: '4px' }}>
                                     <Radio size={11} /> Honeypot Decoy
-                                    <div className="tooltip-bubble">
-                                      <strong className="tooltip-title">Canary Decoy Trap</strong>
-                                      <span>Decoy profile. Access attempts trigger immediate high-severity security alerts.</span>
-                                    </div>
                                   </span>
                                 )}
                               </td>
                               <td data-label="Department" style={{ color: 'var(--text-secondary)' }}>{emp.department}</td>
                               <td data-label="Position" style={{ color: 'var(--text-secondary)' }}>{emp.position}</td>
                               <td data-label="Hire Date" style={{ color: 'var(--text-secondary)' }}>{new Date(emp.hire_date).toLocaleDateString()}</td>
-                              <td data-label="Sensitive Salary" className="salary-val-sensitive has-tooltip">
+                              <td data-label="Sensitive Salary" className="salary-val-sensitive" title={salaryMap[emp.id] ? `Unmasked compensation: $${parseFloat(salaryMap[emp.id]).toLocaleString()} / year (Access logged in compliance audit trail)` : 'Sensitive salary is masked to prevent unauthorized inspection. Click "Query Salary" to decrypt (logs an audit transaction).'}>
                                 {salaryMap[emp.id] ? (
                                   <span className="visible">${parseFloat(salaryMap[emp.id]).toLocaleString()} / year</span>
                                 ) : (
                                   <span style={{ color: 'var(--text-secondary)' }}>•••••••• (Masked)</span>
                                 )}
-                                <div className="tooltip-bubble">
-                                  <strong className="tooltip-title">{salaryMap[emp.id] ? 'Decrypted Salary' : 'Masked Salary Data'}</strong>
-                                  <span>{salaryMap[emp.id] ? `Unmasked annual compensation: $${parseFloat(salaryMap[emp.id]).toLocaleString()}. Access logged in compliance audit trail.` : 'Sensitive salary is masked to prevent unauthorized inspection. Click "Query Salary" to decrypt (logs an audit transaction).'}</span>
-                                </div>
                               </td>
                               <td data-label="Action" style={{ whiteSpace: 'nowrap' }}>
                                 <div style={{ display: 'flex', gap: '8px', alignItems: 'center', flexWrap: 'nowrap', whiteSpace: 'nowrap' }}>
-                                  <div className="has-tooltip-inline">
-                                    <button 
-                                      onClick={() => fetchSensitiveSalary(emp.id)}
-                                      disabled={loadingSalary[emp.id]}
-                                      className={`btn-action-query ${loadingSalary[emp.id] ? 'btn-loading' : ''}`}
-                                      style={{ padding: '6px 12px', fontSize: '11px', whiteSpace: 'nowrap', display: 'inline-flex', alignItems: 'center', gap: '5px' }}
-                                    >
-                                      {loadingSalary[emp.id] ? (
-                                        <><span className="btn-spinner btn-spinner-sm" /> Unmasking...</>
-                                      ) : salaryMap[emp.id] ? (
-                                        <><EyeOff size={12} /> Hide Salary</>
-                                      ) : (
-                                        <><Eye size={12} /> Query Salary</>
-                                      )}
-                                    </button>
-                                    <div className="tooltip-bubble tooltip-right">
-                                      <strong className="tooltip-title">{salaryMap[emp.id] ? 'Re-mask Salary' : 'Decrypt Salary Record'}</strong>
-                                      <span>{salaryMap[emp.id] ? 'Hides decrypted compensation data from screen.' : 'Queries backend to decrypt compensation. Automatically triggers an access audit log entry.'}</span>
-                                    </div>
-                                  </div>
+                                  <button 
+                                    onClick={() => fetchSensitiveSalary(emp.id)}
+                                    disabled={loadingSalary[emp.id]}
+                                    className={`btn-action-query ${loadingSalary[emp.id] ? 'btn-loading' : ''}`}
+                                    style={{ padding: '6px 12px', fontSize: '11px', whiteSpace: 'nowrap', display: 'inline-flex', alignItems: 'center', gap: '5px' }}
+                                    title={salaryMap[emp.id] ? 'Hide Decrypted Salary' : 'Query Sensitive Salary (Audit Logged)'}
+                                  >
+                                    {loadingSalary[emp.id] ? (
+                                      <><span className="btn-spinner btn-spinner-sm" /> Unmasking...</>
+                                    ) : salaryMap[emp.id] ? (
+                                      <><EyeOff size={12} /> Hide Salary</>
+                                    ) : (
+                                      <><Eye size={12} /> Query Salary</>
+                                    )}
+                                  </button>
                                   {(user.role === 'HR Manager' || user.role === 'System Administrator') && !emp.is_canary && (
-                                    <div className="has-tooltip-inline">
-                                      <button 
-                                        onClick={() => handleRemoveEmployee(emp.id, `${emp.first_name} ${emp.last_name}`)}
-                                        disabled={deletingEmployee[emp.id]}
-                                        className={`btn-action-remove-ghost ${deletingEmployee[emp.id] ? 'btn-loading' : ''}`}
-                                        style={{ padding: '6px 12px', fontSize: '11px', whiteSpace: 'nowrap', display: 'inline-flex', alignItems: 'center', gap: '5px' }}
-                                      >
-                                        {deletingEmployee[emp.id] ? <><span className="btn-spinner btn-spinner-sm" /> Removing...</> : <><X size={12} /> Remove</>}
-                                      </button>
-                                      <div className="tooltip-bubble tooltip-right">
-                                        <strong className="tooltip-title">Delete Employee Record</strong>
-                                        <span>Permanently removes profile from organization directory and invalidates credentials.</span>
-                                      </div>
-                                    </div>
+                                    <button 
+                                      onClick={() => handleRemoveEmployee(emp.id, `${emp.first_name} ${emp.last_name}`)}
+                                      disabled={deletingEmployee[emp.id]}
+                                      className={`btn-action-remove-ghost ${deletingEmployee[emp.id] ? 'btn-loading' : ''}`}
+                                      style={{ padding: '6px 12px', fontSize: '11px', whiteSpace: 'nowrap', display: 'inline-flex', alignItems: 'center', gap: '5px' }}
+                                      title="Remove Employee Record"
+                                    >
+                                      {deletingEmployee[emp.id] ? <><span className="btn-spinner btn-spinner-sm" /> Removing...</> : <><X size={12} /> Remove</>}
+                                    </button>
                                   )}
                                 </div>
                               </td>
@@ -4149,12 +4353,8 @@ function App() {
                               <td data-label="End Date" style={{ color: 'var(--text-secondary)' }}>{new Date(l.end_date).toLocaleDateString()}</td>
                               <td data-label="Reason" style={{ fontSize: '12px', color: 'var(--text-secondary)' }}>{l.reason}</td>
                               <td data-label="Status">
-                                <span className={`status-indicator ${l.status.toLowerCase()} has-tooltip`}>
+                                <span className={`status-indicator ${l.status.toLowerCase()}`} title={`Request Status: ${l.status} (${l.status === 'Approved' ? 'Leave request is formally approved and logged.' : l.status === 'Pending' ? 'Pending administrative review and compliance check.' : 'Leave request rejected by management.'})`}>
                                   {l.status}
-                                  <div className="tooltip-bubble">
-                                    <strong className="tooltip-title">Request Status: {l.status}</strong>
-                                    <span>{l.status === 'Approved' ? 'Leave request is formally approved and logged.' : l.status === 'Pending' ? 'Pending administrative review and compliance check.' : 'Leave request rejected by management.'}</span>
-                                  </div>
                                 </span>
                               </td>
                               {(user.role === 'HR Manager' || user.role === 'System Administrator') && (
