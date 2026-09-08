@@ -309,7 +309,7 @@ async function analyzePrivacyThreats(req, user, actionType, recordsAccessed = 0)
 async function insertAuditLog(req, user, actionType, recordsAccessed = 0) {
   const metadata = parseClientMetadata(req);
   try {
-    await pool.query(
+    const [insertResult] = await pool.query(
       `INSERT INTO audit_logs 
        (user_id, user_role, ip_address, device_browser, location_country, location_city, request_path, request_method, records_accessed, action_type)
        VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`,
@@ -326,6 +326,24 @@ async function insertAuditLog(req, user, actionType, recordsAccessed = 0) {
         actionType
       ]
     );
+
+    const logEntry = {
+      id: Date.now(),
+      user_id: user ? user.id : null,
+      user_email: user ? (user.email || 'System') : 'Anonymous / System',
+      user_role: user ? user.role : 'Guest',
+      ip_address: metadata.ip,
+      device_browser: metadata.device,
+      location_country: metadata.country,
+      location_city: metadata.city,
+      request_path: req.path,
+      request_method: req.method,
+      records_accessed: recordsAccessed,
+      action_type: actionType,
+      timestamp: new Date().toISOString()
+    };
+
+    io.emit('NEW_AUDIT_LOG', logEntry);
   } catch (err) {
     console.error('[DB ERR] Failed to write audit log:', err.message);
   }
@@ -384,6 +402,22 @@ async function seedMockData() {
         );
         console.log('[SEED] Admin employee profile e5 seeded successfully.');
       }
+    }
+
+    // Seed baseline audit logs if table is empty
+    const [auditCount] = await pool.query('SELECT COUNT(*) as count FROM audit_logs');
+    if (auditCount[0].count === 0) {
+      console.log('[SEED] Seeding baseline audit log telemetry...');
+      await pool.query(`
+        INSERT INTO audit_logs (user_id, user_role, timestamp, ip_address, device_browser, location_country, location_city, request_path, request_method, records_accessed, action_type)
+        VALUES 
+        ('${adminId}', 'System Administrator', NOW() - INTERVAL '4 hours', '192.168.1.10', 'Chrome/macOS', 'United States', 'San Francisco', '/api/auth/login', 'POST', 0, 'LOGIN_SUCCESS'),
+        ('${adminId}', 'System Administrator', NOW() - INTERVAL '3 hours 45 minutes', '192.168.1.10', 'Chrome/macOS', 'United States', 'San Francisco', '/api/employees', 'GET', 5, 'EMPLOYEE_LIST_ACCESSED'),
+        ('22222222-2222-2222-2222-222222222222', 'HR Manager', NOW() - INTERVAL '2 hours', '192.168.1.25', 'Safari/iOS', 'United States', 'San Francisco', '/api/employees/e2/salary', 'GET', 1, 'EMPLOYEE_SALARY_ACCESSED'),
+        ('33333333-3333-3333-3333-333333333333', 'HR Staff', NOW() - INTERVAL '1 hour 15 minutes', '192.168.1.42', 'Edge/Windows', 'United States', 'San Francisco', '/api/leaves', 'GET', 3, 'LEAVE_LIST_ACCESSED'),
+        ('${adminId}', 'System Administrator', NOW() - INTERVAL '30 minutes', '192.168.1.10', 'Chrome/macOS', 'United States', 'San Francisco', '/api/rules', 'GET', 4, 'PRIVACY_RULES_INSPECTED')
+      `);
+      console.log('[SEED] Baseline audit logs created.');
     }
   } catch (err) {
     console.error('[SEED ERR] Seeding failed:', err.message);
@@ -817,6 +851,100 @@ app.post('/api/incidents/:id/mitigate', async (req, res) => {
     res.status(400).json({ message: 'Invalid action payload.' });
   } catch (err) {
     console.error('[MITIGATE ERR]', err);
+    res.status(500).json({ message: err.message });
+  }
+});
+
+// 6. Live Audit Logs API (Immutable Access Trails & Telemetry)
+app.get('/api/logs', async (req, res) => {
+  if (!req.user || (req.user.role !== 'System Administrator' && req.user.role !== 'HR Manager')) {
+    return res.status(403).json({ message: 'Access denied: Privileged SecOps role required.' });
+  }
+
+  try {
+    const limit = Math.min(parseInt(req.query.limit) || 150, 500);
+    const actionFilter = req.query.action || '';
+    const search = req.query.search ? `%${req.query.search.toLowerCase()}%` : null;
+
+    let query = `
+      SELECT 
+        al.id,
+        al.user_id,
+        COALESCE(u.email, 'Anonymous / System') AS user_email,
+        COALESCE(r.name, al.user_role, 'Guest') AS user_role,
+        al.timestamp,
+        al.ip_address,
+        al.device_browser,
+        al.location_country,
+        al.location_city,
+        al.request_path,
+        al.request_method,
+        al.records_accessed,
+        al.action_type
+      FROM audit_logs al
+      LEFT JOIN users u ON al.user_id = u.id
+      LEFT JOIN roles r ON u.role_id = r.id
+      WHERE 1=1
+    `;
+
+    const params = [];
+
+    if (actionFilter && actionFilter !== 'all') {
+      if (actionFilter === 'SALARY') {
+        query += ` AND al.action_type LIKE '%SALARY%'`;
+      } else if (actionFilter === 'LOGIN') {
+        query += ` AND al.action_type LIKE '%LOGIN%'`;
+      } else if (actionFilter === 'EMPLOYEE') {
+        query += ` AND al.action_type LIKE '%EMPLOYEE%'`;
+      } else if (actionFilter === 'LEAVE') {
+        query += ` AND al.action_type LIKE '%LEAVE%'`;
+      } else if (actionFilter === 'SECOPS') {
+        query += ` AND (al.action_type LIKE '%RULE%' OR al.action_type LIKE '%SIMULAT%' OR al.action_type LIKE '%MITIGAT%' OR al.action_type LIKE '%LOCK%')`;
+      } else {
+        params.push(actionFilter);
+        query += ` AND al.action_type = ?`;
+      }
+    }
+
+    if (search) {
+      params.push(search, search, search, search, search);
+      query += ` AND (
+        LOWER(COALESCE(u.email, '')) LIKE ? OR 
+        LOWER(al.ip_address) LIKE ? OR 
+        LOWER(COALESCE(al.location_city, '')) LIKE ? OR 
+        LOWER(al.action_type) LIKE ? OR
+        LOWER(al.request_path) LIKE ?
+      )`;
+    }
+
+    params.push(limit);
+    query += ` ORDER BY al.timestamp DESC, al.id DESC LIMIT ?`;
+
+    const [logs] = await pool.query(query, params);
+
+    // Summary statistics for executive KPI strip
+    const [statsRows] = await pool.query(`
+      SELECT 
+        COUNT(*) AS total_logs,
+        COUNT(CASE WHEN action_type LIKE '%SALARY%' THEN 1 END) AS salary_queries,
+        COUNT(CASE WHEN action_type LIKE '%LOGIN%' THEN 1 END) AS auth_events,
+        COUNT(DISTINCT ip_address) AS unique_ips
+      FROM audit_logs
+    `);
+
+    const stats = statsRows && statsRows[0] ? {
+      total_logs: parseInt(statsRows[0].total_logs) || (logs ? logs.length : 0),
+      salary_queries: parseInt(statsRows[0].salary_queries) || 0,
+      auth_events: parseInt(statsRows[0].auth_events) || 0,
+      unique_ips: parseInt(statsRows[0].unique_ips) || 0
+    } : { total_logs: 0, salary_queries: 0, auth_events: 0, unique_ips: 0 };
+
+    res.json({
+      logs: logs || [],
+      stats
+    });
+  } catch (err) {
+    console.error('[LOGS API ERR]', err);
     res.status(500).json({ message: err.message });
   }
 });

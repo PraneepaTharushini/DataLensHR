@@ -1,4 +1,4 @@
-import { useState, useEffect } from 'react';
+import React, { useState, useEffect, Fragment } from 'react';
 import { io } from 'socket.io-client';
 import {
   Shield,
@@ -37,12 +37,171 @@ import {
   Check,
   Info,
   ArrowRight,
-  Sparkles
+  Sparkles,
+  Download,
+  Filter,
+  Globe,
+  Layers,
+  List,
+  Terminal,
+  Code
 } from 'lucide-react';
 import './App.css';
 
 const API_BASE = import.meta.env.VITE_API_URL || 'http://localhost:5000/api';
 const CHART_COLORS = ['#6366f1', '#8b5cf6', '#38bdf8', '#10b981', '#f59e0b', '#ef4444'];
+
+// Helper to get audit log action metadata and styling
+function getActionBadgeMeta(action) {
+  if (!action) return { label: 'General Event', color: 'var(--text-secondary)', bg: 'rgba(148, 163, 184, 0.12)', icon: <Activity size={12} /> };
+  const a = action.toUpperCase();
+  if (a.includes('SALARY') || a.includes('SPI_SALARY')) {
+    return { label: 'Salary Decrypt', color: '#f43f5e', bg: 'rgba(244, 63, 94, 0.12)', icon: <Lock size={12} /> };
+  }
+  if (a.includes('LOGIN_SUCCESS')) {
+    return { label: 'Login Success', color: '#10b981', bg: 'rgba(16, 185, 129, 0.12)', icon: <CheckCircle2 size={12} /> };
+  }
+  if (a.includes('LOGIN_FAILED')) {
+    return { label: 'Login Failed', color: '#ef4444', bg: 'rgba(239, 68, 68, 0.12)', icon: <AlertTriangle size={12} /> };
+  }
+  if (a.includes('EMPLOYEE') || a.includes('PROFILE')) {
+    return { label: 'Directory Read', color: '#38bdf8', bg: 'rgba(56, 189, 248, 0.12)', icon: <Users size={12} /> };
+  }
+  if (a.includes('LEAVE')) {
+    return { label: 'Leave Operation', color: '#a855f7', bg: 'rgba(168, 85, 247, 0.12)', icon: <Calendar size={12} /> };
+  }
+  if (a.includes('CANARY') || a.includes('HONEYPOT')) {
+    return { label: 'Honeypot Decoy Trip', color: '#dc2626', bg: 'rgba(220, 38, 38, 0.18)', icon: <AlertCircle size={12} /> };
+  }
+  if (a.includes('RULE') || a.includes('SIMULAT') || a.includes('MITIGAT') || a.includes('LOCK')) {
+    return { label: 'SecOps Action', color: '#f59e0b', bg: 'rgba(245, 158, 11, 0.12)', icon: <Zap size={12} /> };
+  }
+  const clean = a.replace(/_/g, ' ').toLowerCase().replace(/\b\w/g, l => l.toUpperCase());
+  return { label: clean, color: 'var(--primary)', bg: 'var(--primary-glow)', icon: <FileText size={12} /> };
+}
+
+// Human-readable activity narrative generator for Live Audit Logs
+function getHumanAuditActivity(log) {
+  if (!log) return { headline: 'System activity recorded', detail: 'General system event', category: 'System Event', severity: 'info' };
+  
+  const action = (log.action_type || '').toUpperCase();
+  const path = log.request_path || '';
+  const email = log.user_email || 'Anonymous user';
+  const records = log.records_accessed || 1;
+  const method = log.request_method || 'GET';
+  const city = log.location_city || '';
+
+  // 1. Decoy / Canary Honeypot
+  if (action.includes('CANARY') || action.includes('HONEYPOT') || path.includes('/canary')) {
+    return {
+      headline: `${email} triggered Canary Decoy Trap`,
+      detail: `Attempted to query masked executive honeypot profile (John Doe, Senior VP). High-risk unauthorized investigation.`,
+      category: 'Decoy Security Alert',
+      severity: 'critical'
+    };
+  }
+
+  // 2. Salary / SPI compensation lookups
+  if (action.includes('SALARY') || path.includes('/salary') || action.includes('SPI_SALARY')) {
+    const isSingle = records === 1;
+    return {
+      headline: `${email} unmasked sensitive salary details`,
+      detail: `Decrypted and viewed confidential compensation figures for ${isSingle ? 'an employee record' : `${records} employee records`}.`,
+      category: 'Confidential PII',
+      severity: 'warning'
+    };
+  }
+
+  // 3. Login events
+  if (action.includes('LOGIN_SUCCESS')) {
+    return {
+      headline: `${email} signed in successfully`,
+      detail: `Authenticated session initiated from ${city ? city : 'local endpoint'} with valid credentials.`,
+      category: 'Authentication',
+      severity: 'info'
+    };
+  }
+
+  if (action.includes('LOGIN_FAILED')) {
+    return {
+      headline: `Failed sign-in attempt for ${email}`,
+      detail: `Invalid credentials supplied from ${city ? city : 'unknown endpoint'}. Potential brute-force or credential test.`,
+      category: 'Auth Alert',
+      severity: 'danger'
+    };
+  }
+
+  // 4. Employee Directory / Profile lookups
+  if (action.includes('EMPLOYEE') || action.includes('PROFILE') || path.includes('/employees')) {
+    if (action.includes('CREATE') || method === 'POST') {
+      return {
+        headline: `${email} registered a new employee record`,
+        detail: `Added new personnel record to the enterprise staff database.`,
+        category: 'Staff Management',
+        severity: 'info'
+      };
+    }
+    if (action.includes('UPDATE') || method === 'PUT' || method === 'PATCH') {
+      return {
+        headline: `${email} updated employee information`,
+        detail: `Modified employee profile attributes and permissions.`,
+        category: 'Staff Management',
+        severity: 'info'
+      };
+    }
+    if (records > 10) {
+      return {
+        headline: `${email} performed volumetric directory scrape`,
+        detail: `Bulk downloaded/queried ${records} employee profiles in a short burst window.`,
+        category: 'Volumetric Query',
+        severity: 'warning'
+      };
+    }
+    return {
+      headline: `${email} queried employee directory`,
+      detail: `Viewed staff directory records (${records} profile${records !== 1 ? 's' : ''} retrieved).`,
+      category: 'Directory Read',
+      severity: 'info'
+    };
+  }
+
+  // 5. Leave Operations
+  if (action.includes('LEAVE') || path.includes('/leave')) {
+    if (action.includes('STATUS') || action.includes('APPROV') || action.includes('REJECT')) {
+      return {
+        headline: `${email} updated leave request status`,
+        detail: `Processed and updated an employee leave authorization status.`,
+        category: 'HR Operations',
+        severity: 'info'
+      };
+    }
+    return {
+      headline: `${email} submitted a leave application`,
+      detail: `Filed a new time-off / leave record in the HR portal.`,
+      category: 'HR Operations',
+      severity: 'info'
+    };
+  }
+
+  // 6. Security Operations & Policies
+  if (action.includes('RULE') || action.includes('SIMULAT') || action.includes('MITIGAT') || action.includes('LOCK')) {
+    return {
+      headline: `${email} executed SecOps policy command`,
+      detail: `Adjusted heuristic thresholds, triggered attack simulation, or applied mitigation lockouts.`,
+      category: 'SecOps Action',
+      severity: 'warning'
+    };
+  }
+
+  // Fallback
+  const cleanAction = action.replace(/_/g, ' ').toLowerCase().replace(/\b\w/g, l => l.toUpperCase());
+  return {
+    headline: `${email} performed ${cleanAction}`,
+    detail: `Executed ${method} request to ${path || 'API endpoint'}.`,
+    category: 'System Activity',
+    severity: 'info'
+  };
+}
 
 // ================= REUSABLE EMPTY & LOADING COMPONENTS =================
 
@@ -226,12 +385,9 @@ function getUserDisplayName(user) {
   return user.role || 'Security Lead';
 }
 
-// Friendly Dashboard Welcome Hero Component
+// Friendly Dashboard Welcome Hero Component (Customized for all user profiles)
 function DashboardWelcomeHero({ 
   user, 
-  onSimulateThreat, 
-  onNavigateTab, 
-  incidentsCount = 0,
   openAlertsCount = 0 
 }) {
   const [isDismissed, setIsDismissed] = useState(() => {
@@ -246,6 +402,50 @@ function DashboardWelcomeHero({
 
   const displayName = getUserDisplayName(user);
   const greeting = getGreeting();
+  const role = user?.role || 'System Administrator';
+
+  // Role-specific copy & configuration
+  let roleBadge = 'System Administrator';
+  let categoryPill = 'Zero-Trust Privacy Sentinel';
+  let statusBadge = openAlertsCount === 0 ? '✓ 0 Active Threats' : `⚠️ ${openAlertsCount} Active Incidents`;
+  let heroDesc = 'DataLens HR is actively safeguarding employee records. Real-time telemetry evaluates honeypot decoys, anomalous travel velocities, volumetric scraping, and off-hours access patterns across your organization.';
+  let highlights = [
+    { icon: <ShieldCheck size={13} color="var(--success)" />, title: '4 Detection Heuristics', sub: 'armed' },
+    { icon: <Radio size={13} color="var(--primary)" />, title: 'Real-Time WebSockets', sub: 'connected' },
+    { icon: <Lock size={13} color="#38bdf8" />, title: 'Automated Lockout', sub: 'ready' }
+  ];
+
+  if (role === 'HR Manager') {
+    roleBadge = 'HR Manager';
+    categoryPill = 'HR Operations Hub';
+    statusBadge = '🟢 Personnel Records Shielded';
+    heroDesc = 'Welcome to your HR management workspace. Seamlessly view employee directory records, process staff leave requests, and oversee organizational personnel with dynamic privacy masking.';
+    highlights = [
+      { icon: <ShieldCheck size={13} color="var(--success)" />, title: 'Dynamic Privacy Masking', sub: 'active' },
+      { icon: <Users size={13} color="var(--primary)" />, title: 'Leave Approvals', sub: 'ready' },
+      { icon: <Lock size={13} color="#38bdf8" />, title: 'Role-Based Controls', sub: 'enforced' }
+    ];
+  } else if (role === 'HR Staff' || role.toLowerCase().includes('staff')) {
+    roleBadge = 'HR Staff';
+    categoryPill = 'HR Operations Portal';
+    statusBadge = '🟢 Privacy Shielding Active';
+    heroDesc = 'Welcome to your HR operations workspace. Browse employee profiles in the company directory with privacy masking, and assist staff members with leave request tracking.';
+    highlights = [
+      { icon: <ShieldCheck size={13} color="var(--success)" />, title: 'Masked Salary Fields', sub: 'protected' },
+      { icon: <Calendar size={13} color="var(--primary)" />, title: 'Leave Request Tracking', sub: 'ready' },
+      { icon: <Users size={13} color="#38bdf8" />, title: 'Company Directory', sub: 'active' }
+    ];
+  } else if (role === 'Employee' || role.toLowerCase().includes('employee')) {
+    roleBadge = 'Staff Member';
+    categoryPill = 'Employee Self-Service';
+    statusBadge = '🟢 Personal Data Protected';
+    heroDesc = 'Welcome to DataLens HR. Browse colleague profiles in the company directory with privacy masking, and easily submit or track your personal leave requests in real time.';
+    highlights = [
+      { icon: <ShieldCheck size={13} color="var(--success)" />, title: 'Confidential Salary Protection', sub: 'active' },
+      { icon: <Calendar size={13} color="var(--primary)" />, title: 'Direct Leave Submissions', sub: 'ready' },
+      { icon: <Users size={13} color="#38bdf8" />, title: 'Company Directory', sub: 'accessible' }
+    ];
+  }
 
   if (isDismissed) {
     return (
@@ -253,31 +453,19 @@ function DashboardWelcomeHero({
         <div className="collapsed-left">
           <span className="live-pulse-dot" />
           <span className="collapsed-title">
-            <strong>Privacy Sentinel:</strong> All zero-trust heuristic guardrails active
+            <strong>{categoryPill}:</strong> {role === 'System Administrator' ? 'All zero-trust heuristic guardrails active' : 'Privacy-preserving workforce portal active'}
           </span>
           <span className="collapsed-badge">
-            {openAlertsCount === 0 ? '🟢 All Systems Secure' : `⚠️ ${openAlertsCount} Open Alert(s)`}
+            {statusBadge}
           </span>
         </div>
         <div className="collapsed-actions">
-          <button 
-            onClick={() => onNavigateTab('employees')} 
-            className="btn-collapsed-link"
-          >
-            <Users size={12} /> Directory
-          </button>
-          <button 
-            onClick={onSimulateThreat} 
-            className="btn-collapsed-link"
-          >
-            <Zap size={12} /> Test Simulation
-          </button>
           <button 
             onClick={toggleDismiss} 
             className="btn-collapsed-toggle" 
             title="Expand Welcome Guide"
           >
-            <ChevronDown size={14} /> Expand Guide
+            <ChevronDown size={14} /> Expand Welcome
           </button>
         </div>
       </div>
@@ -290,13 +478,13 @@ function DashboardWelcomeHero({
         <div className="welcome-hero-badge-row">
           <span className="hero-status-pill">
             <span className="live-pulse-dot" />
-            Zero-Trust Privacy Sentinel
+            {categoryPill}
           </span>
           <span className="hero-role-pill">
-            <UserCheck size={12} /> {user?.role || 'Security Administrator'}
+            <UserCheck size={12} /> {roleBadge}
           </span>
           <span className="hero-threat-status-pill">
-            {openAlertsCount === 0 ? '✓ 0 Active Threats' : `⚠️ ${openAlertsCount} Active Incidents`}
+            {statusBadge}
           </span>
         </div>
 
@@ -305,53 +493,20 @@ function DashboardWelcomeHero({
         </h3>
 
         <p className="welcome-hero-desc">
-          DataLens HR is actively safeguarding employee records. Real-time telemetry evaluates honeypot decoys, anomalous travel velocities, volumetric scraping, and off-hours access patterns across your organization.
+          {heroDesc}
         </p>
-
-        {/* Quick-Start Action Launchpad */}
-        <div className="welcome-hero-actions">
-          <button 
-            onClick={() => onNavigateTab('employees')} 
-            className="btn-welcome-action primary"
-          >
-            <Users size={14} /> Audit Employee Directory
-          </button>
-          <button 
-            onClick={onSimulateThreat} 
-            className="btn-welcome-action secondary"
-          >
-            <Zap size={14} color="#f59e0b" /> Simulate Test Threat
-          </button>
-          <button 
-            onClick={() => onNavigateTab('rules')} 
-            className="btn-welcome-action tertiary"
-          >
-            <Sliders size={14} /> Heuristic Rules
-          </button>
-          <button 
-            onClick={() => onNavigateTab('logs')} 
-            className="btn-welcome-action tertiary"
-          >
-            <FileText size={14} /> Live Audit Logs
-          </button>
-        </div>
 
         {/* System Highlights Strip */}
         <div className="welcome-hero-highlights">
-          <div className="highlight-item">
-            <ShieldCheck size={13} color="var(--success)" />
-            <span><strong>4 Detection Heuristics</strong> armed</span>
-          </div>
-          <div className="highlight-divider" />
-          <div className="highlight-item">
-            <Radio size={13} color="var(--primary)" />
-            <span><strong>Real-Time WebSockets</strong> connected</span>
-          </div>
-          <div className="highlight-divider" />
-          <div className="highlight-item">
-            <Lock size={13} color="#38bdf8" />
-            <span><strong>Automated Lockout</strong> ready</span>
-          </div>
+          {highlights.map((h, idx) => (
+            <React.Fragment key={idx}>
+              {idx > 0 && <div className="highlight-divider" />}
+              <div className="highlight-item">
+                {h.icon}
+                <span><strong>{h.title}</strong> {h.sub}</span>
+              </div>
+            </React.Fragment>
+          ))}
         </div>
       </div>
 
@@ -522,9 +677,10 @@ function PageGuidanceCard({
 }) {
   const [isCollapsed, setIsCollapsed] = useState(() => {
     if (storageKey) {
-      return localStorage.getItem(`guidance_${storageKey}`) === 'collapsed';
+      const saved = localStorage.getItem(`guidance_${storageKey}`);
+      if (saved) return saved === 'collapsed';
     }
-    return false;
+    return true; // Default collapsed for clean, data-first view
   });
 
   const toggleCollapsed = () => {
@@ -592,37 +748,125 @@ function PageGuidanceCard({
 
 // Heuristic Detection Rule Explanatory Metadata for Tooltips and Visualizations
 const RULE_METADATA = {
+  // Canary Decoy Traps
   CANARY_ACCESS: {
-    label: 'Canary Decoy Access',
-    shortName: 'Canary Decoy Access',
-    code: 'R-01',
+    label: 'Canary Decoy Honeypot Trap',
+    shortName: 'Canary Decoy Trap',
+    code: 'R-06',
     description: 'High-severity detection triggered when an unauthorized user queries masked honeypot employee accounts.'
   },
+  CANARY_HONEYPOT_ACCESSED: {
+    label: 'Canary Decoy Honeypot Trap',
+    shortName: 'Canary Decoy Trap',
+    code: 'R-06',
+    description: 'High-severity detection triggered when an unauthorized user queries masked honeypot employee accounts.'
+  },
+  'R-06': {
+    label: 'Canary Decoy Honeypot Trap',
+    shortName: 'Canary Decoy Trap',
+    code: 'R-06',
+    description: 'High-severity detection triggered when an unauthorized user queries masked honeypot employee accounts.'
+  },
+
+  // Impossible Travel
   IMPOSSIBLE_TRAVEL: {
     label: 'Impossible Travel Velocity',
     shortName: 'Impossible Travel',
     code: 'R-03',
     description: 'Flags login sessions originating from geographically distant regions faster than supersonic transport velocities.'
   },
-  AFTER_HOURS_ACCESS: {
-    label: 'After-Hours Access',
-    shortName: 'After-Hours Access',
+  IMPOSSIBLE_TRAVEL_VELOCITY: {
+    label: 'Impossible Travel Velocity',
+    shortName: 'Impossible Travel',
+    code: 'R-03',
+    description: 'Flags login sessions originating from geographically distant regions faster than supersonic transport velocities.'
+  },
+  'R-03': {
+    label: 'Impossible Travel Velocity',
+    shortName: 'Impossible Travel',
+    code: 'R-03',
+    description: 'Flags login sessions originating from geographically distant regions faster than supersonic transport velocities.'
+  },
+
+  // Unusual Working Hours
+  UNUSUAL_HOURS: {
+    label: 'Unusual Working Hours',
+    shortName: 'Unusual Hours',
     code: 'R-02',
     description: 'Monitors database queries and employee unmasking executed during restricted overnight timeframes (11 PM - 5 AM).'
   },
-  MASS_PROFILE_READS: {
-    label: 'Volumetric Profile Scrape',
+  AFTER_HOURS_ACCESS: {
+    label: 'Unusual Working Hours',
+    shortName: 'Unusual Hours',
+    code: 'R-02',
+    description: 'Monitors database queries and employee unmasking executed during restricted overnight timeframes (11 PM - 5 AM).'
+  },
+  'R-02': {
+    label: 'Unusual Working Hours',
+    shortName: 'Unusual Hours',
+    code: 'R-02',
+    description: 'Monitors database queries and employee unmasking executed during restricted overnight timeframes (11 PM - 5 AM).'
+  },
+
+  // Volumetric Scraping
+  VOLUMETRIC_SCRAPE: {
+    label: 'Volumetric Profile Scraping',
     shortName: 'Volumetric Scrape',
     code: 'R-05',
     description: 'Alerts when rapid bulk employee directory scraping exceeds the configured threshold (> 10 records / 10s).'
   },
+  VOLUMETRIC_SCRAPING: {
+    label: 'Volumetric Profile Scraping',
+    shortName: 'Volumetric Scrape',
+    code: 'R-05',
+    description: 'Alerts when rapid bulk employee directory scraping exceeds the configured threshold (> 10 records / 10s).'
+  },
+  MASS_PROFILE_READS: {
+    label: 'Volumetric Profile Scraping',
+    shortName: 'Volumetric Scrape',
+    code: 'R-05',
+    description: 'Alerts when rapid bulk employee directory scraping exceeds the configured threshold (> 10 records / 10s).'
+  },
+  'R-05': {
+    label: 'Volumetric Profile Scraping',
+    shortName: 'Volumetric Scrape',
+    code: 'R-05',
+    description: 'Alerts when rapid bulk employee directory scraping exceeds the configured threshold (> 10 records / 10s).'
+  },
+
+  // Salary Probing
+  SPI_SALARY_PROBE: {
+    label: 'Unauthorized Salary Probing',
+    shortName: 'Salary Probing',
+    code: 'R-04',
+    description: 'Detects unauthorized attempts by non-privileged accounts to unmask confidential executive compensation.'
+  },
   ANOMALOUS_SALARY_VIEW: {
-    label: 'Unauthorized Salary Read',
-    shortName: 'Unauthorized Salary Read',
+    label: 'Unauthorized Salary Probing',
+    shortName: 'Salary Probing',
+    code: 'R-04',
+    description: 'Detects unauthorized attempts by non-privileged accounts to unmask confidential executive compensation.'
+  },
+  UNAUTHORIZED_SALARY_READ: {
+    label: 'Unauthorized Salary Probing',
+    shortName: 'Salary Probing',
+    code: 'R-04',
+    description: 'Detects unauthorized attempts by non-privileged accounts to unmask confidential executive compensation.'
+  },
+  'R-04': {
+    label: 'Unauthorized Salary Probing',
+    shortName: 'Salary Probing',
     code: 'R-04',
     description: 'Detects unauthorized attempts by non-privileged accounts to unmask confidential executive compensation.'
   }
 };
+
+function formatRuleName(ruleKey) {
+  if (!ruleKey) return 'Standard Rule';
+  if (RULE_METADATA[ruleKey]?.label) return RULE_METADATA[ruleKey].label;
+  if (RULE_METADATA[ruleKey]?.shortName) return RULE_METADATA[ruleKey].shortName;
+  return ruleKey.replace(/_/g, ' ').toLowerCase().replace(/\b\w/g, l => l.toUpperCase());
+}
 
 function App() {
   // Session States
@@ -665,7 +909,7 @@ function App() {
   
   // Proactive Recommendations States
   const [recommendations, setRecommendations] = useState([]);
-  
+
   // Custom Simulator / Context Headers
   const [simLocation, setSimLocation] = useState('Colombo, Sri Lanka');
   const [isScraping, setIsScraping] = useState(false);
@@ -1187,16 +1431,23 @@ function App() {
     const counts = {
       VOLUMETRIC_SCRAPE: 0,
       IMPOSSIBLE_TRAVEL: 0,
-      UNAUTHORIZED_SALARY_READ: 0,
-      CANARY_ACCESS: 0
+      SPI_SALARY_PROBE: 0,
+      CANARY_ACCESS: 0,
+      UNUSUAL_HOURS: 0
     };
     incidents.forEach(inc => {
       const rules = Array.isArray(inc.triggered_rules) ? inc.triggered_rules : JSON.parse(inc.triggered_rules || '[]');
       rules.forEach(rule => {
-        if (rule in counts) {
-          counts[rule]++;
+        let normalized = rule;
+        if (rule === 'MASS_PROFILE_READS' || rule === 'VOLUMETRIC_SCRAPING') normalized = 'VOLUMETRIC_SCRAPE';
+        if (rule === 'CANARY_HONEYPOT_ACCESSED') normalized = 'CANARY_ACCESS';
+        if (rule === 'ANOMALOUS_SALARY_VIEW' || rule === 'UNAUTHORIZED_SALARY_READ') normalized = 'SPI_SALARY_PROBE';
+        if (rule === 'AFTER_HOURS_ACCESS') normalized = 'UNUSUAL_HOURS';
+        
+        if (normalized in counts) {
+          counts[normalized]++;
         } else {
-          counts[rule] = (counts[rule] || 0) + 1;
+          counts[normalized] = (counts[normalized] || 0) + 1;
         }
       });
     });
@@ -2316,9 +2567,6 @@ function App() {
                   {/* Friendly Dashboard Welcome Hero & System Status Banner */}
                   <DashboardWelcomeHero 
                     user={user}
-                    onSimulateThreat={simulateImpossibleTravel}
-                    onNavigateTab={setActiveTab}
-                    incidentsCount={incidents.length}
                     openAlertsCount={incidents.filter(i => i.status === 'Open').length}
                   />
 
@@ -2783,10 +3031,10 @@ function App() {
                                           </div>
                                         </span>
                                         <span className="ticket-rule-tag has-tooltip">
-                                          {triggeredRules.join(', ')}
+                                          {triggeredRules.map(r => formatRuleName(r)).join(', ')}
                                           <div className="tooltip-bubble">
                                             <strong className="tooltip-title">Triggered Heuristics</strong>
-                                            <span>Rule policies violated during this security telemetry event: {triggeredRules.map(r => RULE_METADATA[r]?.shortName || r).join(', ')}.</span>
+                                            <span>Rule policies violated during this security telemetry event: {triggeredRules.map(r => formatRuleName(r)).join(', ')}.</span>
                                           </div>
                                         </span>
                                         {evidence.metadata && (
@@ -3922,7 +4170,13 @@ function App() {
 
               {/* ================= VIEW 5: EMPLOYEE DIRECTORY ================= */}
               {activeTab === 'employees' && (
-                <div>
+                <div className="animate-fade-in">
+                  {/* Friendly Welcome Hero tailored to current profile */}
+                  <DashboardWelcomeHero 
+                    user={user}
+                    openAlertsCount={incidents.filter(i => i.status === 'Open').length}
+                  />
+
                   <div className="view-title-block" style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '28px', flexWrap: 'wrap', gap: '16px' }}>
                     <div>
                       <div className="page-category-badge">
@@ -4104,7 +4358,13 @@ function App() {
 
               {/* ================= VIEW 6: LEAVE MANAGEMENT ================= */}
               {activeTab === 'leaves' && (
-                <div>
+                <div className="animate-fade-in">
+                  {/* Friendly Welcome Hero tailored to current profile */}
+                  <DashboardWelcomeHero 
+                    user={user}
+                    openAlertsCount={incidents.filter(i => i.status === 'Open').length}
+                  />
+
                   <div className="view-title-block">
                     <div>
                       <div className="page-category-badge">
