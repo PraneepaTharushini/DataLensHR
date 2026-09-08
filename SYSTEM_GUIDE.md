@@ -226,11 +226,10 @@ stateDiagram-v2
     Suspicious --> Locked: Composite Risk >= 70 OR Honeypot Tripped
     Locked --> Active: Wait 15-60 min Lockout Expiry
     Locked --> Active: Admin Clicks 'Unlock User' in SecOps
-    Locked --> Active: Click 'Bypass Lockout' (Demo Helper)
 ```
 
 > [!NOTE]
-> **Testing Convenience**: If an account is locked during demonstration, a red lockout banner appears with a **Bypass Lockout (Demo)** button calling `POST /api/auth/bypass-lockout` to restore access immediately.
+> **Account Lockout Policy**: When an account is locked due to high-risk security anomalies, public sign-in is suspended. The account is restored only after the temporary cooldown window elapses (15–60 min) or when a **System Administrator** evaluates the incident in the **SecOps Incident Resolution** center and executes the **Unlock User** mitigation action.
 
 ---
 

@@ -283,6 +283,7 @@ async function analyzePrivacyThreats(req, user, actionType, recordsAccessed = 0)
     // Broadcast WebSocket Incident Event
     const websocketPayload = {
       id: incidentId,
+      user_id: user ? user.id : null,
       detected_at: now.toISOString(),
       user_email: user ? user.email : 'Anonymous',
       user_role: user ? user.role : 'Guest',
@@ -465,16 +466,6 @@ app.post('/api/auth/login', async (req, res) => {
   }
 });
 
-// Auth Bypass Lockout API (Demo helper)
-app.post('/api/auth/bypass-lockout', async (req, res) => {
-  const { email } = req.body;
-  try {
-    await pool.query('UPDATE users SET is_active = TRUE, locked_until = NULL WHERE email = ?', [email]);
-    res.json({ message: 'Lockout bypassed successfully. You can now login.' });
-  } catch (err) {
-    res.status(500).json({ message: err.message });
-  }
-});
 
 // 3. Employee Directory Endpoints
 app.get('/api/employees', async (req, res) => {
@@ -738,9 +729,13 @@ app.get('/api/incidents', async (req, res) => {
 
   try {
     const [incidents] = await pool.query(
-      `SELECT si.*, u.email as user_email, r.name as user_role
+      `SELECT si.*, 
+              COALESCE(u.email, si.raw_evidence->>'email', si.raw_evidence->>'user_email', si.raw_evidence->>'userEmail', 'Anonymous') as user_email, 
+              r.name as user_role,
+              u.is_active as user_is_active,
+              u.locked_until as user_locked_until
        FROM security_incidents si
-       LEFT JOIN users u ON si.user_id = u.id
+       LEFT JOIN users u ON (si.user_id = u.id OR u.email = si.raw_evidence->>'email' OR u.email = si.raw_evidence->>'user_email' OR u.email = si.raw_evidence->>'userEmail')
        LEFT JOIN roles r ON u.role_id = r.id
        ORDER BY si.detected_at DESC`
     );
@@ -758,25 +753,53 @@ app.post('/api/incidents/:id/mitigate', async (req, res) => {
   }
 
   const incidentId = req.params.id;
-  const { action, userId } = req.body;
+  let { action, userId, email } = req.body;
 
   try {
-    if (action === 'LOCK_USER' && userId) {
+    // Robustly resolve target user if not explicitly provided
+    let targetUserId = userId;
+    if (!targetUserId) {
+      const [incRows] = await pool.query('SELECT user_id, raw_evidence FROM security_incidents WHERE id = ?', [incidentId]);
+      if (incRows.length > 0) {
+        targetUserId = incRows[0].user_id;
+        if (!targetUserId && incRows[0].raw_evidence) {
+          try {
+            const ev = typeof incRows[0].raw_evidence === 'string' ? JSON.parse(incRows[0].raw_evidence) : incRows[0].raw_evidence;
+            const targetEmail = email || ev.email || ev.user_email || ev.userEmail;
+            if (targetEmail) {
+              const [uRows] = await pool.query('SELECT id FROM users WHERE email = ?', [targetEmail]);
+              if (uRows.length > 0) targetUserId = uRows[0].id;
+            }
+          } catch (e) {}
+        }
+      }
+    }
+
+    if (!targetUserId && email) {
+      const [uRows] = await pool.query('SELECT id FROM users WHERE email = ?', [email]);
+      if (uRows.length > 0) targetUserId = uRows[0].id;
+    }
+
+    if (action === 'LOCK_USER') {
       const lockDurationMinutes = 15;
       const lockedUntil = new Date(Date.now() + lockDurationMinutes * 60000);
-      await pool.query('UPDATE users SET is_active = FALSE, locked_until = ? WHERE id = ?', [lockedUntil, userId]);
+      if (targetUserId) {
+        await pool.query('UPDATE users SET is_active = FALSE, locked_until = ? WHERE id = ?', [lockedUntil, targetUserId]);
+      }
       await pool.query("UPDATE security_incidents SET status = 'Resolved', mitigation_executed = TRUE, notes = ? WHERE id = ?", [`Manual Mitigated: locked account until ${lockedUntil.toLocaleTimeString()}`, incidentId]);
 
       io.emit('INCIDENT_RESOLVED', { id: incidentId, note: 'User Locked Successfully' });
       return res.json({ message: 'User account has been locked for 15 minutes.' });
     }
 
-    if (action === 'UNLOCK_USER' && userId) {
-      await pool.query('UPDATE users SET is_active = TRUE, locked_until = NULL WHERE id = ?', [userId]);
+    if (action === 'UNLOCK_USER') {
+      if (targetUserId) {
+        await pool.query('UPDATE users SET is_active = TRUE, locked_until = NULL WHERE id = ?', [targetUserId]);
+      }
       await pool.query("UPDATE security_incidents SET status = 'Resolved', mitigation_executed = TRUE, notes = 'Manual Mitigated: account unlocked' WHERE id = ?", [incidentId]);
 
       io.emit('INCIDENT_RESOLVED', { id: incidentId, note: 'User Unlocked Successfully' });
-      return res.json({ message: 'User account has been unlocked.' });
+      return res.json({ message: 'User account has been unlocked successfully.' });
     }
 
     if (action === 'DISMISS') {
@@ -793,6 +816,7 @@ app.post('/api/incidents/:id/mitigate', async (req, res) => {
 
     res.status(400).json({ message: 'Invalid action payload.' });
   } catch (err) {
+    console.error('[MITIGATE ERR]', err);
     res.status(500).json({ message: err.message });
   }
 });
