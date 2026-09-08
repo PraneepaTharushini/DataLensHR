@@ -35,7 +35,8 @@ import {
   Clock,
   RotateCcw,
   Check,
-  Info
+  Info,
+  ArrowRight
 } from 'lucide-react';
 import './App.css';
 
@@ -453,6 +454,8 @@ function App() {
   const [loginPassword, setLoginPassword] = useState('');
   const [showPassword, setShowPassword] = useState(false);
   const [loginTouched, setLoginTouched] = useState({ email: false, password: false });
+  const [activeRolePill, setActiveRolePill] = useState('');
+  const [isLoggingIn, setIsLoggingIn] = useState(false);
   
   // Leave request form states
   const [leaveType, setLeaveType] = useState('Annual Leave');
@@ -1116,54 +1119,98 @@ function App() {
       }
       return;
     }
-    setErrorMessage('');
-    try {
-      const response = await fetch(`${API_BASE}/auth/login`, {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-          'x-simulate-location': simLocation,
-          'x-simulate-impossible-travel': 'false'
-        },
-        body: JSON.stringify({ email: loginEmail, password: loginPassword })
-      });
+      setErrorMessage('');
+      setIsLoggingIn(true);
+      try {
+        const response = await fetch(`${API_BASE}/auth/login`, {
+          method: 'POST',
+          headers: {
+            'Content-Type': 'application/json',
+            'x-simulate-location': simLocation,
+            'x-simulate-impossible-travel': 'false'
+          },
+          body: JSON.stringify({ email: loginEmail, password: loginPassword })
+        });
 
-      if (!response.ok) {
-        const err = await response.json();
-        throw new Error(err.message || 'Invalid credentials');
+        if (!response.ok) {
+          const err = await response.json();
+          throw new Error(err.message || 'Invalid credentials');
+        }
+
+        const data = await response.json();
+        localStorage.setItem('token', data.token);
+        localStorage.setItem('user', JSON.stringify(data.user));
+        setToken(data.token);
+        setUser(data.user);
+        
+        // Auto-route to Security Dashboard if admin/manager, else employee directory
+        if (data.user.role === 'System Administrator' || data.user.role === 'HR Manager') {
+          setActiveTab('dashboard');
+        } else {
+          setActiveTab('employees');
+        }
+      } catch (err) {
+        setErrorMessage(err.message);
+      } finally {
+        setIsLoggingIn(false);
       }
+    };
 
-      const data = await response.json();
-      localStorage.setItem('token', data.token);
-      localStorage.setItem('user', JSON.stringify(data.user));
-      setToken(data.token);
-      setUser(data.user);
-      
-      // Auto-route to Security Dashboard if admin/manager, else employee directory
-      if (data.user.role === 'System Administrator' || data.user.role === 'HR Manager') {
-        setActiveTab('dashboard');
-      } else {
-        setActiveTab('employees');
+    // Autofill Helper with smooth active tracking
+    const handleAutofill = (email) => {
+      setLoginEmail(email);
+      setLoginPassword('admin123');
+      setActiveRolePill(email);
+      setLoginTouched({ email: false, password: false });
+      setErrorMessage('');
+    };
+
+    // Quick One-Click Login with animated role selection
+    const handleQuickLogin = async (email, password = 'admin123') => {
+      setLoginEmail(email);
+      setLoginPassword(password);
+      setActiveRolePill(email);
+      setLoginTouched({ email: false, password: false });
+      setErrorMessage('');
+      setIsLoggingIn(true);
+
+      try {
+        const response = await fetch(`${API_BASE}/auth/login`, {
+          method: 'POST',
+          headers: {
+            'Content-Type': 'application/json',
+            'x-simulate-location': simLocation,
+            'x-simulate-impossible-travel': 'false'
+          },
+          body: JSON.stringify({ email, password })
+        });
+
+        if (!response.ok) {
+          const err = await response.json();
+          throw new Error(err.message || 'Invalid credentials');
+        }
+
+        const data = await response.json();
+        localStorage.setItem('token', data.token);
+        localStorage.setItem('user', JSON.stringify(data.user));
+        setToken(data.token);
+        setUser(data.user);
+        
+        if (data.user.role === 'System Administrator' || data.user.role === 'HR Manager') {
+          setActiveTab('dashboard');
+        } else {
+          setActiveTab('employees');
+        }
+      } catch (err) {
+        setErrorMessage(err.message);
+      } finally {
+        setIsLoggingIn(false);
       }
-    } catch (err) {
-      setErrorMessage(err.message);
-    }
-  };
+    };
 
-  // Autofill Helper
-  const handleAutofill = (email) => {
-    setLoginEmail(email);
-    setLoginPassword('admin123');
-    setLoginTouched({ email: false, password: false });
-    setErrorMessage('');
-  };
-
-  const handleDemoFill = (email, password = 'admin123') => {
-    setLoginEmail(email);
-    setLoginPassword(password);
-    setLoginTouched({ email: false, password: false });
-    setErrorMessage('');
-  };
+    const handleDemoFill = (email, password = 'admin123') => {
+      handleAutofill(email);
+    };
 
   // Toggle Theme
   const toggleTheme = () => {
@@ -1479,7 +1526,7 @@ function App() {
           </header>
 
           {/* Login Portal View */}
-          <main style={{ flex: 1, display: 'flex', flexDirection: 'column' }}>
+          <main className="login-portal-main">
             <div className="login-view animate-fade-in">
               <div className="login-hero">
                 <h2 style={{ color: 'var(--text-primary)' }}>
@@ -1495,7 +1542,7 @@ function App() {
                   <p style={{ fontSize: '12px', color: 'var(--text-secondary)', marginBottom: '12px' }}>Click or navigate with Tab/Enter to automatically load credentials:</p>
                   <div className="demo-pills-container">
                     <div 
-                      className="demo-pill" 
+                      className={`demo-pill ${activeRolePill === 'admin@datalenshr.com' ? 'active' : ''}`}
                       tabIndex={0}
                       role="button"
                       aria-label="Autofill System Administrator credentials"
@@ -1508,7 +1555,7 @@ function App() {
                       <span className="demo-pill-email">admin@datalenshr.com</span>
                     </div>
                     <div 
-                      className="demo-pill" 
+                      className={`demo-pill ${activeRolePill === 'manager@datalenshr.com' ? 'active' : ''}`}
                       tabIndex={0}
                       role="button"
                       aria-label="Autofill HR Manager credentials"
@@ -1521,7 +1568,7 @@ function App() {
                       <span className="demo-pill-email">manager@datalenshr.com</span>
                     </div>
                     <div 
-                      className="demo-pill" 
+                      className={`demo-pill ${activeRolePill === 'staff@datalenshr.com' ? 'active' : ''}`}
                       tabIndex={0}
                       role="button"
                       aria-label="Autofill HR Staff credentials"
@@ -1534,7 +1581,7 @@ function App() {
                       <span className="demo-pill-email">staff@datalenshr.com</span>
                     </div>
                     <div 
-                      className="demo-pill" 
+                      className={`demo-pill ${activeRolePill === 'employee@datalenshr.com' ? 'active' : ''}`}
                       tabIndex={0}
                       role="button"
                       aria-label="Autofill Employee credentials"
@@ -1705,8 +1752,17 @@ function App() {
                         type="submit" 
                         className="btn-login-submit"
                         style={{ marginTop: '18px' }}
+                        disabled={isLoggingIn}
                       >
-                        Sign In
+                        {isLoggingIn ? (
+                          <span style={{ display: 'inline-flex', alignItems: 'center', gap: '8px' }}>
+                            <RefreshCw size={14} className="animate-spin" /> Authenticating...
+                          </span>
+                        ) : (
+                          <span style={{ display: 'inline-flex', alignItems: 'center', gap: '8px' }}>
+                            Sign In to Portal <ArrowRight size={14} />
+                          </span>
+                        )}
                       </button>
                     </form>
                   );
@@ -1714,6 +1770,10 @@ function App() {
               </div>
             </div>
           </main>
+          <footer className="footer login-footer">
+            <span>© 2026 DataLens HR.</span>
+            <span>Privacy Analytics & Security Operations Suite</span>
+          </footer>
         </>
       ) : (
         /* ================= AUTHENTICATED PERSISTENT WORKSPACE ================= */
@@ -1970,9 +2030,10 @@ function App() {
               </div>
 
               <div className="top-bar-right">
-                <div className="live-status-pill">
+                <div className="live-status-pill" title="Privacy Surveillance & Threat Shield Active">
                   <span className="pulse-dot"></span>
-                  <span>Real-Time Shield Active</span>
+                  <span className="status-text-full">Real-Time Shield Active</span>
+                  <span className="status-text-compact">Shield Active</span>
                 </div>
                 <div className="sim-location-pill" title="Simulated Client Geolocation" style={{ display: 'inline-flex', alignItems: 'center', gap: '5px' }}>
                   <MapPin size={12} /> <span>{simLocation}</span>
@@ -4151,15 +4212,15 @@ function App() {
                 </div>
               )}
             </section>
+
+            {/* Main Content Workspace Footer */}
+            <footer className="footer">
+              <span>© 2026 DataLens HR.</span>
+              <span>Secure Session Audit Active (RBAC Level {user ? user.role : 'Guest'})</span>
+            </footer>
           </div>
         </div>
       )}
-
-      {/* Footer */}
-      <footer className="footer">
-        <span>© 2026 DataLens HR.</span>
-        {token && <span>Secure Session Audit Active (RBAC Level {user ? user.role : 'Guest'})</span>}
-      </footer>
 
       {/* Add Employee Modal Overlay */}
       {showAddEmployeeForm && (user.role === 'HR Manager' || user.role === 'System Administrator') && (
