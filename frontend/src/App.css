@@ -690,7 +690,7 @@ html, body {
   -webkit-mask-image: linear-gradient(to bottom, rgba(0,0,0,1) 0%, rgba(0,0,0,0) 80%);
 }
 
-.navbar, .workspace-container, .login-view, .footer {
+.navbar, .workspace-container, .login-view {
   position: relative;
   z-index: 1;
 }
@@ -866,24 +866,37 @@ html, body {
   background-color: rgba(239, 68, 68, 0.05);
 }
 
-/* ================= LOGIN WINDOW ================= */
+/* ================= LOGIN PORTAL WRAPPER ================= */
+.login-portal-main {
+  flex: 1 0 auto;
+  display: flex;
+  flex-direction: column;
+  width: 100%;
+  position: relative;
+}
+
 .login-view {
-  flex: 1;
+  flex: 1 0 auto;
   display: flex;
   align-items: center;
   justify-content: center;
   max-width: 1200px;
   width: 100%;
-  margin: 0 auto;
-  padding: 40px 32px;
-  gap: 80px;
+  margin: auto;
+  padding: 48px 32px;
+  gap: 60px;
+  box-sizing: border-box;
 }
 
 @media (max-width: 1024px) {
   .login-view {
     flex-direction: column;
-    gap: 40px;
+    align-items: center;
+    justify-content: flex-start;
+    gap: 36px;
     padding: 32px 20px;
+    max-width: 680px;
+    margin: 0 auto;
   }
 }
 
@@ -922,7 +935,7 @@ html, body {
   border-radius: 16px;
   padding: 24px;
   margin-bottom: 24px;
-  box-shadow: 0 10px 30px rgba(0, 0, 0, 0.3);
+  box-shadow: 0 10px 30px rgba(0, 0, 0, 0.08);
 }
 
 .demo-accounts-card h4 {
@@ -942,8 +955,8 @@ html, body {
 
 .demo-pill {
   background-color: var(--bg-input);
-  border: 1px solid var(--border-glow);
-  padding: 12px;
+  border: 1.5px solid var(--border-glow);
+  padding: 12px 14px;
   border-radius: 10px;
   cursor: pointer;
   transition: all 0.2s cubic-bezier(0.16, 1, 0.3, 1);
@@ -951,12 +964,26 @@ html, body {
   display: flex;
   flex-direction: column;
   gap: 4px;
+  touch-action: manipulation;
+  -webkit-tap-highlight-color: transparent;
+  user-select: none;
 }
 
 .demo-pill:hover {
   background-color: rgba(99, 102, 241, 0.08);
-  border-color: rgba(99, 102, 241, 0.3);
+  border-color: rgba(99, 102, 241, 0.35);
   transform: translateY(-2px);
+}
+
+.demo-pill.active {
+  background-color: rgba(99, 102, 241, 0.12);
+  border-color: var(--primary);
+  box-shadow: 0 0 0 1px var(--primary), 0 4px 14px rgba(37, 99, 235, 0.18);
+}
+
+.demo-pill:active {
+  transform: scale(0.98);
+  background-color: rgba(99, 102, 241, 0.16);
 }
 
 .demo-pill-title {
@@ -1148,7 +1175,7 @@ html, body {
   display: flex;
   flex-direction: column;
   background-color: var(--bg-main);
-  overflow-y: auto;
+  position: relative;
 }
 
 /* Persistent Nav Sidebar */
@@ -1759,6 +1786,11 @@ html, body {
   font-size: 11px;
   font-weight: 700;
   letter-spacing: 0.3px;
+  flex-shrink: 0;
+}
+
+.status-text-compact {
+  display: none;
 }
 
 .pulse-dot {
@@ -3251,7 +3283,6 @@ html, body {
   margin-bottom: 4px;
 }
 
-/* Footer Section styling */
 .footer {
   border-top: 1px solid var(--border-glow);
   background-color: var(--bg-darker);
@@ -3261,6 +3292,19 @@ html, body {
   display: flex;
   justify-content: space-between;
   align-items: center;
+  margin-top: auto;
+  width: 100%;
+  box-sizing: border-box;
+}
+
+@media (max-width: 768px) {
+  .footer {
+    padding: 14px 16px;
+    flex-direction: column;
+    gap: 6px;
+    text-align: center;
+    font-size: 10.5px;
+  }
 }
 
 /* Responsive Layout Media Queries */
@@ -4939,6 +4983,11 @@ textarea:focus:not(:focus-visible),
     text-align: left;
   }
 
+  .demo-pills-container {
+    grid-template-columns: 1fr;
+    gap: 8px;
+  }
+
   .login-form-box {
     max-width: 100%;
   }
@@ -5017,10 +5066,19 @@ textarea:focus:not(:focus-visible),
   }
 
   .live-status-pill {
-    font-size: 11px;
-    padding: 4px 8px;
+    font-size: 10.5px;
+    padding: 3px 8px;
     gap: 5px;
     white-space: nowrap;
+    border-radius: 12px;
+  }
+
+  .status-text-full {
+    display: none;
+  }
+
+  .status-text-compact {
+    display: inline;
   }
 
   /* View Frame */
@@ -5358,13 +5416,33 @@ textarea:focus:not(:focus-visible),
 
 /* ------------------ SMARTPHONES (<= 540px) ------------------ */
 @media (max-width: 540px) {
+  .login-view {
+    padding: 20px 14px 32px !important;
+    gap: 20px !important;
+  }
+
   .login-hero h2 {
-    font-size: 24px;
+    font-size: 22px;
+  }
+
+  .login-hero p {
+    font-size: 13px;
+    margin-bottom: 18px;
+  }
+
+  .demo-accounts-card {
+    padding: 16px 14px;
+    margin-bottom: 16px;
   }
 
   .demo-pills-container {
     grid-template-columns: 1fr;
     gap: 8px;
+  }
+
+  .login-form-box {
+    padding: 24px 18px;
+    border-radius: 18px;
   }
 
   /* Form inputs touch height */
